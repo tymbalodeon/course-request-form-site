@@ -85,26 +85,28 @@ def create_requests(inputfile="unused_sis_ids.txt", copy_site=""):
                     course.save()
                     print(f"- Created request for {course}.")
                 except Exception:
-                    print(f"- ERROR: Failed to create request for: {line}")
-                    crf_logger.info(f"- ERROR: Failed to create request for: {line}")
+                    print(f"- ERROR: Failed to create request for: {course_id}")
+                    crf_logger.info(
+                        f"- ERROR: Failed to create request for: {course_id}"
+                    )
 
             else:
-                print(f"- ERROR: Course not in CRF ({line})")
-                crf_logger.info(f"- ERROR: Course not in CRF ({line})")
+                print(f"- ERROR: Course not in CRF ({course_id})")
+                crf_logger.info(f"- ERROR: Course not in CRF ({course_id})")
 
 
 def gather_request_process_notes(inputfile="unused_sis_ids.txt"):
-    print(") Gathering request prcess notes...")
+    print(") Gathering request process notes...")
 
     my_path = os.path.dirname(os.path.abspath(sys.argv[0]))
     file_path = os.path.join(my_path, "ACP/data", inputfile)
 
     dataFile = open(file_path, "r")
     request_results_file = open(
-        os.path.join(my_path, "ACP/data", "requestProcessNotes.txt"), "w+"
+        os.path.join(my_path, "ACP/data", "request_process_notes.txt"), "w+"
     )
     canvas_sites_file = open(
-        os.path.join(my_path, "ACP/data", "canvasSitesFile.txt"), "w+"
+        os.path.join(my_path, "ACP/data", "canvas_sites_file.txt"), "w+"
     )
 
     for line in dataFile:
@@ -142,9 +144,6 @@ def process_requests(input_file="unused_sis_ids.txt"):
     print(") Creating canvas sites...")
 
     create_canvas_site()
-
-    print(") Gathering request process notes...")
-
     gather_request_process_notes(input_file)
 
 
