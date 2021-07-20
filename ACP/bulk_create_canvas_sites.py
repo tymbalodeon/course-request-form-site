@@ -4,14 +4,14 @@ from datetime import datetime
 from canvasapi.exceptions import CanvasException
 
 from canvas.api import get_canvas
-from course.models import Course, Request
-from course.tasks import create_canvas_site
+from course.models import Course, Request, User
+from course.tasks import create_canvas_sites
 
 from .logger import canvas_logger, crf_logger
 
 config = ConfigParser()
 config.read("config/config.ini")
-OWNER = config.items("users")[0][0]
+OWNER = User.objects.get(username=config.items("users")[0][0])
 
 
 def get_unrequested_courses(year_and_term):
@@ -153,19 +153,18 @@ def bulk_create_canvas_sites(
                 request_course(course, copy_site)
 
                 print("\t> Creating Canvas site...")
-                create_canvas_site()
+                create_canvas_sites(test=test, verbose=False)
 
-                print("\t> Checking request process notes...")
+                print("\t> Confirming site creation...")
                 request = Request.objects.get(course_requested=course)
 
                 if request.status == "COMPLETED":
-                    print(
-                        f"\t* COMPLETED: {request.canvas_instance.canvas_id},"
-                        f" {request.process_notes}"
-                    )
+                    print(f"\t* COMPLETED: ({request.canvas_instance.canvas_id})")
                 else:
-                    print("\t* ERROR: Request incomplete.")
-                    canvas_logger.info(f"ERROR: Request incomplete for {course}.")
+                    print("\t* ERROR: Request incomplete. ({request.process_notes})")
+                    canvas_logger.info(
+                        f"ERROR: Request incomplete for {course} ({request.process_notes})."
+                    )
                     continue
 
                 if config:
