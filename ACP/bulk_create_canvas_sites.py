@@ -62,7 +62,7 @@ def request_course(course, copy_site):
     request.save()
     course.save()
 
-    print(f"\t* Request complete.")
+    print("\t* Request complete.")
 
 
 def enable_lti(canvas_id, tool, test=False):
@@ -94,7 +94,7 @@ def copy_content(canvas_id, source_site, test=False):
             migration_type="course_copy_importer",
             settings={"[source_course_id": source_site},
         )
-        print(f"\t* Created content migration.")
+        print("\t* Created content migration.")
     except Exception as error:
         print(f"\t* ERROR: Failed to create content migration ({error}).")
         canvas_logger.info(f"ERROR: Failed to find site {canvas_id} ({error})")
@@ -122,7 +122,7 @@ def config_sites(canvas_id, capacity, publish, tool, source_site, test):
             canvas = get_canvas(test)
             canvas_site = canvas.get_course(canvas_id)
             canvas_site.update(course=config)
-            print(f"\t* Updated complete.")
+            print("\t* Updated complete.")
         except Exception as error:
             print(f"\t* ERROR: Failed to update course ({error}).")
             canvas_logger.info(f"ERROR: Failed to update site {canvas_id} ({error}).")
@@ -149,7 +149,7 @@ def bulk_create_canvas_sites(
 
         if should_request(sis_id):
             try:
-                print(f"\t> Requesting course...")
+                print("\t> Requesting course...")
                 request_course(course, copy_site)
 
                 print("\t> Creating Canvas site...")
@@ -164,7 +164,7 @@ def bulk_create_canvas_sites(
                         f" {request.process_notes}"
                     )
                 else:
-                    print(f"\t* ERROR: Request incomplete")
+                    print("\t* ERROR: Request incomplete.")
                     canvas_logger.info(f"ERROR: Request incomplete for {course}.")
                     continue
 
@@ -172,7 +172,7 @@ def bulk_create_canvas_sites(
                     canvas_id = request.canvas_instance.canvas_id
                     config_sites(canvas_id, capacity, publish, tool, source_site, test)
             except Exception as error:
-                print(f"\t* ERROR: Failed to create site.")
+                print("\t* ERROR: Failed to create site.")
                 crf_logger.info(f"ERROR: Failed to create site for {course} ({error}).")
         else:
             print(f"\t* SKIPPING: {sis_id} is already in use.")
