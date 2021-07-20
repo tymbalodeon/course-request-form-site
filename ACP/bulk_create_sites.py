@@ -1,21 +1,23 @@
-from datetime import datetime
 import os
 import sys
 from configparser import ConfigParser
+from datetime import datetime
+from pathlib import Path
 
 import pandas
 from canvas.api import get_canvas
+from canvasapi.exceptions import CanvasException
 from course.models import Course, Request, User
 from course.tasks import create_canvas_site
 
 from .logger import canvas_logger, crf_logger
 
-CONFIG = ConfigParser()
-CONFIG.read("config/config.ini")
-OWNER = CONFIG.items("users")[0][0]
+config = ConfigParser()
+config.read("config/config.ini")
+OWNER = config.items("user")[0][0]
 
 
-def create_unrequested_list(year_and_term, copy_site, tools=None, test=False):
+def get_unrequested_courses(year_and_term):
     print(") Finding unrequested courses...")
 
     term = year_and_term[-1]
@@ -30,13 +32,56 @@ def create_unrequested_list(year_and_term, copy_site, tools=None, test=False):
         course_schools__visible=True,
     )
 
-    for course in unrequested_courses:
+    course_srs_codes = list()
+    total = len(unrequested_courses)
+
+    for index, course in enumerate(unrequested_courses):
+        course_srs_codes.append(course.srs_format_primary())
+        print(f"- ({index + 1}/{total}) {course.srs_format_primary()}")
+
+    return pandas.DataFrame(
+        course_srs_codes,
+        columns=["srs format primary"],
+    )
+
+
+def filter_out_used_ids(courses, test=False):
+    print(") Finding unused sis ids...")
+
+    for course in courses.itertuples():
+        sis_id = f"SRS_{course['srs format primary']}"
+
         try:
+            canvas = get_canvas(test)
+            section = canvas.get_section(sis_id, use_sis_id=True)
+            print(f"- {sis_id} is already in use. Removing from requests list...")
+            canvas_logger.warning(
+                f"{sis_id} is already in use. Removed from requests list."
+            )
+            courses.drop(course[0], inplace=True)
+        except CanvasException:
+            print(f"- Requesting site for {sis_id}...")
+
+    return courses
+
+
+def create_requests(courses, copy_site=""):
+    print(") Creating requests...")
+
+    for course in courses.itertuples():
+        course_id = "".join(
+            character
+            for character in course["srs format primary"]
+            if character.isalnum()
+        ).strip()
+
+        try:
+            course = Course.objects.get(course_code=course_id)
             request = Request.objects.create(
                 course_requested=course,
                 copy_from_course=copy_site,
                 additional_instructions=(
-                    "Request automatically generated; contact Courseware Support for additional information."
+                    "Request automatically generated; contact Courseware Support for more information."
                 ),
                 owner=OWNER,
                 created=datetime.now(),
@@ -45,15 +90,49 @@ def create_unrequested_list(year_and_term, copy_site, tools=None, test=False):
             request.save()
             course.save()
             print(f"- Created request for {course}.")
-        except Exception:
-            print(f"- ERROR: Failed to create request for: {course")
-            crf_logger.info(f"- ERROR: Failed to create request for: {course")
+        except Exception as error:
+            print(f"- ERROR: Failed to create request for: {course_id} ({error})")
+            crf_logger.info(
+                f"- ERROR: Failed to create request for: {course_id} ({error})"
+            )
+
+
+def gather_request_process_notes(courses):
+    print(") Gathering request process notes...")
+
+    canvas_site_ids = list()
+    request_process_notes = list()
+
+    for course in courses.itertuples():
+        course_id = "".join(
+            character
+            for character in course["srs format primary"]
+            if character.isalnum()
+        ).strip()
+
+        try:
+            course = Course.objects.get(course_code=course_id)
+            request = Request.objects.get(course_requested=course)
+
+            if request.status == "COMPLETED":
+                canvas_site_ids.append(f"{request.canvas_instance.canvas_id}")
+                request_process_notes.append(f"{request.process_notes}")
+                print(
+                    f"- COMPLETED: {course['srs format primary']} | {request.canvas_instance.canvas_id} |"
+                    f" {request.process_notes}"
+                )
+            else:
+                canvas_logger.info(f"- ERROR: Request incomplete for {course_id}")
+                print(f"- ERROR: Request incomplete for {course_id}")
+        except Exception as error:
+            print(f"- ERROR: {error}")
+
+
+def process_requests():
+    print(") Creating canvas sites...")
 
     create_canvas_site()
-
-    if tools:
-        for tool in tools:
-            enable_lti(tool, test)
+    gather_request_process_notes()
 
 
 def enable_lti(tool, test=False):
