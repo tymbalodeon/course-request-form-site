@@ -1,7 +1,7 @@
-import datetime
+from datetime import datetime
 import os
 import sys
-from pathlib import Path
+from configparser import ConfigParser
 
 import pandas
 from canvas.api import get_canvas
@@ -10,14 +10,17 @@ from course.tasks import create_canvas_site
 
 from .logger import canvas_logger, crf_logger
 
-DATA_PATH = Path.cwd() / "ACP/data"
+CONFIG = ConfigParser()
+CONFIG.read("config/config.ini")
+OWNER = CONFIG.items("users")[0][0]
 
 
-def create_unrequested_list(year_and_term):
+def create_unrequested_list(year_and_term, copy_site, tools=None, test=False):
     print(") Finding unrequested courses...")
 
     term = year_and_term[-1]
     year = year_and_term[:-1]
+
     unrequested_courses = Course.objects.filter(
         course_term=term,
         year=year,
@@ -27,162 +30,57 @@ def create_unrequested_list(year_and_term):
         course_schools__visible=True,
     )
 
-    COURSE_PRIMARIES_AND_ABBREVIATIONS = list()
-
     for course in unrequested_courses:
-        COURSE_PRIMARIES_AND_ABBREVIATIONS.append(
-            [course.srs_format_primary(), course.course_schools.abbreviation]
-        )
-        print(f"- {course.srs_format_primary()}, {course.course_schools.abbreviation}")
-
-    print(f"- Found {len(unrequested_courses)} unrequested courses.")
-
-    return pandas.DataFrame(
-        COURSE_PRIMARIES_AND_ABBREVIATIONS,
-        columns=["srs format primary", "course school abbreviation"],
-    )
-
-
-def create_unused_sis_list(
-    inputfile="unrequested_courses.txt", outputfile="unused_sis_ids.txt"
-):
-    print(") Finding unused sis ids...")
-
-    my_path = os.path.dirname(os.path.abspath(sys.argv[0]))
-    file_path = os.path.join(my_path, "ACP/data", inputfile)
-
-    with open(file_path, "r") as dataFile:
-        for line in dataFile:
-            sis_id, school = line.replace("\n", "").split(",")
-            print(f"- {sis_id}, {school}")
-
-
-def create_requests(inputfile="unused_sis_ids.txt", copy_site=""):
-    print(") Creating requests...")
-
-    owner = User.objects.get(username="benrosen")
-    my_path = os.path.dirname(os.path.abspath(sys.argv[0]))
-    file_path = os.path.join(my_path, "ACP/data", inputfile)
-
-    with open(file_path, "r") as dataFile:
-        for line in dataFile:
-            course_id = line.replace("\n", "").replace(" ", "").replace("-", "")
-            course_id = course_id.strip()
-
-            try:
-                course = Course.objects.get(course_code=course_id)
-            except Exception:
-                course = None
-
-            if course:
-                try:
-                    request = Request.objects.create(
-                        course_requested=course,
-                        copy_from_course=copy_site,
-                        additional_instructions=(
-                            "Created automatically, contact courseware support for info"
-                        ),
-                        owner=owner,
-                        created=datetime.datetime.now(),
-                    )
-                    request.status = "APPROVED"
-                    request.save()
-                    course.save()
-                    print(f"- Created request for {course}.")
-                except Exception:
-                    print(f"- ERROR: Failed to create request for: {course_id}")
-                    crf_logger.info(
-                        f"- ERROR: Failed to create request for: {course_id}"
-                    )
-
-            else:
-                print(f"- ERROR: Course not in CRF ({course_id})")
-                crf_logger.info(f"- ERROR: Course not in CRF ({course_id})")
-
-
-def gather_request_process_notes(inputfile="unused_sis_ids.txt"):
-    print(") Gathering request process notes...")
-
-    my_path = os.path.dirname(os.path.abspath(sys.argv[0]))
-    file_path = os.path.join(my_path, "ACP/data", inputfile)
-
-    dataFile = open(file_path, "r")
-    request_results_file = open(
-        os.path.join(my_path, "ACP/data", "request_process_notes.txt"), "w+"
-    )
-    canvas_sites_file = open(
-        os.path.join(my_path, "ACP/data", "canvas_sites_file.txt"), "w+"
-    )
-
-    for line in dataFile:
-        course_id = line.replace("\n", "").replace(" ", "").replace("-", "")
-
         try:
-            course = Course.objects.get(course_code=course_id)
+            request = Request.objects.create(
+                course_requested=course,
+                copy_from_course=copy_site,
+                additional_instructions=(
+                    "Request automatically generated; contact Courseware Support for additional information."
+                ),
+                owner=OWNER,
+                created=datetime.now(),
+            )
+            request.status = "APPROVED"
+            request.save()
+            course.save()
+            print(f"- Created request for {course}.")
         except Exception:
-            course = None
-
-        try:
-            request = Request.objects.get(course_requested=course)
-        except Exception:
-            request = None
-
-        if request:
-            if request.status == "COMPLETED":
-                canvas_sites_file.write(
-                    f"{course_id}, {request.canvas_instance.canvas_id}\n"
-                )
-                request_results_file.write(f"{course_id} | {request.process_notes}\n")
-                print(
-                    f"- {course_id} | {request.canvas_instance.canvas_id} |"
-                    f" {request.process_notes}"
-                )
-            else:
-                canvas_logger.info(f"request incomplete for {course_id}")
-                print(f"- request incomplete for {course_id}")
-        else:
-            crf_logger.info(f"- ERROR: Couldn't find request for {course_id}")
-            print(f"- ERROR: Couldn't find request for {course_id}")
-
-
-def process_requests(input_file="unused_sis_ids.txt"):
-    print(") Creating canvas sites...")
+            print(f"- ERROR: Failed to create request for: {course")
+            crf_logger.info(f"- ERROR: Failed to create request for: {course")
 
     create_canvas_site()
-    gather_request_process_notes(input_file)
+
+    if tools:
+        for tool in tools:
+            enable_lti(tool, test)
 
 
-def enable_lti(input_file, tool, test=False):
+def enable_lti(tool, test=False):
     print(") Enabling LTI for courses...")
 
     canvas = get_canvas(test)
-    my_path = os.path.dirname(os.path.abspath(sys.argv[0]))
-    file_path = os.path.join(my_path, "ACP/data", input_file)
 
-    with open(file_path, "r") as dataFile:
-        for line in dataFile:
-            canvas_id = line.replace("\n", "").strip()
+    try:
+        course_site = canvas.get_course(canvas_id)
+    except Exception:
+        print(f"- ERROR: Failed to find site {canvas_id}")
+        canvas_logger.info(f"- ERROR: Failed to find site {canvas_id}")
+        course_site = None
 
-            try:
-                course_site = canvas.get_course(canvas_id)
-            except Exception:
-                print(f"- ERROR: Failed to find site {canvas_id}")
-                canvas_logger.info(f"- ERROR: Failed to find site {canvas_id}")
-                course_site = None
+    if course_site:
+        tabs = course_site.get_tabs()
 
-            if course_site:
-                tabs = course_site.get_tabs()
-
-                for tab in tabs:
-                    if tab.id == tool:
-                        try:
-                            if tab.visibility != "public":
-                                tab.update(hidden=False, position=3)
-                                print(f"- {tool} enabled. ")
-                            else:
-                                print(f"- {tool} already enabled.")
-                        except Exception:
-                            print(f"- ERROR: Failed to enable {tool} for {canvas_id}")
+        for tab in tabs:
+            if tab.id == tool:
+                try:
+                    if tab.visibility != "public":
+                        tab.update(hidden=False, position=3)
+                        print(f"- {tool} enabled. ")
+                    else:
+                        print(f"- {tool} already enabled.")
+                except Exception:
+                    print(f"- ERROR: Failed to enable {tool} for {canvas_id}")
 
 
 def copy_content(input_file, source_site, test=False):
@@ -270,9 +168,6 @@ def bulk_create_sites(
     print(") Bulk creating sites...")
 
     create_unrequested_list(term)
-    create_unused_sis_list()
-    create_requests(copy_site=copy_site)
-    process_requests()
 
     if config:
         config_sites(
