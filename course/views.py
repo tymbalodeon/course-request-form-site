@@ -1824,8 +1824,7 @@ def quickconfig(request):
                             print("CanvasException: ", e)
                             if (
                                 e.message
-                                == '{"message":"Can\'t add an enrollment to a concluded'
-                                ' course."}'
+                                == '{"message":"Can\'t add an enrollment to a concluded course."}'
                             ):
                                 # change term n try again
                                 print("we are adjusting the term")
@@ -1862,13 +1861,11 @@ def quickconfig(request):
                                 e,
                                 e.message[0],
                                 e.message
-                                == '{"message":"Can\'t add an enrollment to a concluded'
-                                ' course."}',
+                                == '{"message":"Can\'t add an enrollment to a concluded course."}',
                             )
                             if (
                                 e.message
-                                == '{"message":"Can\'t add an enrollment to a concluded'
-                                ' course."}'
+                                == '{"message":"Can\'t add an enrollment to a concluded course."}'
                             ):
                                 # change term n try again
                                 print("we are adjusting the term")
