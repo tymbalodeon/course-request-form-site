@@ -11,7 +11,7 @@ from .logger import canvas_logger, crf_logger
 
 config = ConfigParser()
 config.read("config/config.ini")
-OWNER = config.items("user")[0][0]
+OWNER = config.items("users")[0][0]
 
 
 def should_request(course, index, total, test=False):
@@ -191,8 +191,8 @@ def bulk_create_canvas_sites(
     requestable_courses = list()
 
     for index, course in enumerate(unrequested_courses):
-        if should_request(course, index, total_unrequested.test):
-            course.append(requestable_courses)
+        if should_request(course, index, total_unrequested, test):
+            requestable_courses.append(course)
 
     total_requestable = len(requestable_courses)
 
