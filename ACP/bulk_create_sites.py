@@ -1,20 +1,24 @@
 import datetime
 import os
 import sys
+from pathlib import Path
 
+import pandas
 from canvas.api import get_canvas
 from course.models import Course, Request, User
 from course.tasks import create_canvas_site
 
 from .logger import canvas_logger, crf_logger
 
+DATA_PATH = Path.cwd() / "ACP/data"
 
-def create_unrequested_list(term, outputfile="unrequested_courses.txt"):
+
+def create_unrequested_list(year_and_term):
     print(") Finding unrequested courses...")
 
-    term = term[-1]
-    year = term[:-1]
-    courses = Course.objects.filter(
+    term = year_and_term[-1]
+    year = year_and_term[:-1]
+    unrequested_courses = Course.objects.filter(
         course_term=term,
         year=year,
         requested=False,
@@ -23,19 +27,20 @@ def create_unrequested_list(term, outputfile="unrequested_courses.txt"):
         course_schools__visible=True,
     )
 
-    my_path = os.path.dirname(os.path.abspath(sys.argv[0]))
-    file_path = os.path.join(my_path, "ACP/data/", outputfile)
+    COURSE_PRIMARIES_AND_ABBREVIATIONS = list()
 
-    with open(file_path, "w+") as output_file:
-        for course in courses:
-            output_file.write(
-                f"{course.srs_format_primary()}, {course.course_schools.abbreviation}\n"
-            )
-            print(
-                f"- {course.srs_format_primary()}, {course.course_schools.abbreviation}"
-            )
+    for course in unrequested_courses:
+        COURSE_PRIMARIES_AND_ABBREVIATIONS.append(
+            [course.srs_format_primary(), course.course_schools.abbreviation]
+        )
+        print(f"- {course.srs_format_primary()}, {course.course_schools.abbreviation}")
 
-    print(f"- Found {len(courses)} unrequested courses.")
+    print(f"- Found {len(unrequested_courses)} unrequested courses.")
+
+    return pandas.DataFrame(
+        COURSE_PRIMARIES_AND_ABBREVIATIONS,
+        columns=["srs format primary", "course school abbreviation"],
+    )
 
 
 def create_unused_sis_list(
