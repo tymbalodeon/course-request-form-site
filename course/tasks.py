@@ -138,15 +138,18 @@ def check_for_account(pennkey):
 
 
 @task()
-def create_canvas_site(test=False):
-    print(") Creating Canvas sites for requested courses...")
+def create_canvas_sites(test=False, verbose=True):
+    if verbose:
+        print(") Creating Canvas sites for requested courses...")
 
     requested_courses = Request.objects.filter(status="APPROVED")
 
     if not requested_courses:
-        print("SUMMARY")
-        print("- No requested courses found.")
-        print("FINISHED")
+        if verbose:
+            print("SUMMARY")
+            print("- No requested courses found.")
+            print("FINISHED")
+
         return
 
     for request in requested_courses:
@@ -158,7 +161,8 @@ def create_canvas_site(test=False):
 
         course_requested = request.course_requested
 
-        print(f") Creating Canvas site for {course_requested}...")
+        if verbose:
+            print(f") Creating Canvas site for {course_requested}...")
 
         account = find_account(
             course_requested.course_schools.canvas_subaccount, test=test
@@ -227,7 +231,10 @@ def create_canvas_site(test=False):
                         "course site creation failed--check if it already exists,"
                     )
                     request.save()
-                    print(f"\t- ERROR: failed to create site ({error})")
+
+                    if verbose:
+                        print(f"\t- ERROR: failed to create site ({error})")
+
                     return
 
             try:
@@ -257,11 +264,17 @@ def create_canvas_site(test=False):
                     request.process_notes += "failed to create main section,"
                     request.process_notes += sys.exc_info()[0]
                     request.save()
-                    print(f"\t- ERROR: failed to add section ({error})")
+
+                    if verbose:
+                        print(f"\t- ERROR: failed to add section ({error})")
+
                     return
         else:
             request.process_notes += "failed to locate Canvas Account,"
-            print("\t- ERROR: failed to locate Canvas Account")
+
+            if verbose:
+                print("\t- ERROR: failed to locate Canvas Account")
+
             return
 
         if request.title_override:
@@ -295,7 +308,10 @@ def create_canvas_site(test=False):
             except Exception as error:
                 request.process_notes += "failed to create section,"
                 request.save()
-                print(f"\t- ERROR: failed to create section ({error})")
+
+                if verbose:
+                    print(f"\t- ERROR: failed to create section ({error})")
+
                 return
 
         enrollment_types = {
@@ -408,15 +424,19 @@ def create_canvas_site(test=False):
                 if tab.visibility != "public":
                     request.process_notes += "failed to configure ARES,"
             except Exception as error:
-                print(f"\t- ERROR: {error}")
+                if verbose:
+                    print(f"\t- ERROR: {error}")
+
                 request.process_notes += "failed to try to configure ARES,"
 
         if serialized.data["copy_from_course"]:
             try:
-                print(
-                    "\t* Copying course data from course id"
-                    f" {serialized.data['copy_from_course']}..."
-                )
+                if verbose:
+                    print(
+                        "\t* Copying course data from course id"
+                        f" {serialized.data['copy_from_course']}..."
+                    )
+
                 source_course_id = serialized.data["copy_from_course"]
                 content_migration = canvas_course.create_content_migration(
                     migration_type="course_copy_importer",
@@ -427,11 +447,14 @@ def create_canvas_site(test=False):
                     content_migration.get_progress == "queued"
                     or content_migration.get_progress == "running"
                 ):
-                    print("\t* Migration running...")
+                    if verbose:
+                        print("\t* Migration running...")
+
                     time.sleep(8)
 
-                print("\t- MIGRATION COMPLETE")
-                print("\t* Deleting Zoom events...")
+                if verbose:
+                    print("\t- MIGRATION COMPLETE")
+                    print("\t* Deleting Zoom events...")
 
                 canvas = get_canvas(test)
                 course_string = f"course_{canvas_course.id}"
@@ -456,10 +479,12 @@ def create_canvas_site(test=False):
                             " relevant"
                         )
                     )
-                    print(f"\t- Event '{deleted}' deleted.")
+                    if verbose:
+                        print(f"\t- Event '{deleted}' deleted.")
 
             except Exception as error:
-                print(f"\t- ERROR: {error}")
+                if verbose:
+                    print(f"\t- ERROR: {error}")
 
         instructors = canvas_course.get_enrollments(type="TeacherEnrollment")._elements
         canvas_id = canvas_course.id
@@ -487,6 +512,9 @@ def create_canvas_site(test=False):
 
         request.status = "COMPLETED"
         request.save()
-        print(f"- Canvas site successfully created: {site}.")
 
-    print("FINISHED")
+        if verbose:
+            print(f"- Canvas site successfully created: {site}.")
+
+    if verbose:
+        print("FINISHED")
