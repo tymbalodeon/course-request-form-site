@@ -1,19 +1,23 @@
-import datetime
 import os
 import sys
+from configparser import ConfigParser
+from datetime import datetime
 from pathlib import Path
 
 import pandas
 from canvas.api import get_canvas
+from canvasapi.exceptions import CanvasException
 from course.models import Course, Request, User
 from course.tasks import create_canvas_site
 
 from .logger import canvas_logger, crf_logger
 
-DATA_PATH = Path.cwd() / "ACP/data"
+config = ConfigParser()
+config.read("config/config.ini")
+OWNER = config.items("user")[0][0]
 
 
-def create_unrequested_list(year_and_term):
+def get_unrequested_courses(year_and_term):
     print(") Finding unrequested courses...")
 
     term = year_and_term[-1]
@@ -27,129 +31,107 @@ def create_unrequested_list(year_and_term):
         course_schools__visible=True,
     )
 
-    COURSE_PRIMARIES_AND_ABBREVIATIONS = list()
+    course_srs_codes = list()
+    total = len(unrequested_courses)
 
-    for course in unrequested_courses:
-        COURSE_PRIMARIES_AND_ABBREVIATIONS.append(
-            [course.srs_format_primary(), course.course_schools.abbreviation]
-        )
-        print(f"- {course.srs_format_primary()}, {course.course_schools.abbreviation}")
-
-    print(f"- Found {len(unrequested_courses)} unrequested courses.")
+    for index, course in enumerate(unrequested_courses):
+        course_srs_codes.append(course.srs_format_primary())
+        print(f"- ({index + 1}/{total}) {course.srs_format_primary()}")
 
     return pandas.DataFrame(
-        COURSE_PRIMARIES_AND_ABBREVIATIONS,
-        columns=["srs format primary", "course school abbreviation"],
+        course_srs_codes,
+        columns=["srs format primary"],
     )
 
 
-def create_unused_sis_list(
-    inputfile="unrequested_courses.txt", outputfile="unused_sis_ids.txt"
-):
+def filter_out_used_ids(courses, test=False):
     print(") Finding unused sis ids...")
 
-    my_path = os.path.dirname(os.path.abspath(sys.argv[0]))
-    file_path = os.path.join(my_path, "ACP/data", inputfile)
+    for course in courses.itertuples():
+        sis_id = f"SRS_{course['srs format primary']}"
 
-    with open(file_path, "r") as dataFile:
-        for line in dataFile:
-            sis_id, school = line.replace("\n", "").split(",")
-            print(f"- {sis_id}, {school}")
+        try:
+            canvas = get_canvas(test)
+            section = canvas.get_section(sis_id, use_sis_id=True)
+            print(f"- {sis_id} is already in use. Removing from requests list...")
+            canvas_logger.warning(
+                f"{sis_id} is already in use. Removed from requests list."
+            )
+            courses.drop(course[0], inplace=True)
+        except CanvasException:
+            print(f"- Requesting site for {sis_id}...")
+
+    return courses
 
 
-def create_requests(inputfile="unused_sis_ids.txt", copy_site=""):
+def create_requests(courses, copy_site=""):
     print(") Creating requests...")
 
-    owner = User.objects.get(username="benrosen")
-    my_path = os.path.dirname(os.path.abspath(sys.argv[0]))
-    file_path = os.path.join(my_path, "ACP/data", inputfile)
-
-    with open(file_path, "r") as dataFile:
-        for line in dataFile:
-            course_id = line.replace("\n", "").replace(" ", "").replace("-", "")
-            course_id = course_id.strip()
-
-            try:
-                course = Course.objects.get(course_code=course_id)
-            except Exception:
-                course = None
-
-            if course:
-                try:
-                    request = Request.objects.create(
-                        course_requested=course,
-                        copy_from_course=copy_site,
-                        additional_instructions=(
-                            "Created automatically, contact courseware support for info"
-                        ),
-                        owner=owner,
-                        created=datetime.datetime.now(),
-                    )
-                    request.status = "APPROVED"
-                    request.save()
-                    course.save()
-                    print(f"- Created request for {course}.")
-                except Exception:
-                    print(f"- ERROR: Failed to create request for: {course_id}")
-                    crf_logger.info(
-                        f"- ERROR: Failed to create request for: {course_id}"
-                    )
-
-            else:
-                print(f"- ERROR: Course not in CRF ({course_id})")
-                crf_logger.info(f"- ERROR: Course not in CRF ({course_id})")
-
-
-def gather_request_process_notes(inputfile="unused_sis_ids.txt"):
-    print(") Gathering request process notes...")
-
-    my_path = os.path.dirname(os.path.abspath(sys.argv[0]))
-    file_path = os.path.join(my_path, "ACP/data", inputfile)
-
-    dataFile = open(file_path, "r")
-    request_results_file = open(
-        os.path.join(my_path, "ACP/data", "request_process_notes.txt"), "w+"
-    )
-    canvas_sites_file = open(
-        os.path.join(my_path, "ACP/data", "canvas_sites_file.txt"), "w+"
-    )
-
-    for line in dataFile:
-        course_id = line.replace("\n", "").replace(" ", "").replace("-", "")
+    for course in courses.itertuples():
+        course_id = "".join(
+            character
+            for character in course["srs format primary"]
+            if character.isalnum()
+        ).strip()
 
         try:
             course = Course.objects.get(course_code=course_id)
-        except Exception:
-            course = None
+            request = Request.objects.create(
+                course_requested=course,
+                copy_from_course=copy_site,
+                additional_instructions=(
+                    "Request automatically generated; contact Courseware Support for more information."
+                ),
+                owner=OWNER,
+                created=datetime.now(),
+            )
+            request.status = "APPROVED"
+            request.save()
+            course.save()
+            print(f"- Created request for {course}.")
+        except Exception as error:
+            print(f"- ERROR: Failed to create request for: {course_id} ({error})")
+            crf_logger.info(
+                f"- ERROR: Failed to create request for: {course_id} ({error})"
+            )
+
+
+def gather_request_process_notes(courses):
+    print(") Gathering request process notes...")
+
+    canvas_site_ids = list()
+    request_process_notes = list()
+
+    for course in courses.itertuples():
+        course_id = "".join(
+            character
+            for character in course["srs format primary"]
+            if character.isalnum()
+        ).strip()
 
         try:
+            course = Course.objects.get(course_code=course_id)
             request = Request.objects.get(course_requested=course)
-        except Exception:
-            request = None
 
-        if request:
             if request.status == "COMPLETED":
-                canvas_sites_file.write(
-                    f"{course_id}, {request.canvas_instance.canvas_id}\n"
-                )
-                request_results_file.write(f"{course_id} | {request.process_notes}\n")
+                canvas_site_ids.append(f"{request.canvas_instance.canvas_id}")
+                request_process_notes.append(f"{request.process_notes}")
                 print(
-                    f"- {course_id} | {request.canvas_instance.canvas_id} |"
+                    f"- COMPLETED: {course['srs format primary']} | {request.canvas_instance.canvas_id} |"
                     f" {request.process_notes}"
                 )
             else:
-                canvas_logger.info(f"request incomplete for {course_id}")
-                print(f"- request incomplete for {course_id}")
-        else:
-            crf_logger.info(f"- ERROR: Couldn't find request for {course_id}")
-            print(f"- ERROR: Couldn't find request for {course_id}")
+                canvas_logger.info(f"- ERROR: Request incomplete for {course_id}")
+                print(f"- ERROR: Request incomplete for {course_id}")
+        except Exception as error:
+            print(f"- ERROR: {error}")
 
 
-def process_requests(input_file="unused_sis_ids.txt"):
+def process_requests():
     print(") Creating canvas sites...")
 
     create_canvas_site()
-    gather_request_process_notes(input_file)
+    gather_request_process_notes()
 
 
 def enable_lti(input_file, tool, test=False):
