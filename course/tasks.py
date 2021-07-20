@@ -170,6 +170,7 @@ def create_canvas_site(test=False):
                 != course_requested.course_subject.abbreviation
             ):
                 pc = course_requested.primary_crosslist
+
                 if course_requested.primary_crosslist:
                     term = pc[-5:]
                     section = pc[:-5][-3:]
