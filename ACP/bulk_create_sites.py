@@ -128,13 +128,6 @@ def gather_request_process_notes(courses):
             print(f"- ERROR: {error}")
 
 
-def process_requests():
-    print(") Creating canvas sites...")
-
-    create_canvas_site()
-    gather_request_process_notes()
-
-
 def enable_lti(tool, test=False):
     print(") Enabling LTI for courses...")
 
@@ -237,7 +230,6 @@ def bulk_create_sites(
     term,
     copy_site="",
     config=False,
-    input_file="canvas_sites.txt",
     capacity=2,
     publish=False,
     tool=None,
@@ -246,11 +238,14 @@ def bulk_create_sites(
 ):
     print(") Bulk creating sites...")
 
-    create_unrequested_list(term)
+    courses = get_unrequested_courses(term)
+    courses = filter_out_used_ids(courses)
+    create_requests()
+    create_canvas_site()
+    gather_request_process_notes()
 
     if config:
         config_sites(
-            input_file=input_file,
             capacity=capacity,
             publish=publish,
             tool=tool,
