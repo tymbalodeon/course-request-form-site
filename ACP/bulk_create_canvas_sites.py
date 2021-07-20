@@ -172,7 +172,7 @@ def bulk_create_canvas_sites(
                     canvas_id = request.canvas_instance.canvas_id
                     config_sites(canvas_id, capacity, publish, tool, source_site, test)
             except Exception as error:
-                print("\t* ERROR: Failed to create site. ({error})")
+                print(f"\t* ERROR: Failed to create site. ({error})")
                 crf_logger.info(f"ERROR: Failed to create site for {course} ({error}).")
         else:
             print(f"\t* SKIPPING: {sis_id} is already in use.")
