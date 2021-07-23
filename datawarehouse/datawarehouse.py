@@ -66,6 +66,8 @@ def get_user(penn_id):
 
 
 def inspect_course(section, term=None):
+    section = section.replace("-", "")
+    section = section.replace(" ", "")
     cursor = get_cursor()
     cursor.execute(
         """
