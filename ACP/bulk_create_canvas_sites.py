@@ -57,6 +57,7 @@ def request_course(course, copy_site):
         ),
         owner=OWNER,
         created=datetime.now(),
+        reserves=True,
     )
     request.status = "APPROVED"
     request.save()
@@ -140,7 +141,6 @@ def bulk_create_canvas_sites(
     capacity=2,
     publish=False,
     tools={
-        "context_external_tool_139969": "Course Materials @ Penn Libraries",
         "context_external_tool_90311": "Class Recordings",
         "context_external_tool_231623": "Zoom",
         "context_external_tool_132117": "Gradescope",
