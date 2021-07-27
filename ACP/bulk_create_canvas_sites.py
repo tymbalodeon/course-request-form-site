@@ -66,7 +66,7 @@ def request_course(course, copy_site):
 
 
 def enable_lti(canvas_id, tool, label=False, test=False):
-    print("\t> Enabling {tool}...")
+    print(f"\t> Enabling {tool}...")
 
     try:
         canvas = get_canvas(test)
@@ -80,9 +80,9 @@ def enable_lti(canvas_id, tool, label=False, test=False):
 
         if tool_tab.visibility != "public":
             tool_tab.update(hidden=False, position=3)
-            print(f"\t* Enabled {tool}.")
+            print(f"\t* Enabled {tool_tab.label}.")
         else:
-            print(f"\t* {tool} already enabled for course.")
+            print(f"\t* {tool_tab.label} already enabled for course.")
     except Exception as error:
         print(f"\t* ERROR: Failed to enable {tool} ({error}).")
         canvas_logger.info(f"ERROR: Failed to enable {tool} for {canvas_id} ({error}).")
@@ -139,11 +139,21 @@ def bulk_create_canvas_sites(
     config=False,
     capacity=2,
     publish=False,
-    tools=["Course Materials @ Penn Libraries", "Panopto", "Zoom", "Gradescope"],
-    label=True,
+    tools={
+        "context_external_tool_139969": "Course Materials @ Penn Libraries",
+        "context_external_tool_90311": "Class Recordings",
+        "context_external_tool_231623": "Zoom",
+        "context_external_tool_132117": "Gradescope",
+    },
+    label=False,
     source_site=None,
     test=False,
 ):
+    if type(tools) == dict and label:
+        tools = [tool for tool in tools.values()]
+    elif type(tools) == dict:
+        tools = [tool for tool in tools.keys()]
+
     unrequested_courses = get_unrequested_courses(year_and_term)
 
     print(") Processing courses...")
