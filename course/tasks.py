@@ -153,12 +153,10 @@ def create_canvas_sites(test=False, verbose=True):
         return
 
     for request in requested_courses:
-        serialized = RequestSerializer(request)
-        additional_sections = []
-
         request.status = "IN_PROCESS"
         request.save()
-
+        serialized = RequestSerializer(request)
+        additional_sections = []
         course_requested = request.course_requested
 
         if verbose:
@@ -173,17 +171,18 @@ def create_canvas_sites(test=False, verbose=True):
                 course_requested.course_primary_subject.abbreviation
                 != course_requested.course_subject.abbreviation
             ):
-                pc = course_requested.primary_crosslist
+                primary_crosslist = course_requested.primary_crosslist
 
                 if course_requested.primary_crosslist:
-                    term = pc[-5:]
-                    section = pc[:-5][-3:]
-                    number = pc[:-5][:-3][-3:]
-                    subj = pc[:-5][:-6]
-                    section_name_code = f"{subj} {number}-{section} {term}"
+                    term = primary_crosslist[-5:]
+                    section = primary_crosslist[:-5][-3:]
+                    number = primary_crosslist[:-5][:-3][-3:]
+                    subject = primary_crosslist[:-5][:-6]
+                    section_name_code = f"{subject} {number}-{section} {term}"
                 else:
                     request.process_notes += "primary_crosslist not set,"
                     request.save()
+
                     return
             else:
                 section_name_code = (
@@ -193,13 +192,11 @@ def create_canvas_sites(test=False, verbose=True):
                     f" {course_requested.year}{course_requested.course_term}"
                 )
 
-            name_code = section_name_code
-
             if request.title_override:
-                name = f"{name_code} {request.title_override[:45]}"
+                name = f"{section_name_code} {request.title_override[:45]}"
                 section_name = f"{section_name_code}{request.title_override[:45]}"
             else:
-                name = f"{name_code} {course_requested.course_name}"
+                name = f"{section_name_code} {course_requested.course_name}"
                 section_name = f"{section_name_code} {course_requested.course_name}"
 
             sis_course_id = f"SRS_{course_requested.srs_format_primary()}"
