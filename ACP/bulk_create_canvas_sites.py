@@ -89,7 +89,7 @@ def enable_lti(canvas_id, tool, label=False, test=False):
 
 
 def copy_content(canvas_id, source_site, test=False):
-    print("\t> Copying course content from {source_site}...")
+    print(f"\t> Copying course content from {source_site}...")
 
     try:
         canvas = get_canvas(test)
@@ -146,7 +146,7 @@ def bulk_create_canvas_sites(
         "context_external_tool_132117": "Gradescope",
     },
     label=False,
-    source_site=None,
+    source_site=1599746,
     test=False,
 ):
     if type(tools) == dict and label:
