@@ -65,14 +65,18 @@ def request_course(course, copy_site):
     print("\t* Request complete.")
 
 
-def enable_lti(canvas_id, tool, test=False):
+def enable_lti(canvas_id, tool, label=False, test=False):
     print("\t> Enabling {tool}...")
 
     try:
         canvas = get_canvas(test)
         canvas_site = canvas.get_course(canvas_id)
         tabs = canvas_site.get_tabs()
-        tool_tab = next(filter(lambda tab: tab.id == tool, tabs), None)
+
+        if label:
+            tool_tab = next(filter(lambda tab: tab.label == tool, tabs), None)
+        else:
+            tool_tab = next(filter(lambda tab: tab.id == tool, tabs), None)
 
         if tool_tab.visibility != "public":
             tool_tab.update(hidden=False, position=3)
@@ -100,12 +104,13 @@ def copy_content(canvas_id, source_site, test=False):
         canvas_logger.info(f"ERROR: Failed to find site {canvas_id} ({error})")
 
 
-def config_sites(canvas_id, capacity, publish, tool, source_site, test):
+def config_site(canvas_id, capacity, publish, tools, source_site, label, test):
     if source_site:
         copy_content(canvas_id, source_site, test)
 
-    if tool:
-        enable_lti(canvas_id, tool, test)
+    if tools:
+        for tool in tools:
+            enable_lti(canvas_id, tool, label, test)
 
     config = {}
 
@@ -134,7 +139,8 @@ def bulk_create_canvas_sites(
     config=False,
     capacity=2,
     publish=False,
-    tool=None,
+    tools=["Course Materials @ Penn Libraries", "Panopto", "Zoom", "Gradescope"],
+    label=True,
     source_site=None,
     test=False,
 ):
@@ -169,7 +175,9 @@ def bulk_create_canvas_sites(
 
                 if config:
                     canvas_id = request.canvas_instance.canvas_id
-                    config_sites(canvas_id, capacity, publish, tool, source_site, test)
+                    config_site(
+                        canvas_id, capacity, publish, tools, source_site, label, test
+                    )
             except Exception as error:
                 print(f"\t* ERROR: Failed to create site. ({error})")
                 crf_logger.info(f"ERROR: Failed to create site for {course} ({error}).")
