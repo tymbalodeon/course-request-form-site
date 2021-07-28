@@ -140,6 +140,7 @@ def check_for_account(pennkey):
 @task()
 def create_canvas_sites(
     requested_courses=Request.objects.filter(status="APPROVED"),
+    sections=None,
     test=False,
     verbose=True,
 ):
@@ -281,15 +282,18 @@ def create_canvas_sites(
         else:
             namebit = course_requested.course_name
 
+        serialized.data["additonal_sections"] = serialized.data[
+            "additional_sections"
+        ].extend(sections)
+
         for section in serialized.data["additional_sections"]:
-            section_course = Course.objects.get(course_code=section)
-
-            if section_course.course_activity.abbr != "LEC":
-                namebit = section_course.course_activity.abbr
-
-            sis_section = f"SRS_{section_course.srs_format_primary()}"
-
             try:
+                section_course = Course.objects.get(course_code=section.course_code)
+
+                if section_course.course_activity.abbr != "LEC":
+                    namebit = section_course.course_activity.abbr
+
+                sis_section = f"SRS_{section_course.srs_format_primary()}"
                 additional_section = {"course_section": "", "instructors": ""}
                 additional_section[
                     "course_section"

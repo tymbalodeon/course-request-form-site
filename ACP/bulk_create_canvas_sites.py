@@ -73,7 +73,6 @@ def request_course(course, status="APPROVED", verbose=True):
     request.status = status
     request.save()
     course.save()
-
     if verbose:
         print("\t* Request complete.")
 
@@ -145,8 +144,13 @@ def bulk_create_canvas_sites(
                 print("\t> Requesting course...")
                 course_request = request_course(course)
 
+                print("\t> Finding course sections...")
+                sections = list(course.sections.all())[1:]
+
                 print("\t> Creating Canvas site...")
-                create_canvas_sites(course_request, test=test, verbose=False)
+                create_canvas_sites(
+                    course_request, sections=sections, test=test, verbose=False
+                )
 
                 print("\t> Confirming site creation...")
                 request = Request.objects.get(course_requested=course)
