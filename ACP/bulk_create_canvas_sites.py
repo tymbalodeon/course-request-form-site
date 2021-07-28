@@ -145,12 +145,19 @@ def bulk_create_canvas_sites(
                 course_request = request_course(course)
 
                 print("\t> Finding course sections...")
-                sections = list(course.sections.all())[1:]
+                sections = list(course.sections.all())
 
                 print("\t> Creating Canvas site...")
-                create_canvas_sites(
+                creation_error = create_canvas_sites(
                     course_request, sections=sections, test=test, verbose=False
                 )
+
+                if creation_error:
+                    print(f"\t> Aborting... (SECTION ALREADY EXISTS)")
+                    canvas_logger.info(
+                        f"ERROR: Failed to create main section for {course} (SECTION ALREADY EXISTS)"
+                    )
+                    continue
 
                 print("\t> Confirming site creation...")
                 request = Request.objects.get(course_requested=course)
