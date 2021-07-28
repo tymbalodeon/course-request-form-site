@@ -138,11 +138,13 @@ def check_for_account(pennkey):
 
 
 @task()
-def create_canvas_sites(test=False, verbose=True):
+def create_canvas_sites(
+    requested_courses=Request.objects.filter(status="APPROVED"),
+    test=False,
+    verbose=True,
+):
     if verbose:
         print(") Creating Canvas sites for requested courses...")
-
-    requested_courses = Request.objects.filter(status="APPROVED")
 
     if not requested_courses:
         if verbose:
