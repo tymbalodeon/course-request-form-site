@@ -57,7 +57,7 @@ from course.serializers import (
     UpdateLogSerializer,
     UserSerializer,
 )
-from course.tasks import create_canvas_site
+from course.tasks import create_canvas_sites
 from course.utils import datawarehouse_lookup, updateCanvasSites, validate_pennkey
 
 
@@ -1406,7 +1406,7 @@ def process_requests(request):
                 }
             ]
 
-        create_canvas_site()
+        create_canvas_sites()
 
         for obj in done["processed"]:
             req = Request.objects.get(course_requested=obj["course_code"])

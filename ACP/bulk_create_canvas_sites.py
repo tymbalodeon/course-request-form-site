@@ -20,23 +20,32 @@ def get_unrequested_courses(year_and_term, school_abbreviation):
     term = year_and_term[-1]
     year = year_and_term[:-1]
 
-    school = School.objects.get(abbreviation=school_abbreviation)
-
-    unrequested_courses = Course.objects.filter(
-        course_term=term,
-        year=year,
-        requested=False,
-        requested_override=False,
-        primary_crosslist="",
-        course_schools__visible=True,
-        course_schools=school,
-    )
+    if school_abbreviation:
+        school = School.objects.get(abbreviation=school_abbreviation)
+        unrequested_courses = Course.objects.filter(
+            course_term=term,
+            year=year,
+            requested=False,
+            requested_override=False,
+            primary_crosslist="",
+            course_schools__visible=True,
+            course_schools=school,
+        )
+    else:
+        unrequested_courses = Course.objects.filter(
+            course_term=term,
+            year=year,
+            requested=False,
+            requested_override=False,
+            primary_crosslist="",
+            course_schools__visible=True,
+        )
 
     total_unrequested = len(unrequested_courses)
 
     print(f"FOUND {total_unrequested} UNREQUESTED COURSES.")
 
-    return unrequested_courses
+    return list(unrequested_courses)
 
 
 def should_request(sis_id, test=False):
@@ -111,7 +120,15 @@ def bulk_create_canvas_sites(
     elif type(tools) == dict:
         tools = [tool for tool in tools.keys()]
 
-    unrequested_courses = get_unrequested_courses(year_and_term, school)
+    if not school or (school and type(school) == str):
+        unrequested_courses = get_unrequested_courses(year_and_term, school)
+    else:
+        unrequested_courses = list()
+
+        for abbreviation in school:
+            unrequested_courses.extend(
+                get_unrequested_courses(year_and_term, abbreviation)
+            )
 
     print(") Processing courses...")
 
