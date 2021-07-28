@@ -480,22 +480,18 @@ class Request(models.Model):
         ("SUBMITTED", "Submitted"),
         ("LOCKED", "Locked"),
     )
-    # The first element in each tuple is the actual value to be set on the model,
-    # and the second element is the human-readable name.
 
     course_requested = models.OneToOneField(
         Course, on_delete=models.CASCADE, primary_key=True
-    )  # once the course is deleted the request will be deleted too.
+    )
 
     # additional_sections = models.ForeignKey(Course,null=True,default=None,blank=True,related_name='sections')
     copy_from_course = models.CharField(
         max_length=100, null=True, default=None, blank=True
-    )  # previously content source
-    # this should be a list of courses they have rights too
-    # SuperUsers have access to all courses
+    )
     title_override = models.CharField(
         max_length=100, null=True, default=None, blank=True
-    )  # previously SRS title override
+    )
     additional_instructions = models.TextField(blank=True, default=None, null=True)
     admin_additional_instructions = models.TextField(
         blank=True, default=None, null=True
@@ -511,8 +507,6 @@ class Request(models.Model):
         blank=True,
     )
 
-    # NOTE! needs something for multisection course sites!
-
     status = models.CharField(
         max_length=20, choices=REQUEST_PROCESS_CHOICES, default="SUBMITTED"
     )
@@ -520,56 +514,51 @@ class Request(models.Model):
     updated = models.DateTimeField(auto_now=True)
     owner = models.ForeignKey(
         "auth.User", related_name="requests", on_delete=models.CASCADE
-    )  # should not delete when user is deleted
+    )
     masquerade = models.CharField(max_length=20, null=True)
     # additional_enrollments = models.ManyToManyField(AdditionalEnrollment,related_name='additional_enrollments',blank=True)
 
     class Meta:
-        ordering = ["-status", "-created"]  # ('created',)
-        # verbose_name = 'Site Request'
-        # verbose_name_plural = 'Site Requests'
+        ordering = ["-status", "-created"]
 
     def save(self, *args, **kwargs):
-        # some text
-        # print("saving")
-        # print("..",self.status,args,kwargs)
-        # print("(Model.py) Request self.pk",self.pk)
         super(Request, self).save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        # print("ohhh")
-        c = Course.objects.get(course_code=self.course_requested.course_code)
+        course = Course.objects.get(course_code=self.course_requested.course_code)
+        multi_section_courses = Course.objects.filter(
+            multisection_request=course.course_code
+        )
+        crosslisted_courses = Course.objects.filter(
+            crosslisted_request=course.course_code
+        )
 
-        multisection = Course.objects.filter(multisection_request=c.course_code)
-        crosslisted = Course.objects.filter(crosslisted_request=c.course_code)
-        if crosslisted:
-            for xc in crosslisted:
-                xc.crosslisted_request = None
-                xc.requested = False
-                xc.save()
-        if multisection:
-            for ms in multisection:
-                ms.multisection_request = None
-                ms.requested = False
-                ms.save()
-        print(c.requested)
+        if crosslisted_courses:
+            for crosslisted_course in crosslisted_courses:
+                crosslisted_course.crosslisted_request = None
+                crosslisted_course.requested = False
+                crosslisted_course.save()
+
+        if multi_section_courses:
+            for multi_section_course in multi_section_courses:
+                multi_section_course.multisection_request = None
+                multi_section_course.requested = False
+                multi_section_course.save()
+
         super(Request, self).delete()
-        c.requested = False
-        c.save()
-        print(c.requested)
+        course.requested = False
+        course.save()
 
-        if crosslisted:
-            for xc in crosslisted:
-                if c != xc:
-                    xc.requested = False
-                    xc.save()
-        if multisection:
-            for ms in multisection:
-                ms.requested = False
-                ms.save()
+        if crosslisted_courses:
+            for crosslisted_course in crosslisted_courses:
+                if course != crosslisted_course:
+                    crosslisted_course.requested = False
+                    crosslisted_course.save()
 
-    # def __str__(self):
-    #    return " \"%s\" site request" % ( self.course_requested.course_code)
+        if multi_section_courses:
+            for multi_section_course in multi_section_courses:
+                multi_section_course.requested = False
+                multi_section_course.save()
 
 
 class AdditionalEnrollment(models.Model):

@@ -137,28 +137,39 @@ def check_for_account(pennkey):
             pass
 
 
-@task()
-def create_canvas_site(test=False):
-    print(") Creating Canvas sites for requested courses...")
+def add_request_process_notes(message, request):
+    start = ", " if request.process_notes else ""
+    request.process_notes += f"{start}{message}"
+    request.save()
 
-    requested_courses = Request.objects.filter(status="APPROVED")
+
+@task()
+def create_canvas_sites(
+    requested_courses=Request.objects.filter(status="APPROVED"),
+    sections=None,
+    test=False,
+    verbose=True,
+):
+    if verbose:
+        print(") Creating Canvas sites for requested courses...")
 
     if not requested_courses:
-        print("SUMMARY")
-        print("- No requested courses found.")
-        print("FINISHED")
+        if verbose:
+            print("SUMMARY")
+            print("- No requested courses found.")
+            print("FINISHED")
+
         return
 
     for request in requested_courses:
-        serialized = RequestSerializer(request)
-        additional_sections = []
-
         request.status = "IN_PROCESS"
         request.save()
-
+        serialized = RequestSerializer(request)
+        additional_sections = []
         course_requested = request.course_requested
 
-        print(f") Creating Canvas site for {course_requested}...")
+        if verbose:
+            print(f") Creating Canvas site for {course_requested}...")
 
         account = find_account(
             course_requested.course_schools.canvas_subaccount, test=test
@@ -169,16 +180,17 @@ def create_canvas_site(test=False):
                 course_requested.course_primary_subject.abbreviation
                 != course_requested.course_subject.abbreviation
             ):
-                pc = course_requested.primary_crosslist
+                primary_crosslist = course_requested.primary_crosslist
+
                 if course_requested.primary_crosslist:
-                    term = pc[-5:]
-                    section = pc[:-5][-3:]
-                    number = pc[:-5][:-3][-3:]
-                    subj = pc[:-5][:-6]
-                    section_name_code = f"{subj} {number}-{section} {term}"
+                    term = primary_crosslist[-5:]
+                    section = primary_crosslist[:-5][-3:]
+                    number = primary_crosslist[:-5][:-3][-3:]
+                    subject = primary_crosslist[:-5][:-6]
+                    section_name_code = f"{subject} {number}-{section} {term}"
                 else:
-                    request.process_notes += "primary_crosslist not set,"
-                    request.save()
+                    add_request_process_notes(f"{primary_crosslist} not set", request)
+
                     return
             else:
                 section_name_code = (
@@ -188,13 +200,11 @@ def create_canvas_site(test=False):
                     f" {course_requested.year}{course_requested.course_term}"
                 )
 
-            name_code = section_name_code
-
             if request.title_override:
-                name = f"{name_code} {request.title_override[:45]}"
+                name = f"{section_name_code} {request.title_override[:45]}"
                 section_name = f"{section_name_code}{request.title_override[:45]}"
             else:
-                name = f"{name_code} {course_requested.course_name}"
+                name = f"{section_name_code} {course_requested.course_name}"
                 section_name = f"{section_name_code} {course_requested.course_name}"
 
             sis_course_id = f"SRS_{course_requested.srs_format_primary()}"
@@ -222,18 +232,20 @@ def create_canvas_site(test=False):
                     canvas_course.update(course=course)
                     already_exists = True
                 except Exception as error:
-                    request.process_notes += (
-                        "course site creation failed--check if it already exists,"
+                    add_request_process_notes(
+                        "course site creation failed--check if it already exists",
+                        request,
                     )
-                    request.save()
-                    print(f"\t- ERROR: failed to create site ({error})")
+
+                    if verbose:
+                        print(f"\t- ERROR: failed to create site ({error})")
+
                     return
 
             try:
                 canvas_course.update(course={"storage_quota_mb": 2000})
             except Exception:
-                request.process_notes += "course site quota not raised,"
-                request.save()
+                add_request_process_notes("course site quota not raised", request)
 
             if not already_exists:
                 try:
@@ -253,14 +265,18 @@ def create_canvas_site(test=False):
                     ] = course_requested.instructors.all()
                     additional_sections += [additional_section]
                 except Exception as error:
-                    request.process_notes += "failed to create main section,"
-                    request.process_notes += sys.exc_info()[0]
-                    request.save()
-                    print(f"\t- ERROR: failed to add section ({error})")
-                    return
+                    add_request_process_notes(f"failed to create main section", request)
+
+                    if verbose:
+                        print(f"\t- ERROR: failed to create main section ({error})")
+
+                    return "section already exists"
         else:
-            request.process_notes += "failed to locate Canvas Account,"
-            print("\t- ERROR: failed to locate Canvas Account")
+            add_request_process_notes("failed to locate Canvas Account", request)
+
+            if verbose:
+                print("\t- ERROR: failed to locate Canvas Account")
+
             return
 
         if request.title_override:
@@ -268,15 +284,18 @@ def create_canvas_site(test=False):
         else:
             namebit = course_requested.course_name
 
+        serialized.data["additonal_sections"] = serialized.data[
+            "additional_sections"
+        ].extend(sections)
+
         for section in serialized.data["additional_sections"]:
-            section_course = Course.objects.get(course_code=section)
-
-            if section_course.course_activity.abbr != "LEC":
-                namebit = section_course.course_activity.abbr
-
-            sis_section = f"SRS_{section_course.srs_format_primary()}"
-
             try:
+                section_course = Course.objects.get(course_code=section.course_code)
+
+                if section_course.course_activity.abbr != "LEC":
+                    namebit = section_course.course_activity.abbr
+
+                sis_section = f"SRS_{section_course.srs_format_primary()}"
                 additional_section = {"course_section": "", "instructors": ""}
                 additional_section[
                     "course_section"
@@ -292,9 +311,11 @@ def create_canvas_site(test=False):
                 additional_section["instructors"] = section_course.instructors.all()
                 additional_sections += [additional_section]
             except Exception as error:
-                request.process_notes += "failed to create section,"
-                request.save()
-                print(f"\t- ERROR: failed to create section ({error})")
+                add_request_process_notes(f"failed to create section", request)
+
+                if verbose:
+                    print(f"\t- ERROR: failed to create section ({error})")
+
                 return
 
         enrollment_types = {
@@ -322,12 +343,13 @@ def create_canvas_site(test=False):
                             f"{instructor.first_name} {instructor.last_name}",
                             test=test,
                         )
-                        request.process_notes += (
-                            f"created account for user: {instructor.username},"
+                        add_request_process_notes(
+                            f"created account for user: {instructor.username}", request
                         )
                     except Exception:
-                        request.process_notes += (
-                            f"failed to create account for user: {instructor.username},"
+                        add_request_process_notes(
+                            f"failed to create account for user: {instructor.username}",
+                            request,
                         )
 
                 try:
@@ -340,8 +362,8 @@ def create_canvas_site(test=False):
                         },
                     )
                 except Exception:
-                    request.process_notes += (
-                        f"failed to add user: {instructor.username},"
+                    add_request_process_notes(
+                        f"failed to add user: {instructor.username}", request
                     )
         additional_enrollments = serialized.data["additional_enrollments"]
 
@@ -358,12 +380,13 @@ def create_canvas_site(test=False):
                         user_crf.email,
                         user_crf.first_name + user_crf.last_name,
                     )
-                    request.process_notes += (
-                        f"created account for user: {instructor.username},"
+                    add_request_process_notes(
+                        f"created account for user: {instructor.username}", request
                     )
                 except Exception:
-                    request.process_notes += (
-                        f"failed to create account for user: {instructor.username},"
+                    add_request_process_notes(
+                        f"failed to create account for user: {instructor.username}",
+                        request,
                     )
 
             if role == "LIB" or role == "librarian":
@@ -378,7 +401,7 @@ def create_canvas_site(test=False):
                         },
                     )
                 except Exception:
-                    request.process_notes += f"failed to add user: {user},"
+                    add_request_process_notes(f"failed to add user: {user}", request)
             else:
                 try:
                     canvas_course.enroll_user(
@@ -390,7 +413,7 @@ def create_canvas_site(test=False):
                         },
                     )
                 except Exception:
-                    request.process_notes += f"failed to add user: {user},"
+                    add_request_process_notes(f"failed to add user: {user}", request)
 
         if serialized.data["reserves"]:
             try:
@@ -405,17 +428,21 @@ def create_canvas_site(test=False):
                 tab.update(hidden=False)
 
                 if tab.visibility != "public":
-                    request.process_notes += "failed to configure ARES,"
+                    add_request_process_notes("failed to configure ARES", request)
             except Exception as error:
-                print(f"\t- ERROR: {error}")
-                request.process_notes += "failed to try to configure ARES,"
+                if verbose:
+                    print(f"\t- ERROR: {error}")
+
+                add_request_process_notes("failed to try to configure ARES", request)
 
         if serialized.data["copy_from_course"]:
             try:
-                print(
-                    "\t* Copying course data from course id"
-                    f" {serialized.data['copy_from_course']}..."
-                )
+                if verbose:
+                    print(
+                        "\t* Copying course data from course id"
+                        f" {serialized.data['copy_from_course']}..."
+                    )
+
                 source_course_id = serialized.data["copy_from_course"]
                 content_migration = canvas_course.create_content_migration(
                     migration_type="course_copy_importer",
@@ -426,11 +453,14 @@ def create_canvas_site(test=False):
                     content_migration.get_progress == "queued"
                     or content_migration.get_progress == "running"
                 ):
-                    print("\t* Migration running...")
+                    if verbose:
+                        print("\t* Migration running...")
+
                     time.sleep(8)
 
-                print("\t- MIGRATION COMPLETE")
-                print("\t* Deleting Zoom events...")
+                if verbose:
+                    print("\t- MIGRATION COMPLETE")
+                    print("\t* Deleting Zoom events...")
 
                 canvas = get_canvas(test)
                 course_string = f"course_{canvas_course.id}"
@@ -455,10 +485,12 @@ def create_canvas_site(test=False):
                             " relevant"
                         )
                     )
-                    print(f"\t- Event '{deleted}' deleted.")
+                    if verbose:
+                        print(f"\t- Event '{deleted}' deleted.")
 
             except Exception as error:
-                print(f"\t- ERROR: {error}")
+                if verbose:
+                    print(f"\t- ERROR: {error}")
 
         instructors = canvas_course.get_enrollments(type="TeacherEnrollment")._elements
         canvas_id = canvas_course.id
@@ -486,6 +518,9 @@ def create_canvas_site(test=False):
 
         request.status = "COMPLETED"
         request.save()
-        print(f"- Canvas site successfully created: {site}.")
 
-    print("FINISHED")
+        if verbose:
+            print(f"- Canvas site successfully created: {site}.")
+
+    if verbose:
+        print("FINISHED")

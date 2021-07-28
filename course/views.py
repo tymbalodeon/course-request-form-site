@@ -1,48 +1,32 @@
 import datetime
 import json
-import time
 import urllib.parse
 from configparser import ConfigParser
+from os import listdir
 
+from canvas import api as canvas_api
 from django.contrib import messages
-from django.contrib.auth import views as auth_views
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.auth.models import User
-from django.core.files import File
-from django.core.mail import EmailMessage
-from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
+from django.contrib.auth.views import redirect_to_login
 from django.db.models import Q
-from django.http import HttpResponse, HttpResponseRedirect
-from django.http.request import QueryDict
-from django.shortcuts import get_object_or_404, redirect, render
-from django.template.loader import get_template
-from django.urls import path
-from django.utils.datastructures import MultiValueDict
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
-from django.views.generic import TemplateView
-from django_celery_beat.models import CrontabSchedule, IntervalSchedule, PeriodicTask
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import redirect, render
+from django_celery_beat.models import PeriodicTask
 from django_filters import rest_framework as filters
-from rest_framework import generics, permissions, status, viewsets
+from OpenData import library
+from rest_framework import permissions, serializers, status, viewsets
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import (
-    SAFE_METHODS,
-    BasePermission,
-    IsAdminUser,
-    IsAuthenticated,
-    IsAuthenticatedOrReadOnly,
-)
-from rest_framework.renderers import JSONRenderer, TemplateHTMLRenderer
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.utils import html
-from rest_framework.utils.urls import remove_query_param, replace_query_param
-from rest_framework.views import APIView
+from rest_framework.views import APIView, exception_handler
 
-from canvas import api as canvas_api
-from course import email_processor, utils, views
+from course import email_processor
 from course.forms import (
     CanvasSiteForm,
     ContactForm,
@@ -50,34 +34,31 @@ from course.forms import (
     SubjectForm,
     UserForm,
 )
-from course.models import *  # Course, Notice, Request, School, Subject, AutoAdd
-from course.permissions import IsOwnerOrReadOnly
-from course.serializers import *  # CourseSerializer, UserSerializer, NoticeSerializer, RequestSerializer, SchoolSerializer, SubjectSerializer, AutoAddSerializer
-from OpenData import library
-
-"""
-For more 'Detailed descriptions, with full methods and attributes, for each
-of Django REST Framework's class-based views and serializers'see: http://www.cdrf.co/
-
-"""
-
-# self.request.QUERY_PARAMS.get('appKey', None)
-
-
-######### API METHODS ########
-# PUT/PATCH -> PARTIAL UPDATE
-# POST -> CREATE
-
-# for more on viewsets see: https://www.django-rest-framework.org/api-guide/viewsets/
-# (slightly helpful ) or see: http://polyglot.ninja/django-rest-framework-viewset-modelviewset-router/
-
-#######################################
-########## ERROR VIEWS ###############
-######################################
-
-from django.shortcuts import redirect, render
-from rest_framework import status
-from rest_framework.views import exception_handler
+from course.models import (
+    Activity,
+    AutoAdd,
+    CanvasSite,
+    Course,
+    Notice,
+    Profile,
+    Request,
+    School,
+    Subject,
+    UpdateLog,
+)
+from course.serializers import (
+    AutoAddSerializer,
+    CanvasSiteSerializer,
+    CourseSerializer,
+    NoticeSerializer,
+    RequestSerializer,
+    SchoolSerializer,
+    SubjectSerializer,
+    UpdateLogSerializer,
+    UserSerializer,
+)
+from course.tasks import create_canvas_sites
+from course.utils import datawarehouse_lookup, updateCanvasSites, validate_pennkey
 
 
 def emergency_redirect(request):
@@ -88,7 +69,7 @@ def emergency_redirect(request):
 def custom_exception_handler(exc, context):
     # Call REST framework's default exception handler first,
     # to get the standard error response.
-    ##prsnt("helloooo","\n",exc,"\n",context)
+    # prsnt("helloooo","\n",exc,"\n",context)
     response = exception_handler(exc, context)
     # response = render({},'errors/403.html')
 
@@ -107,29 +88,27 @@ def custom_exception_handler(exc, context):
 
 class TestUserProfileCreated(UserPassesTestMixin):
     def test_func(self):
-        # this is to test that for each new user a profile exists for them
-        # the User object is automatically created with the shib login
-        # for more info please refer to https://ccbv.co.uk/projects/Django/1.9/django.contrib.auth.mixins/UserPassesTestMixin/
-
-        print("testing user")
         user = User.objects.get(username=self.request.user.username)
+
         try:
-            profile = user.profile
-            return True
-        except:  # profile doesnt exist -- first time logging in and was never a masquerade so all of their info must be filled out
+            if user.profile:
+                return True
+        except Exception:
             userdata = datawarehouse_lookup(PPENN_KEY=user.username)
-            if userdata:  # if no result userdata== False
+
+            if userdata:
                 first_name = userdata["firstname"].title()
                 last_name = userdata["lastname"].title()
                 user.update(
                     first_name=first_name, last_name=last_name, email=userdata["email"]
                 )
                 Profile.objects.create(user=user, penn_id=userdata["penn_id"])
+
                 return True
             else:
                 return False
+
         return False
-        # return self.request.user == self.post.owner
 
 
 class MixedPermissionModelViewSet(
@@ -222,65 +201,32 @@ class CourseFilter(filters.FilterSet):
 
 
 class CourseViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
-    """
-    This viewset automatically provides `list`, `create`, `retrieve`,
-    `update` and `destroy` actions. see http://www.cdrf.co/3.9/rest_framework.viewsets/ModelViewSet.html
-    """
-
-    # # TODO:
-    # [ ] create and test permissions
-    # [x] on creation of request instance mutate course instance so course.requested = True
-    # [x ] ensure POST is only setting masquerade
     lookup_field = "course_code"
-
     queryset = Course.objects.filter(~Q(course_subject__visible=False)).exclude(
         course_schools__visible=False,
-    )  # this should be filtered by the
+    )
     serializer_class = CourseSerializer
-    # permission_classes = (permissions.IsAuthenticatedOrReadOnly,IsOwnerOrReadOnly,)
-    # filter_backends = ( SearchFilter)
     search_fields = (
         "$course_name",
         "$course_code",
     )
     filterset_class = CourseFilter
 
-    # for permission_classes_by_action see: https://stackoverflow.com/questions/35970970/django-rest-framework-permission-classes-of-viewset-method
     permission_classes_by_action = {
         "create": [IsAdminUser],
         "list": [IsAuthenticated],
-        "retrieve": [
-            IsAuthenticated
-        ],  # ,IsAdminUser], # it seems like it defaults to the most strict case
+        "retrieve": [IsAuthenticated],
         "update": [IsAdminUser],
         "partial_update": [IsAdminUser],
         "delete": [IsAdminUser],
     }
 
     def perform_create(self, serializer):
-        # print("CourseViewSet.perform_create: request.POST", self.request.POST)
-        # print("CourseViewSet.perform_create: request.meta", self.request.META) # could use 'HTTP_REFERER': 'http://127.0.0.1:8000/courses/'
-        # print("CourseViewSet.perform_create: request.query_params", self.request.query_params)
-        # print('CourseViewSet.perform_create lookup field', self.lookup_field)
-        # print("CourseViewSet.perform_create", self.request.data)
         serializer.save(owner=self.request.user)
-
-    # below allows for it to be passed to the template !!!!
-    # I AM NOT SURE IF THIS IS OKAY WITH AUTHENTICATION
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-        # print(args,kwargs)
-        # print("DATA",request.query_params)
-        # print("course query_set", queryset)
         page = self.paginate_queryset(queryset)
-
-        ##print(",,",self.filter_backends[0].get_filterset(request,self.get_queryset(),self))
-        # for backend in list(self.filter_backends):
-        # django_filters.rest_framework.backends.DjangoFilterBackend - https://github.com/carltongibson/django-filter/blob/master/django_filters/rest_framework/backends.py
-        ##print("...",backend.filterset_base.form) # <class 'django_filters.rest_framework.filterset.FilterSet'>
-        ##print("...1",backend.filterset_base.get_form_class)
-        ##print("...1",backend.filterset_base.filters)
 
         if page is not None:
             serializer = self.get_serializer(
@@ -305,22 +251,10 @@ class CourseViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
                     "associated_request",
                 ],
             )
-            response = self.get_paginated_response(
-                serializer.data
-            )  # http://www.cdrf.co/3.9/rest_framework.viewsets/ModelViewSet.html#paginate_queryset
-            # print("template_name",response.template_name)
+            response = self.get_paginated_response(serializer.data)
+
             if request.accepted_renderer.format == "html":
                 response.template_name = "course_list.html"
-                # print("pp",request.get_full_path())
-                # print("kwargs",kwargs)
-                # print("args",args)
-
-                # https://github.com/encode/django-rest-framework/blob/master/rest_framework/utils/urls.py
-
-                print("filterfield", CourseFilter)
-                print("filterfield", CourseFilter.Meta.fields)
-                # print('request.query_params', request.query_params.keys())
-
                 response.data = {
                     "results": response.data,
                     "paginator": self.paginator,
@@ -331,73 +265,41 @@ class CourseViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
                     "autocompleteSubject": SubjectForm(),
                     "style": {"template_pack": "rest_framework/vertical/"},
                 }
-            ##print("yeah ok1",response.items())
-            ##print("o")
+
             return response
-        """
-        serializer = self.get_serializer(queryset, many=True)
-        response = Response(serializer.data)
-        if request.accepted_renderer.format == 'html':
-            response.template_name = 'course_list.html'
-            response.data = {'results': response.data}
-        #print("yeah ok2",response.items())
-        return response
-        """
 
-    # @method_decorator(cache_page(60*60*1))
     def retrieve(self, request, *args, **kwargs):
-        print("Start Execution : ", end="")
-        print(time.ctime())
-        # print('CourseViewSet.retrieve lookup field', self.lookup_field)
         response = super(CourseViewSet, self).retrieve(request, *args, **kwargs)
-        if request.accepted_renderer.format == "html":
-            print("bye george(detail)!\n", response.data)
-            course_instance = self.get_object()
-            # print("iii",course_instance)
-            # okay so at this point none of this is working soe
 
-            # should check if requested and if so get that request obj! is this efficient ??
-            if course_instance.requested == True:
-                # course detail needs form history
-                print("we here")
-                # NOTE there must be an associated course and if there isnt... we r in trouble!
+        if request.accepted_renderer.format == "html":
+            course_instance = self.get_object()
+
+            if course_instance.requested is True:
+
                 if course_instance.multisection_request:
                     request_instance = ""
                 else:
                     request_instance = course_instance.get_request()
-                ##print("hfaweuifh ",request_instance)
-                this_form = ""  # RequestSerializer()
-
-            else:  # no request has been created yet
-                #######
-                ##  Here is a hack that will allow SAS, SEAS, Design, BGS, SP2, Nursing & PSOM to have Reserves already toggled
-                ######
-                print(
-                    "course_instance.course_schools.abbreviation",
-                    course_instance.course_schools.abbreviation,
+                this_form = ""
+            else:
+                reserves = (
+                    True
+                    if course_instance.course_schools.abbreviation
+                    in [
+                        "SAS",
+                        "SEAS",
+                        "FA",
+                        "PSOM",
+                        "SP2",
+                    ]
+                    else False
                 )
-                if course_instance.course_schools.abbreviation in [
-                    "SAS",
-                    "SEAS",
-                    "FA",
-                    "PSOM",
-                    "SP2",
-                ]:
-                    print("we would enable here")
-                    this_form = RequestSerializer(
-                        data={"course_requested": self.get_object(), "reserves": True}
-                    )
-                else:
-                    this_form = RequestSerializer(
-                        data={"course_requested": self.get_object()}
-                    )
-                # print("ok")
+                this_form = RequestSerializer(
+                    data={"course_requested": self.get_object(), "reserves": reserves}
+                )
                 this_form.is_valid()
-                print("this_form", this_form.data)
                 request_instance = ""
-                print("Stop Execution : ", end="")
-                print(time.ctime())
-            print("I DIDNT THINK WE'D GET HERE")
+
             return Response(
                 {
                     "course": response.data,
@@ -409,9 +311,9 @@ class CourseViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
                 },
                 template_name="course_detail.html",
             )
-        print("Stop Execution : ", end="")
-        print(time.ctime())
-        return response
+        else:
+
+            return response
 
 
 class RequestFilter(filters.FilterSet):
@@ -445,17 +347,6 @@ class RequestFilter(filters.FilterSet):
 
 
 class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
-    """
-    This viewset automatically provides `list`, `create`, `retrieve`,
-    `update` and `destroy` actions. see http://www.cdrf.co/3.9/rest_framework.viewsets/ModelViewSet.html
-
-    the function custom permissions handles the ... custom permissions
-    """
-
-    # # TODO:
-    # [ ] create and test permissions
-    # [x] on creation of request instance mutatate course instance so courese.requested = True
-    # [ ] ensure POST is only setting masquerade
     queryset = Request.objects.all()
     serializer_class = RequestSerializer
     filterset_class = RequestFilter
@@ -464,7 +355,6 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         "$course_requested__course_code",
     ]
     permission_classes = (permissions.IsAuthenticated,)
-    #                      IsOwnerOrReadOnly,)
     permission_classes_by_action = {
         "create": [IsAuthenticated],
         "list": [IsAuthenticated],
@@ -475,57 +365,28 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
     }
 
     def create(self, request, *args, **kwargs):
-        """
-        functions like a signal
-            whenever a request is created this function updates the course instance and updates the crosslisted courses.
-        """
-        # putting this function inside create because it should only be accessible here.
-        # there does not need to be this in the delete of a request...
         def update_course(self, course):
-            # course.requested = True
             course.save()
+
             if course.crosslisted:
                 for crosslisted in course.crosslisted.all():
-
-                    # crosslisted.requested = True
                     crosslisted.request = course.request
-                    # print("crosslisted.request , course.request",crosslisted.request , course.request)
                     crosslisted.save()
-            # print("-",course.course_code, course.requested)
-            # get crosslisted courses
+
             crosslisted = course.crosslisted
-            ##print(crosslisted,"help me!!!")
-
-        """
-        Currently this function creates Request instances made from the UI view and the api view
-        Therefore there needs to be diambiguation that routes to the UI list view or the api list view
-        after creation. Since the POST action is always made to the /api/ endpoint i cannot check what
-        the accepted_renderer.format is b/c it will always be api.
-            To do this I am tryint to pass a query_param with the UI POST action
-            however this may not be the best method perhaps something that has to do with
-            sessions would be a better and safer implementation.
-        """
-
-        print("views.py in create: request.data", request.data)
-        # setting masquerade variable for later use
 
         try:
             masquerade = request.session["on_behalf_of"]
         except KeyError:
             masquerade = ""
-        # print("Request create; masqueraded as:", masquerade)
 
-        course = Course.objects.get(
-            course_code=request.data["course_requested"]
-        )  # get Course instance
+        course = Course.objects.get(course_code=request.data["course_requested"])
         instructors = course.get_instructors()
+
         if instructors == "STAFF":
             instructors = None
-        print("course instructors", instructors)
 
-        # CHECK PERMISSIONS custom_permissions(request,request_obj,masquerade,instructors)
-        permission = self.custom_permissions(None, masquerade, instructors)
-        print("permission, ", permission)
+        self.custom_permissions(None, masquerade, instructors)
 
         additional_enrollments_partial = html.parse_html_list(
             request.data, prefix="additional_enrollments"
@@ -533,115 +394,85 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         additional_sections_partial = html.parse_html_list(
             request.data, prefix="additional_sections"
         )
+        data = request.data.dict()
 
-        print(
-            "request.data, data to create!",
-            request.data,
-            additional_enrollments_partial,
-        )
-        d = request.data.dict()
-        # check if we are updating
         if additional_enrollments_partial or additional_sections_partial:
             if additional_enrollments_partial:
                 final_add_enroll = clean_custom_input(additional_enrollments_partial)
-                # print(additional_enrollments_partial.dict())
-                d[
-                    "additional_enrollments"
-                ] = final_add_enroll  # [{'user':'molly','role':'DES'}]})
+                data["additional_enrollments"] = final_add_enroll
             else:
-                d["additional_enrollments"] = []
+                data["additional_enrollments"] = []
             if additional_sections_partial:
                 final_add_sects = clean_custom_input(additional_sections_partial)
-                print("final_add_sects", final_add_sects)
-                d["additional_sections"] = [d["course_code"] for d in final_add_sects]
+                data["additional_sections"] = [
+                    data["course_code"] for data in final_add_sects
+                ]
             else:
-                d["additional_sections"] = []
-            serializer = self.get_serializer(data=d)
-            print("(create) serializer.initial_data", serializer.initial_data)
-            # request.data['additional_enrollments'] = additional_enrollments_partial
-
+                data["additional_sections"] = []
+            serializer = self.get_serializer(data=data)
         else:
             data = dict(
                 [
                     (x, y)
-                    for x, y in d.items()
+                    for x, y in data.items()
                     if not x.startswith("additional_enrollments")
                     or x.startswith("additional_sections")
                 ]
             )
-            print("data", data)
             data["additional_enrollments"] = []
             data["additional_sections"] = []
-            ####### THIS IS THE RESERVES HACK #########
+
             if "view_type" in request.data:
                 if request.data["view_type"] == "UI-course-list":
-                    ##  Here is a hack that will allow SAS, SEAS, Design, BGS, SP2, Nursing & PSOM to have Reserves already toggled
-                    print(
-                        "course_instance.course_schools.abbreviation",
-                        course.course_schools.abbreviation,
-                    )
-                    if course.course_schools.abbreviation in [
+                    data["reserves"] = course.course_schools.abbreviation in [
                         "SAS",
                         "SEAS",
                         "FA",
                         "PSOM",
                         "SP2",
-                    ]:
-                        print("we would enable here")
-                        data["reserves"] = True
+                    ]
 
-            print("data", data)
             serializer = self.get_serializer(data=data)
 
-        # serializer = self.get_serializer(data=request.data)
         serializer.is_valid()
+
         if not serializer.is_valid():
-            # print(serializer.errors)
-            # potentially uncomment next line...
-            # (serializer.errors)
             messages.add_message(request, messages.ERROR, serializer.errors)
+
             raise serializers.ValidationError(serializer.errors)
 
         serializer.validated_data["masquerade"] = masquerade
-        print("testing !")
-        # serializer.validated_data['additional_enrollments'] = None
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
 
-        # updates the course instance #
-        course = Course.objects.get(
-            course_code=request.data["course_requested"]
-        )  # get Course instance
+        course = Course.objects.get(course_code=request.data["course_requested"])
         update_course(self, course)
-        # this allow for the redirect to the UI and not the API endpoint. 'view_type' should be defined in the form that submits this request
-        # the following should have redirect pages which say something like "you have created X see item, go back to list"
+
         if "view_type" in request.data:
             if request.data["view_type"] == "UI-course-list":
                 return redirect("UI-course-list")
+
             if request.data["view_type"] == "home":
                 return redirect("home")
+
             if request.data["view_type"] == "UI-request-detail":
-                # return Response({'course':course},template_name='request_success.html')
                 return redirect(
                     "UI-request-detail-success",
                     pk=course.course_code,
                 )
+
         return Response(
             serializer.data, status=status.HTTP_201_CREATED, headers=headers
         )
 
     def perform_create(self, serializer):
-        print("Request perform_create")
-
         serializer.save(owner=self.request.user)
-        # serializer.save(masquerade="test")# NOTE fix this!
 
     def list(self, request, *args, **kwargs):
-        # print('self.lookup_field', self.lookup_field)
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
-        if page is not None:
 
+        if page is not None:
             serializer = self.get_serializer(
                 page,
                 many=True,
@@ -654,102 +485,71 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
                     "course_requested",
                 ],
             )
-            # print(";",serializer.data)
-            response = self.get_paginated_response(
-                serializer.data
-            )  # http://www.cdrf.co/3.9/rest_framework.viewsets/ModelViewSet.html#paginate_queryset
-            # print("template_name",response.template_name)
+            response = self.get_paginated_response(serializer.data)
+
             if request.accepted_renderer.format == "html":
                 response.template_name = "request_list.html"
-                # print("template_name",response.template_name)
                 response.data = {
                     "results": response.data,
                     "paginator": self.paginator,
                     "filter": RequestFilter,
                     "autocompleteUser": UserForm(),
                 }
-            # print("request.accepted_renderer.format",request.accepted_renderer.format)
+
             return response
 
     def custom_permissions(self, request_obj, masquerade, instructors):
-        """
-        This should handle both creating and retrieving
-        Keep in mind that instructors can be blank.
-        Here 403 errors will be raised
-        """
-
-        # print("masquerade: ", masquerade)
-        if request_obj:
-            pass
-
         if self.request.user.is_staff:
             return True
 
         if self.request.method == "GET":
-            # scenario - we are asking to see a request
-            # user or masq is in the Request Instance
-            # if the user is the owner of the request obj or the listed masquerade
             if not masquerade:
-                # print("no masq set")
                 if (
                     self.request.user.username == request_obj["owner"]
                     or self.request.user.username == request_obj["masquerade"]
                 ):
-                    ##print("")
                     return True
                 else:
-                    # print("raising error1")
                     raise PermissionDenied(
                         {"message": "You don't have permission to access"}
                     )
+
                     return False
 
-            # if the current masquerade is the owner or the masquerade of the request.
             elif (
                 masquerade == request_obj["owner"]
                 or masquerade == request_obj["masquerade"]
             ):
                 return True
             else:
-                # print("raising error2")
                 raise PermissionDenied(
                     {"message": "You don't have permission to access"}
                 )
+
                 return False
 
         if self.request.method == "POST":
-            print("in post perm check")
-            # scenario - we are asking to create a request from a course, request_obj=None
-            if instructors:  # there are instructors
-                print("we have intsructors")
+            if instructors:
                 if self.request.user.username in instructors:
-                    # print("self.request.user.username in instructors: ", self.request.user.username, "in ", instructors, "==",self.request.user.username in instructors)
-                    # ("masquerade in instructors: ", masquerade," in ", instructors, "== ", masquerade in instructors)
                     return True
                 elif masquerade and masquerade in instructors:
                     return True
                 else:
-                    # print("raising error3")
                     raise PermissionDenied(
                         {"message": "You don't have permission to access"}
                     )
+
                     return False
-            # no instructors then anyone can create a request for it
             else:
-                # print("no instructors then anyone can create a request for it")
                 return True
         else:
-            # print("OHH BUDY WE HAVE A PROBLEM")
             return False
 
-    def check_request_update_permissions(request, response_data):
+    def check_request_update_permissions(self, request, response_data):
         request_status = response_data["status"]
         request_owner = response_data["owner"]
-        request_masquerade = response_data["masquerade"]  #
-        print("request_masquerade", request_masquerade)
-        print("request_status", request_status)
-        print("request_owner", request_owner)
-        # owner is also considered masquerade
+        request_masquerade = response_data["masquerade"]
+
         if request_status == "SUBMITTED":
             permissions = {
                 "staff": ["lock", "cancel", "edit", "create"],
@@ -766,86 +566,42 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         elif request_status == "COMPLETED":
             permissions = {"staff": [""], "owner": [""]}
         else:
-            permissions = {"staff": [""], "owner": [""]}  # throw error!???
-
-        # permission - 'create' pushes the request into the approved queue to soon be IN_PROCESS
-        # permission - 'unlock' sets it as submitted again
+            permissions = {"staff": [""], "owner": [""]}
 
         if request.session["on_behalf_of"]:
-            # you have you're masq set
             current_masquerade = request.session["on_behalf_of"]
-            print("request.session['on_behalf_of']", request.session["on_behalf_of"])
+
             if current_masquerade == request_owner:
                 return permissions["owner"]
 
-        # else:
         if request.user.is_staff:
             return permissions["staff"]
 
-        # they own or was submitted on their behalf
-        print(
-            "request.user.username",
-            request.user.username,
-            type(request.user.username),
-            request_owner,
-            type(request_owner),
-            request_owner == request.user.username,
-        )
         if request.user.username == request_owner or (
             request.user.username == request_masquerade and request_masquerade != ""
         ):
-            print("yeahh buddy", request.user.username)
             return permissions["owner"]
-        #
-        print("no permissions case")
+
         return ""
 
     def retrieve(self, request, *args, **kwargs):
-        """
-        can retrieve for /requests/<COURSE_CODE>/ or /requests/<COURSE_CODE/edit
-        """
-        # print("ok in retrieve self,,",self.request.session.get('on_behalf_of','None'))
-        # print("ok in ret,,", request.session.get('on_behalf_of','None'))
-        # print("Request.retrieve")
-        # print("request.data",request.data)
-        # print("request.resolver_match.url_name",request.resolver_match.url_name)
-
         response = super(RequestViewSet, self).retrieve(request, *args, **kwargs)
-        # print("response",response.data)
         if request.resolver_match.url_name == "UI-request-detail-success":
             return Response(
                 {"request_instance": response.data},
                 template_name="request_success.html",
             )
 
-        # CHECK PERMISSIONS custom_permissions(request_obj, current_masquerade,instructors)
-        obj_permission = self.custom_permissions(
-            response.data,
-            request.session.get("on_behalf_of", "None"),
-            response.data["course_info"]["instructors"],
-        )
-        # print("permission, ", obj_permission)
-
         if request.accepted_renderer.format == "html":
-            print("bye george(UI-request-detail)!\n", response.data)
-            # {'owner':instance.owner.username,'masquerade':instance.masquerade,'status':instance.status}
             permissions = RequestViewSet.check_request_update_permissions(
                 request, response.data
             )
-            print("request permissions", permissions)
+
             if request.resolver_match.url_name == "UI-request-detail-edit":
-                # if 'edit' in request.path.split('/') : # this is possibly the most unreliable code ive ever written
-                # we want the edit form
-                # CHECK PERMISSIONS -> must be creator and not be masquerading as creator
-                # CHECK IF request status is submitted ( for requestor ) or submitted/locked( for admin)
-                ##print("object",self.get_object())
                 here = RequestSerializer(
                     self.get_object(), context={"request": request}
                 )
 
-                ##print(here.title_override)
-                ##print("RequestSerializer(response.data)",here)
-                print("request_form", here, here.data)
                 return Response(
                     {
                         "request_instance": response.data,
@@ -855,8 +611,7 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
                         "style": {"template_pack": "rest_framework/vertical/"},
                     },
                     template_name="request_detail_edit.html",
-                )  # data={'course_requested':response.data['course_requested']},partial_update=True
-            # else we are creating the object?
+                )
 
             return Response(
                 {"request_instance": response.data, "permissions": permissions},
@@ -865,74 +620,46 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         return response
 
     def destroy(self, request, *args, **kwargs):
-        # print("OH MY GOLLY GEEE we r deleteing a request")
         instance = self.get_object()
-        # Must get Course and set .request to true
-        course = Course.objects.get(
-            course_code=instance.course_requested
-        )  # get Course instance
-        # course.requested = False
+        course = Course.objects.get(course_code=instance.course_requested)
         course.save()
         self.perform_destroy(instance)
+
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def post(self, request, *args, **kwargs):
-        # if request.user.is_authenticated()
-        # need to check if the post is for masquerade
-        # '' is different than None ... if the key isnt present the .get() returns None
-        """
-        if request.data.get('on_behalf_of')=='':
-            #print(request.get_full_path())
-            #print("ok self,,",self.request.session.get('on_behalf_of','None'))
-            #print("ok no self,,",request.session.get('on_behalf_of','None'))
-            set_session(request)
-            return redirect(request.get_full_path())
-        """
+        pass
 
     def update(self, request, *args, **kwargs):
-        print("in update")
-
-        partial = kwargs.pop("partial", False)  # see if partial
-        print("partial", partial)
-        instance = self.get_object()  # get request to update
+        partial = kwargs.pop("partial", False)
+        instance = self.get_object()
         additional_enrollments_partial = html.parse_html_list(
             request.data, prefix="additional_enrollments"
         )
         additional_sections_partial = html.parse_html_list(
             request.data, prefix="additional_sections"
         )
+        data = request.data.dict()
 
-        print(
-            "request.data, data to create!",
-            request.data,
-            additional_enrollments_partial,
-        )
-        d = request.data.dict()
-        # check if we are updating
         if additional_enrollments_partial or additional_sections_partial:
             if additional_enrollments_partial:
                 final_add_enroll = clean_custom_input(additional_enrollments_partial)
-                print("additional_enrollments_partial", additional_enrollments_partial)
-                d[
-                    "additional_enrollments"
-                ] = final_add_enroll  # [{'user':'molly','role':'DES'}]})
+                data["additional_enrollments"] = final_add_enroll
             else:
-                d["additional_enrollments"] = []
+                data["additional_enrollments"] = []
             if additional_sections_partial:
                 final_add_sects = clean_custom_input(additional_sections_partial)
-                print("final_add_sects", final_add_sects)
-                d["additional_sections"] = [d["course_code"] for d in final_add_sects]
+                data["additional_sections"] = [
+                    data["course_code"] for data in final_add_sects
+                ]
             else:
-                d["additional_sections"] = []
-            # d['owner']=self.request.user
-            serializer = self.get_serializer(instance, data=d, partial=True)
-            print("(create) serializer.initial_data", serializer.initial_data)
-            # request.data['additional_enrollments'] = additional_enrollments_partial
+                data["additional_sections"] = []
+            serializer = self.get_serializer(instance, data=data, partial=True)
         else:
             data = dict(
                 [
                     (x, y)
-                    for x, y in d.items()
+                    for x, y in data.items()
                     if not x.startswith("additional_enrollments")
                     or x.startswith("additional_sections")
                 ]
@@ -940,28 +667,21 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
             data["additional_enrollments"] = []
             data["additional_sections"] = []
             serializer = self.get_serializer(instance, data=data, partial=partial)
-        print("about to check if serializer is valid")
-        serializer.is_valid()  # raise_exception=True)
+        serializer.is_valid()
+
         if not serializer.is_valid():
-            print("serializer.errors", serializer.errors)
-            messages.add_message(
-                request, messages.ERROR, serializer.errors
-            )  # "An error occurred: Please add the information to the additional instructions field and a Courseware Support team memeber will assist you.")
+            messages.add_message(request, messages.ERROR, serializer.errors)
             raise serializers.ValidationError(serializer.errors)
         else:
             serializer.save(owner=self.request.user)
 
         self.perform_update(serializer)
-        # print(":^) !")
+
         if getattr(instance, "_prefetched_objects_cache", None):
-            # If 'prefetch_related' has been applied to a queryset, we need to
-            # forcibly invalidate the prefetch cache on the instance.
             instance._prefetched_objects_cache = {}
 
-        # Lets check if we need to send an email?
         if "status" in request.data:
             if request.data["status"] == "LOCKED":
-                # lets send that email babie !!!!
                 email_processor.admin_lock(
                     context={
                         "request_detail_url": request.build_absolute_uri(
@@ -976,7 +696,6 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
 
         if "view_type" in request.data:
             if request.data["view_type"] == "UI-request-detail":
-                # print("LLL")
                 permissions = RequestViewSet.check_request_update_permissions(
                     request,
                     {
@@ -985,12 +704,12 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
                         "status": instance.status,
                     },
                 )
-                print("permissions", permissions)
+
                 return Response(
                     {"request_instance": serializer.data, "permissions": permissions},
                     template_name="request_detail.html",
                 )
-                # return redirect('UI-request-detail', pk=request.data['course_requested'])
+
         return Response(serializer.data)
 
 
@@ -1136,7 +855,6 @@ class SchoolViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         # this response should probably be paginated but thats a lot of work ..
         response = super(SchoolViewSet, self).retrieve(request, *args, **kwargs)
         if request.accepted_renderer.format == "html":
-            ##print("bye george(UI-request-detail)!\n",response.data)
             return Response({"data": response.data}, template_name="school_detail.html")
         return response
 
@@ -1216,13 +934,13 @@ class SubjectViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         """
 
     def retrieve(self, request, *args, **kwargs):
-        # print("request.data",request.data)
         response = super(SubjectViewSet, self).retrieve(request, *args, **kwargs)
+
         if request.accepted_renderer.format == "html":
-            ##print("bye george(UI-request-detail)!\n",response.data)
             return Response(
                 {"data": response.data}, template_name="subject_detail.html"
             )
+
         return response
 
 
@@ -1244,7 +962,6 @@ class NoticeViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         # print("NoticeViewSet - perform_create trying to create Notice")
-        ##print(self.request.user) == username making request
         serializer.save(owner=self.request.user)
 
 
@@ -1292,7 +1009,6 @@ class CanvasSiteViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         # print("request.data",request.data)
         response = super(CanvasSiteViewSet, self).retrieve(request, *args, **kwargs)
         if request.accepted_renderer.format == "html":
-            ##print("bye george(UI-request-detail)!\n",response.data)
             return Response(
                 {"data": response.data, "autocompleteUser": UserForm()},
                 template_name="canvassite_detail.html",
@@ -1360,9 +1076,9 @@ class HomePage(APIView, UserPassesTestMixin):  # ,
         print("testing user")
         user = User.objects.get(username=self.request.user.username)
         try:
-            profile = user.profile
-            return True
-        except:  # profile doesnt exist -- first time logging in and was never a masquerade so all of their info must be filled out
+            if user.profile:
+                return True
+        except Exception:
             userdata = datawarehouse_lookup(PPENN_KEY=user.username)
             if userdata:  # if no result userdata== False
                 first_name = userdata["firstname"].title()
@@ -1371,7 +1087,7 @@ class HomePage(APIView, UserPassesTestMixin):  # ,
                 user.last_name = last_name
                 user.email = userdata["email"]
                 Profile.objects.create(user=user, penn_id=userdata["penn_id"])
-                utils.updateCanvasSites(user.username)
+                updateCanvasSites(user.username)
                 return True
             else:
                 return False
@@ -1413,7 +1129,6 @@ class HomePage(APIView, UserPassesTestMixin):  # ,
         canvas_sites = CanvasSite.objects.filter(Q(owners=user))
         canvas_sites_count = canvas_sites.count()
         canvas_sites = canvas_sites[:15]
-        ##print(site_requests, site_requests[0].course_requested.course_name)
         # for courses do instructors.courses since there is a manytomany relationship
         return Response(
             {
@@ -1439,20 +1154,20 @@ class HomePage(APIView, UserPassesTestMixin):  # ,
     #    def post(self, request,*args, **kwargs):
     #        return redirect(request.path)
 
-    def set_session(request):
+    def set_session(self, request):
         print("set_session request.data", request.data)
         try:
             on_behalf_of = request.data["on_behalf_of"].lower()
             print("found on_behalf_of in request.data ", on_behalf_of)
             if on_behalf_of:  # if its not none -> if exists then see if pennkey works
-                lookup_user = utils.validate_pennkey(on_behalf_of)
-                if lookup_user == None:  # if pennkey is good the user exists
+                lookup_user = validate_pennkey(on_behalf_of)
+                if lookup_user is None:  # if pennkey is good the user exists
                     print("not valid input")
                     messages.error(
                         request, "Invalid Pennkey -- Pennkey must be Upenn Employee"
                     )
                     on_behalf_of = None
-                elif lookup_user.is_staff == True:
+                elif lookup_user.is_staff is True:
                     messages.error(
                         request,
                         "Invalid Pennkey -- Pennkey cannot be Courseware Team Member",
@@ -1524,7 +1239,7 @@ class AutoAddViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         return response
 
     def list(self, request, *args, **kwargs):
-        ##print(request.user.is_authenticated())
+        # print(request.user.is_authenticated())
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         # print("1")
@@ -1582,7 +1297,7 @@ class UpdateLogViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         "partial_update": [IsAdminUser],
         "delete": [IsAdminUser],
     }
-    # CHECK PERMISSIONS!
+
     def list(self, request, *args, **kwargs):
         # print("yeah ok")
         # see more about the models here https://django-celery-beat.readthedocs.io/en/latest/index.html
@@ -1616,26 +1331,20 @@ def userinfo(request):
 
 # -------------- DWHSE Proxies ----------------
 def DWHSE_Proxy(request):
-    if request.method == "GET":
-        print(
-            request.GET
-        )  # should be query dict of the form <QueryDict: {'pennkey': [''], 'firstName': [''], 'lastName': [''], 'email': ['']}>
-        pennkey = request.GET.get("pennkey", "")
-        firstName = request.GET.get("firstName", "")
-        lastName = request.GET.get("lastName", "")
-        email = request.GET.get("email", "")
-        print(pennkey)
-        staffResults = None
-        studentResults = None
+    # if request.method == "GET":
+    #     pennkey = request.GET.get("pennkey", "")
+    #     firstName = request.GET.get("firstName", "")
+    #     lastName = request.GET.get("lastName", "")
+    #     email = request.GET.get("email", "")
+    #     print(pennkey)
+    #     staffResults = None
+    #     studentResults = None
 
-    else:
-        print("we have an error here")
-    return django.http.JsonResponse({})
+    return JsonResponse({})
 
 
 # -------------- Canvas Proxies ----------------
 def myproxy(request, username):
-    from operator import itemgetter
 
     print("user", username)
     login_id = username
@@ -1651,7 +1360,7 @@ def myproxy(request, username):
     print(other)
     final = data.attributes
     final["courses"] = other
-    return django.http.JsonResponse(final)
+    return JsonResponse(final)
 
 
 def autocompleteCanvasCourse(request, search):
@@ -1679,18 +1388,16 @@ def autocompleteCanvasCourse(request, search):
 
 
 # ------------- TEMPORARY PROCESS REQUESTS --------
-from django.contrib.admin.views.decorators import staff_member_required
 
 
 @staff_member_required
 def process_requests(request):
-    from course.tasks import create_canvas_site
 
     done = {"response": "response", "processed": []}
-    _to_process = Request.objects.filter(status="APPROVED")
-    if _to_process.exists():
-        for obj in _to_process:
-            item = {"request": obj.course_requested.course_code}
+    approved_requests = Request.objects.filter(status="APPROVED")
+
+    if approved_requests.exists():
+        for obj in approved_requests:
             done["processed"] += [
                 {
                     "course_code": obj.course_requested.course_code,
@@ -1698,8 +1405,8 @@ def process_requests(request):
                     "notes": "",
                 }
             ]
-        running = create_canvas_site()
-        print("done", done)
+
+        create_canvas_sites()
 
         for obj in done["processed"]:
             req = Request.objects.get(course_requested=obj["course_code"])
@@ -1712,14 +1419,14 @@ def process_requests(request):
     else:
         done["processed"] = "No Approved Requests to Process"
 
-    return django.http.JsonResponse(done)
+    return JsonResponse(done)
 
 
 @staff_member_required
 def view_requests(request):
     with open("course/static/log/result.json") as json_file:
         data = json.load(json_file)
-    return django.http.JsonResponse(data)
+    return JsonResponse(data)
 
 
 @staff_member_required
@@ -1732,21 +1439,17 @@ def view_canceled_SRS(request):
 
 @staff_member_required
 def remove_canceled_requests(request):
-    from course.tasks import delete_canceled_requests
 
     done = {"response": "", "processed": []}
     _to_process = Request.objects.filter(status="CANCELED")
     for obj in _to_process:
-        item = {"canceled/deleted": obj.course_requested.course_code}
         done["processed"] += [obj.course_requested.course_code]
-    running = delete_canceled_requests()
     done["response"] = datetime.datetime.now().strftime("%m/%d/%y %I:%M%p")
-    return django.http.JsonResponse(done)
+    return JsonResponse(done)
 
 
 # --------- Quick Config of Canvas (enrollment/add tool) ----------
 def quickconfig(request):
-    from canvasapi.exceptions import CanvasException
 
     data = {"Job": "", "Info": {"Errors": ""}}
     print("start")
@@ -1771,14 +1474,14 @@ def quickconfig(request):
                 user = validate_pennkey(
                     pennkey
                 )  # looks them up in EMPLOYEE_GENERAL DW table and returns the django CRF user
-                if user == None:  # there was an issue finding them in the DW
+                if user is None:  # there was an issue finding them in the DW
                     data += "failed to find user (%s) in DW," % pennkey
                     return render(request, "admin/quickconfig.html", {"data": data})
                 else:
                     pass  # else found user info in DW
                 # check if user in Canvas
                 user_canvas = canvas_api.get_user_by_sis(pennkey)
-                if user_canvas == None:  # user doesnt exist
+                if user_canvas is None:  # user doesnt exist
                     data["Job"] = "AccountCreation"
                     # get user in DW info:
                     user_crf = user  # variable already exists from above
@@ -1790,7 +1493,7 @@ def quickconfig(request):
                             user_crf.email,
                             user_crf.first_name + user_crf.last_name,
                         )
-                    except:
+                    except Exception:
                         data += "failed create user in Canvas,"
                         return render(request, "admin/quickconfig.html", {"data": data})
                     data += "created canvas account for user %s," % pennkey
@@ -1805,7 +1508,6 @@ def quickconfig(request):
                     canvas_course = canvas.get_course(course_id)
                     # lets check that the term wont need to be changed.
                     enrollment_term_id = canvas_course.enrollment_term_id
-                    canvas_account = canvas.get_account(canvas_course.root_account_id)
 
                     if role == "lib":
                         try:
@@ -1902,12 +1604,11 @@ def quickconfig(request):
 
 
 def side_sign_in(request):
-    from django.contrib.auth import authenticate, login
 
     config = ConfigParser()
     config.read("config/config.ini")
     name = request.user.username + "_test"
-    passwrd = config.get("users_test", "pass")  #'prod_key')
+    passwrd = config.get("users_test", "pass")
     user = authenticate(username=name, password=passwrd)
     login(request, user)
     return redirect("/")
@@ -1967,7 +1668,7 @@ def autocompleteModel(request):
     if request.is_ajax():
         q = request.GET.get("term", "").capitalize()
         print("q", q)
-        search_qs = user.objects.filter(username__startswith=q)
+        search_qs = User.objects.filter(username__startswith=q)
         results = []
         for r in search_qs:
             results.append(r.username)
@@ -1982,7 +1683,7 @@ def autocompleteSubjectModel(request):
     if request.is_ajax():
         q = request.GET.get("term", "").capitalize()
         print("q", q)
-        search_qs = subject.objects.filter(abbreviation__startswith=q)
+        search_qs = Subject.objects.filter(abbreviation__startswith=q)
         results = []
         for r in search_qs:
             results.append(r.abbreviation)
@@ -2040,16 +1741,11 @@ def contact(request):
 """
 This view is only for beta testing of the app
 """
-import os
-from os import listdir
 
 
 def temporary_email_list(request):
-    filelist = os.listdir("course/static/emails/")
+    filelist = listdir("course/static/emails/")
     return render(request, "email/email_log.html", {"filelist": filelist})
-
-
-from django.http import HttpResponse
 
 
 def my_email(request, value):
