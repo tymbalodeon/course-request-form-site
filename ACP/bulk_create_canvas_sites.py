@@ -73,16 +73,15 @@ def request_course(course, status="APPROVED", verbose=True):
     request.status = status
     request.save()
     course.save()
+
     if verbose:
-        print("\t* Request complete.")
+        print("\t* Request created.")
 
     return [request]
 
 
 def enable_tools(canvas_id, tools, label, test):
     for tool in tools:
-        print(f"\t> Enabling {tool}...")
-
         try:
             canvas = get_canvas(test)
             canvas_site = canvas.get_course(canvas_id)
@@ -141,13 +140,8 @@ def bulk_create_canvas_sites(
 
         if should_request(sis_id):
             try:
-                print("\t> Requesting course...")
                 course_request = request_course(course)
-
-                print("\t> Finding course sections...")
                 sections = list(course.sections.all())
-
-                print("\t> Creating Canvas site...")
                 creation_error = create_canvas_sites(
                     course_request, sections=sections, test=test, verbose=False
                 )
@@ -157,13 +151,16 @@ def bulk_create_canvas_sites(
                     canvas_logger.info(
                         f"ERROR: Failed to create main section for {course} (SECTION ALREADY EXISTS)"
                     )
+                    course_request[0].status = "COMPLETED"
+                    course_request[0].save = "COMPLETED"
+                    course.save()
+
                     continue
 
-                print("\t> Confirming site creation...")
                 request = Request.objects.get(course_requested=course)
 
                 if request.status == "COMPLETED":
-                    print(f"\t* COMPLETED: ({request.canvas_instance.canvas_id})")
+                    print(f"\t* Course created: ({request.canvas_instance.canvas_id})")
                 else:
                     print(f"\t* ERROR: Request incomplete. ({request.process_notes})")
                     canvas_logger.info(
@@ -176,8 +173,10 @@ def bulk_create_canvas_sites(
                     canvas_id = request.canvas_instance.canvas_id
                     enable_tools(canvas_id, tools, label, test)
             except Exception as error:
-                print(f"\t* ERROR: Failed to create site. ({error})")
+                print(f"\t* ERROR: Failed to create site ({error}).")
                 crf_logger.info(f"ERROR: Failed to create site for {course} ({error}).")
+
+            print("\tCOMPLETE")
         else:
             print(f"\t* SKIPPING: {sis_id} is already in use.")
             canvas_logger.warning(f"{sis_id} is already in use.")
