@@ -66,6 +66,8 @@ def get_user(penn_id):
 
 
 def inspect_course(section, term=None):
+    section = section.replace("-", "")
+    section = section.replace(" ", "")
     cursor = get_cursor()
     cursor.execute(
         """
@@ -103,6 +105,11 @@ def inspect_course(section, term=None):
         """,
         section=section,
     )
+    print(
+        "course_code, section_id, course_term, subject_area, school, xc, xc_code,"
+        " activity, section_dept, section_division, title, status, rev\n"
+    )
+
     for (
         course_code,
         section_id,
