@@ -77,6 +77,8 @@ def request_course(course, status="APPROVED", verbose=True):
     if verbose:
         print("\t* Request complete.")
 
+    return [request]
+
 
 def enable_tools(canvas_id, tools, label, test):
     for tool in tools:
@@ -141,10 +143,10 @@ def bulk_create_canvas_sites(
         if should_request(sis_id):
             try:
                 print("\t> Requesting course...")
-                request_course(course)
+                course_request = request_course(course)
 
                 print("\t> Creating Canvas site...")
-                create_canvas_sites(test=test, verbose=False)
+                create_canvas_sites(course_request, test=test, verbose=False)
 
                 print("\t> Confirming site creation...")
                 request = Request.objects.get(course_requested=course)
