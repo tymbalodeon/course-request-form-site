@@ -159,9 +159,6 @@ def create_canvas_sites(test=False, verbose=True):
         additional_sections = []
         course_requested = request.course_requested
 
-        print(serialized.data)
-        print(serialized.data["additional_sections"])
-
         if verbose:
             print(f") Creating Canvas site for {course_requested}...")
 
