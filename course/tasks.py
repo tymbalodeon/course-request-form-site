@@ -159,6 +159,9 @@ def create_canvas_sites(test=False, verbose=True):
         additional_sections = []
         course_requested = request.course_requested
 
+        print(serialized.data)
+        print(serialized.data["additional_sections"])
+
         if verbose:
             print(f") Creating Canvas site for {course_requested}...")
 
@@ -259,7 +262,7 @@ def create_canvas_sites(test=False, verbose=True):
                     additional_sections += [additional_section]
                 except Exception as error:
                     request.process_notes += "failed to create main section,"
-                    request.process_notes += sys.exc_info()[0]
+                    request.process_notes += error
                     request.save()
 
                     if verbose:
