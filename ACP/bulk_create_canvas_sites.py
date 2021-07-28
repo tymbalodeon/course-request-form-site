@@ -13,13 +13,13 @@ config.read("config/config.ini")
 OWNER = User.objects.get(username=config.items("users")[0][0])
 
 
-def get_unrequested_courses(year_and_term):
+def get_unrequested_courses(year_and_term, school_abbreviation):
     print(") Finding unrequested courses...")
 
     term = year_and_term[-1]
     year = year_and_term[:-1]
 
-    SEAS = School.objects.get(abbreviation="SEAS")
+    school = School.objects.get(abbreviation=school_abbreviation)
 
     unrequested_courses = Course.objects.filter(
         course_term=term,
@@ -28,7 +28,7 @@ def get_unrequested_courses(year_and_term):
         requested_override=False,
         primary_crosslist="",
         course_schools__visible=True,
-        course_schools=SEAS,
+        course_schools=school,
     )
 
     total_unrequested = len(unrequested_courses)
@@ -95,6 +95,7 @@ def enable_tools(canvas_id, tools, label, test):
 
 def bulk_create_canvas_sites(
     year_and_term,
+    school="SEAS",
     enable=True,
     tools={
         "context_external_tool_90311": "Class Recordings",
@@ -109,7 +110,7 @@ def bulk_create_canvas_sites(
     elif type(tools) == dict:
         tools = [tool for tool in tools.keys()]
 
-    unrequested_courses = get_unrequested_courses(year_and_term)
+    unrequested_courses = get_unrequested_courses(year_and_term, school)
 
     print(") Processing courses...")
 
