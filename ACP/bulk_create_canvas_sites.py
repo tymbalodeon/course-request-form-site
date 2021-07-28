@@ -59,7 +59,7 @@ def should_request(sis_id, test=False):
         return True
 
 
-def request_course(course):
+def request_course(course, status="APPROVED", verbose=True):
     request = Request.objects.create(
         course_requested=course,
         additional_instructions=(
@@ -70,11 +70,12 @@ def request_course(course):
         created=datetime.now(),
         reserves=True,
     )
-    request.status = "APPROVED"
+    request.status = status
     request.save()
     course.save()
 
-    print("\t* Request complete.")
+    if verbose:
+        print("\t* Request complete.")
 
 
 def enable_tools(canvas_id, tools, label, test):
@@ -151,7 +152,7 @@ def bulk_create_canvas_sites(
                 if request.status == "COMPLETED":
                     print(f"\t* COMPLETED: ({request.canvas_instance.canvas_id})")
                 else:
-                    print("\t* ERROR: Request incomplete. ({request.process_notes})")
+                    print(f"\t* ERROR: Request incomplete. ({request.process_notes})")
                     canvas_logger.info(
                         f"ERROR: Request incomplete for {course}"
                         f" ({request.process_notes})."
@@ -167,5 +168,8 @@ def bulk_create_canvas_sites(
         else:
             print(f"\t* SKIPPING: {sis_id} is already in use.")
             canvas_logger.warning(f"{sis_id} is already in use.")
+
+            if not course.requested:
+                request_course(course, "COMPLETED", False)
 
     print("FINISHED")
