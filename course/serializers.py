@@ -1,20 +1,22 @@
 import collections
-import datetime
-from copy import deepcopy
 
-from django.contrib import messages
 from django.contrib.auth.models import User
-from django.db.models import Q
 from rest_framework import serializers
 
-from canvas import api
-from course.models import *
-from course.utils import *
-
-# Serializer Classes provide a way of serializing and deserializing
-# the model instances into representations such as json. We can do this
-# by declaring serializers that work very similar to Django forms
-#
+from course.models import (
+    Activity,
+    AdditionalEnrollment,
+    AutoAdd,
+    CanvasSite,
+    Course,
+    Notice,
+    Profile,
+    Request,
+    School,
+    Subject,
+    UpdateLog,
+)
+from course.utils import validate_pennkey
 
 
 class DynamicFieldsModelSerializer(serializers.ModelSerializer):
@@ -130,9 +132,6 @@ class CourseSerializer(
         if "crosslisted" in validated_data:
             crosslist = validated_data.pop("crosslisted")
         course = Course.objects.create(**validated_data)
-        ##
-        ## must loop through adding fields individually because we cannot do direct assignment
-        ##
         for instructor_data in instructors_data:
             # print(instructor_data.username, instructor_data)
             course.instructors.add(instructor_data)
@@ -313,18 +312,11 @@ class CanvasSiteSerializer(serializers.ModelSerializer):
         return instance
 
 
-class RequestSerializer(DynamicFieldsModelSerializer):  # HyperlinkedModelSerializer
-    # this adds a field that is not defined in the model
-    # url = serializers.HyperlinkedIdentityField(view_name='UI-requests', looku
+class RequestSerializer(DynamicFieldsModelSerializer):
     owner = serializers.ReadOnlyField(source="owner.username", required=False)
     course_info = CourseSerializer(source="course_requested", read_only=True)
-    canvas_instance = CanvasSiteSerializer(
-        read_only=True
-    )  # -- doesnt work bc canvassites have p tight permissions?
+    canvas_instance = CanvasSiteSerializer(read_only=True)
     masquerade = serializers.ReadOnlyField()
-    # additional_sections = CourseSerializer()
-    # sections = serializers.SerializerMethodField()
-
     course_requested = serializers.SlugRelatedField(
         many=False,
         queryset=Course.objects.all(),
@@ -353,132 +345,83 @@ class RequestSerializer(DynamicFieldsModelSerializer):  # HyperlinkedModelSerial
         required=False,
     )
 
-    # sections_requested = serializers.SlugRelatedField(many=True,queryset=Course.objects.all(),slug_field='course_code')
-    # IF REQUEST STATUS IS CHANGED TO CANCELED IT SHOULD BE DISASSOCIATED FROM COURSE INSTANCE
-    # IN ORDER TO PRESERVE THE ONE TO ONE COURSE -> REQUEST RELATIONSHIP
-    # IF REQUEST IS MADE THE COURSE INSTANCE SHOULD CHANGE COURSE.REQUESTED to TRUE
     class Meta:
         model = Request
-        fields = "__all__"  # or a list of field from model like ('','')
-        # exclude = ('masquerade',)
-        # depth=2
+        fields = "__all__"
 
-    def check_for_crf_account(enrollments):
-        # [{'user': 'Pennkey', 'role': 'TA'}]
+    def check_for_crf_account(self, enrollments):
         for enrollment in enrollments:
-            print("checking for user, ", enrollment["user"])
+            print(
+                "- Checking Course Request Form accounts for user:"
+                f" {enrollment['user']}... "
+            )
             user = validate_pennkey(enrollment["user"])
-            if user == None:
-                print("we have an error")
+
+            if user is None:
+                print(
+                    f"- ERROR: User {enrollment['user']} has no account in the Course"
+                    " Request Form."
+                )
 
     def to_internal_value(self, data):
         data = dict(data)
+
         if data.get("title_override", None) == "":
             data["title_override"] = None
+
         if data.get("course_requested", None) == "":
             data["course_requested"] = None
-        if data.get("reserves", None) == None:
+
+        if data.get("reserves", None) is None:
             data["reserves"] = False
-        if data.get("additional_enrollments", None) != None:
+
+        if data.get("additional_enrollments", None) is not None:
             RequestSerializer.check_for_crf_account(data["additional_enrollments"])
+
         return super(RequestSerializer, self).to_internal_value(data)
 
     def validate(self, data):
-        """
-        Check that:
-            CourseCopy Course has user or masquerade listed as an instructor
-        """
-        print("data in validate", data)
-        print(data.keys())
-
         if "additional_enrollments" in data.keys():
-            # check if additional_enrollments is not none
-            if data["additional_enrollments"] != []:
+            if data["additional_enrollments"]:
                 for enrollment in data["additional_enrollments"]:
-                    print("checking for user, ", enrollment["user"])
+                    print(
+                        "- Checking Course Request Form accounts for user:"
+                        f" {enrollment['user']}... "
+                    )
                     user = validate_pennkey(enrollment["user"])
-                    if user == None:
-                        print("error validate pennkey")
+
+                    if user is None:
+                        print(
+                            "- ERROR: Failed to validate pennkey for"
+                            f" {enrollment['user']}"
+                        )
                         raise serializers.ValidationError(
                             {
                                 "error": (
-                                    "an error occurred please check that the pennkey's"
+                                    "An error occurred. Please check that the pennkeys"
                                     " you entered are correct and add the course"
                                     " information to the additional instructions field."
                                 )
                             }
                         )
 
-        # Lets check if we want to update content source and if so, lets check if its valid
-        """
-        if 'copy_from_course' in data.keys():
-            if data['copy_from_course'] == None or data['copy_from_course'] == '':
-                print("no copy from course data")
-                return data
-            #go get course
-            print("data['copy_from_course']",data['copy_from_course'])
-            instructors = api.get_course_users(data['copy_from_course'])
-            user = self.context['request'].user
-            masquerade =self.context['request'].session['on_behalf_of']
-            print({"instructors":instructors, "user":user, "masquerade":masquerade})
-            if user in instructors:
-                #validate!
-                #print("you taught the course")
-                pass
-            if masquerade:
-                if masquerade in instructors:
-                    #validate!
-                    #print("you are masqued as some1 who taught the course")
-                    pass
-            else:
-                print("not valid content source")
-                #messages.add_message(self.request, messages.ERROR, "an error occurred please add the course information to the additional instructions field and a Courseware Support team memeber will assist you.")
-                raise serializers.ValidationError({"error":"an error occurred please add the course information to the additional instructions field and a Courseware Support team memeber will assist you."})
-            #if not in the instructors raise an error
-            # error message should be like "an error occurred please add the course information to the additional instructions field"
-        """
-        # if data['owner'] in data['course_info']['instructors']:
-        #    raise serializers.ValidationError("you do not have permissions to request this course")
-        # print("data was fine")
         return data
 
     def create(self, validated_data):
-        """
-        Create and return a new 'Request' instance, given the validated_data.
-        Also get associtated Course instance and set course.requested ==True
-        """
-        # it must also get associated Course instance and set course.requested = True
-        # course_requested_data = validated_data.pop('course_requested')
-        # check that this course.requested==False
-        ##print("course_requested_data", course_requested_data)
-        print(
-            "validated_Data", validated_data
-        )  # {'course_requested': <Course: AAMW_622_401_2019C>, 'additional_enrollments': [], 'copy_from_course': '', 'status': 'SUBMITTED', 'masquerade': '', 'owner': <SimpleLazyObject: <User: mfhodges>>}
-
         add_enrolls_data = validated_data.pop("additional_enrollments")
         add_sections_data = validated_data.pop("additional_sections")
-        # CHECK FOR AUTOADDS AND THEN ADD !
-        # check for school and then check for subject
         autoadds = AutoAdd.objects.filter(
             school=validated_data["course_requested"].course_schools
         ).filter(subject=validated_data["course_requested"].course_subject)
-
         request_object = Request.objects.create(**validated_data)
-        # validated_data['course_requested'].requested = False
+
         if add_enrolls_data:
-            print("add_enrolls_data", add_enrolls_data)
             for enroll_data in add_enrolls_data:
-                ##print("subject data", subject_data)
-                print("enroll_data", enroll_data)
                 AdditionalEnrollment.objects.create(
                     course_request=request_object, **enroll_data
                 )
-                # request_object.additional_enrollments.add(enroll_data)
         if autoadds:
             for autoadd in autoadds:
-                print(autoadd)
-                # [OrderedDict([('user', <User: mollyk>), ('role', 'DES')])]
-
                 enroll_data = collections.OrderedDict(
                     [("user", autoadd.user), ("role", autoadd.role)]
                 )
@@ -487,41 +430,30 @@ class RequestSerializer(DynamicFieldsModelSerializer):  # HyperlinkedModelSerial
                 )
 
         if add_sections_data:
-            print("add_sections_data", add_sections_data)
             for section_data in add_sections_data:
-                # we need to add point the multisection_request to this request
-                print("section_data", section_data)
                 section = Course.objects.get(course_code=section_data.course_code)
                 section.multisection_request = request_object
                 section.save()
 
-                # FINISH
         course = validated_data["course_requested"]
+
         if course.crosslisted.all():
-            print("instance.crosslisted", course.crosslisted.all())
-            for xc in course.crosslisted.all():
-                if course != xc:
-                    xc.crosslisted_request = request_object
-                    xc.save()
-        # print("RequestSerializer.create", validated_data)
+            for crosslisted_course in course.crosslisted.all():
+                if course != crosslisted_course:
+                    crosslisted_course.crosslisted_request = request_object
+                    crosslisted_course.save()
+
         return request_object
 
-    # this allows the object to be updated!
     def update(self, instance, validated_data):
-        """
-        Update and return an existing 'Request' instance, given the validated_data.
-        If the status field is present no other information should be updated this is to resolve the issue of clearing all form information when you approve a request
-        """
-
-        print("in serializer update ", validated_data)
         new_status = validated_data.get("status", None)
-        print("new_status, instance.status", new_status, instance.status)
 
         if new_status:
-            print("status change all other changes are ignored")
             instance.status = new_status
             instance.save()
+
             return instance
+
         instance.status = validated_data.get("status", instance.status)
         instance.title_override = validated_data.get(
             "title_override", instance.title_override
@@ -536,62 +468,33 @@ class RequestSerializer(DynamicFieldsModelSerializer):  # HyperlinkedModelSerial
         instance.admin_additional_instructions = validated_data.get(
             "admin_additional_instructions", instance.admin_additional_instructions
         )
-
-        if instance.reserves == None:
-            print("instance.reserves", instance.reserves)
-
         add_enrolls_data = validated_data.get("additional_enrollments")
+
         if add_enrolls_data:
-            # request_obj =
             AdditionalEnrollment.objects.filter(course_request=instance).delete()
+
             for enroll_data in add_enrolls_data:
-                ##print("subject data", subject_data)
-                # print("instance",instance)
-                print("enroll_data", enroll_data)
                 AdditionalEnrollment.objects.update_or_create(
                     course_request=instance, **enroll_data
                 )
-                # request_object.additional_enrollments.add(enroll_data)
 
         add_sections_data = validated_data.get("additional_sections")
-        c_data = instance.additional_sections.all()  # .update()
-        print("c_data", c_data)
-        c_copy = deepcopy(c_data)
+        c_data = instance.additional_sections.all()
 
-        print(instance.status, "STATUS")
         if add_sections_data or instance.additional_sections.all():
-            print("instance.", instance)
-            # now that the relationship has been removed - there is still some other params to fix
-            print("c_data2", c_data)
             for course in c_data:
                 course.multisection_request = None
                 course.requested = False
                 course.save()
-                print("course.requested", course.requested)
-            print("instance..", instance)
             instance.additional_sections.clear()
-            # instance.additional_sections.set()
-            print("2instance.additional_sections", instance.additional_sections.all())
-            print("add_sections_data", add_sections_data)
+
             for section_data in add_sections_data:
-                # we need to add point the multisection_request to this request
-                print("section_data", section_data.course_code)
                 section = Course.objects.get(course_code=section_data.course_code)
                 section.multisection_request = instance
                 section.save()
-                print("section.requested", section.requested)
 
-        # instance.additional_enrollments = validated_data.set('additional_enrollments',instance.additional_enrollments)
-        # print("instance.status", instance.status)
-        # print("instance.title_override", instance.title_override)
-        # instance.course = validated_data.get('course_requested', instance.course_requested)
         instance.save()
 
-        print("c_Data", c_data)
-        print("c_copy", c_copy)
-        print("3instance.additional_sections", instance.additional_sections.all())
-        # print('additional_instructions',validated_data.get('additional_instructions',instance.additional_instructions))
-        # print('reserves',validated_data.get('reserves',instance.reserves))
         return instance
 
 
