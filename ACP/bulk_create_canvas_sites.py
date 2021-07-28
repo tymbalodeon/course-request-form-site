@@ -1,9 +1,10 @@
 from configparser import ConfigParser
 from datetime import datetime
 
-from canvas.api import get_canvas
 from canvasapi.exceptions import CanvasException
-from course.models import Course, Request, User, School
+
+from canvas.api import get_canvas
+from course.models import Course, Request, School, User
 from course.tasks import create_canvas_sites
 
 from .logger import canvas_logger, crf_logger
@@ -135,7 +136,8 @@ def bulk_create_canvas_sites(
                 else:
                     print("\t* ERROR: Request incomplete. ({request.process_notes})")
                     canvas_logger.info(
-                        f"ERROR: Request incomplete for {course} ({request.process_notes})."
+                        f"ERROR: Request incomplete for {course}"
+                        f" ({request.process_notes})."
                     )
                     continue
 
