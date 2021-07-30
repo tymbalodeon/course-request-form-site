@@ -470,9 +470,9 @@ def create_canvas_sites(
 
                 for event in events:
                     if (
-                        "zoom" in event.location_name.lower()
-                        or "zoom" in event.description.lower()
-                        or "zoom" in event.title.lower()
+                        (event.location_name and "zoom" in event.location_name.lower())
+                        or (event.description and "zoom" in event.description.lower())
+                        or (event.title and "zoom" in event.title.lower())
                     ):
                         zoom_events.append(event.id)
 
