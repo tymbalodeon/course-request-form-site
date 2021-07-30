@@ -375,7 +375,7 @@ class Course(models.Model):
 
     def srs_format(self):
         return (
-            f"{self.course_subject.abbreviation}-{self.course_number}-{self-course_section}"
+            f"{self.course_subject.abbreviation}-{self.course_number}-{self.course_section}"
             f" {self.year}{self.course_term}"
         )
 
