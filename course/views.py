@@ -2,7 +2,8 @@ import datetime
 import json
 import urllib.parse
 from configparser import ConfigParser
-from os import listdir
+from os import listdir, mkdir
+from pathlib import Path
 
 from canvas import api as canvas_api
 from django.contrib import messages
@@ -545,7 +546,7 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         else:
             return False
 
-    def check_request_update_permissions(self, request, response_data):
+    def check_request_update_permissions(request, response_data):
         request_status = response_data["status"]
         request_owner = response_data["owner"]
         request_masquerade = response_data["masquerade"]
@@ -1414,7 +1415,13 @@ def process_requests(request):
             obj["notes"] = req.process_notes
 
         done["response"] = datetime.datetime.now().strftime("%m/%d/%y %I:%M%p")
-        with open("course/static/log/result.json", "w") as fp:
+
+        log_path = Path("course/static/log")
+
+        if not log_path.exists():
+            mkdir(log_path)
+
+        with open("course/static/log/result.json", "w+") as fp:
             json.dump(done, fp)
     else:
         done["processed"] = "No Approved Requests to Process"
@@ -1424,9 +1431,13 @@ def process_requests(request):
 
 @staff_member_required
 def view_requests(request):
-    with open("course/static/log/result.json") as json_file:
-        data = json.load(json_file)
-    return JsonResponse(data)
+    try:
+        with open("course/static/log/result.json") as json_file:
+            data = json.load(json_file)
+
+        return JsonResponse(data)
+    except Exception:
+        return JsonResponse({"data": "no data to display"})
 
 
 @staff_member_required
