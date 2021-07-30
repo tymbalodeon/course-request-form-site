@@ -349,21 +349,21 @@ class RequestSerializer(DynamicFieldsModelSerializer):
         model = Request
         fields = "__all__"
 
-    def check_for_crf_account(self, enrollments):
-        for enrollment in enrollments:
-            print(
-                "- Checking Course Request Form accounts for user:"
-                f" {enrollment['user']}... "
-            )
-            user = validate_pennkey(enrollment["user"])
-
-            if user is None:
-                print(
-                    f"- ERROR: User {enrollment['user']} has no account in the Course"
-                    " Request Form."
-                )
-
     def to_internal_value(self, data):
+        def check_for_crf_account(enrollments):
+            for enrollment in enrollments:
+                print(
+                    "- Checking Course Request Form accounts for user:"
+                    f" {enrollment['user']}... "
+                )
+                user = validate_pennkey(enrollment["user"])
+
+                if user is None:
+                    print(
+                        f"- ERROR: User {enrollment['user']} has no account in the Course"
+                        " Request Form."
+                    )
+
         data = dict(data)
 
         if data.get("title_override", None) == "":
@@ -376,7 +376,7 @@ class RequestSerializer(DynamicFieldsModelSerializer):
             data["reserves"] = False
 
         if data.get("additional_enrollments", None) is not None:
-            RequestSerializer.check_for_crf_account(data["additional_enrollments"])
+            check_for_crf_account(data["additional_enrollments"])
 
         return super(RequestSerializer, self).to_internal_value(data)
 
