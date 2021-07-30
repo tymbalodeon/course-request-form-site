@@ -180,16 +180,12 @@ def create_canvas_sites(
                 course_requested.course_primary_subject.abbreviation
                 != course_requested.course_subject.abbreviation
             ):
-                primary_crosslist = course_requested.primary_crosslist
-
                 if course_requested.primary_crosslist:
-                    term = primary_crosslist[-5:]
-                    section = primary_crosslist[:-5][-3:]
-                    number = primary_crosslist[:-5][:-3][-3:]
-                    subject = primary_crosslist[:-5][:-6]
-                    section_name_code = f"{subject} {number}-{section} {term}"
+                    section_name_code = course_requested.srs_format_primary()
                 else:
-                    add_request_process_notes(f"{primary_crosslist} not set", request)
+                    add_request_process_notes(
+                        f"{course_requested.primary_crosslist} not set", request
+                    )
 
                     return
             else:
