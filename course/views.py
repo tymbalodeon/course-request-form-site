@@ -1411,7 +1411,7 @@ def process_requests(request):
 
         for processed_request in response["processed"]:
             request_object = Request.objects.get(
-                course_requested=approved_request["course_code"]
+                course_requested=processed_request["course_code"]
             )
             processed_request["status"] = request_object.status
             processed_request["notes"] = request_object.process_notes
