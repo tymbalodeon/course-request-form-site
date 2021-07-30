@@ -360,8 +360,8 @@ class RequestSerializer(DynamicFieldsModelSerializer):
 
                 if user is None:
                     print(
-                        f"- ERROR: User {enrollment['user']} has no account in the Course"
-                        " Request Form."
+                        f"- ERROR: User {enrollment['user']} has no account in the"
+                        " Course Request Form."
                     )
 
         data = dict(data)
