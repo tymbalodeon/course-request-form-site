@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 import json
 import urllib.parse
 from configparser import ConfigParser
@@ -1394,14 +1394,14 @@ def autocompleteCanvasCourse(request, search):
 @staff_member_required
 def process_requests(request):
 
-    done = {"response": "response", "processed": []}
+    response = {"response": "response", "processed": []}
     approved_requests = Request.objects.filter(status="APPROVED")
 
     if approved_requests.exists():
-        for obj in approved_requests:
-            done["processed"] += [
+        for approved_request in approved_requests:
+            response["processed"] += [
                 {
-                    "course_code": obj.course_requested.course_code,
+                    "course_code": approved_request.course_requested.course_code,
                     "status": "",
                     "notes": "",
                 }
@@ -1409,12 +1409,14 @@ def process_requests(request):
 
         create_canvas_sites()
 
-        for obj in done["processed"]:
-            req = Request.objects.get(course_requested=obj["course_code"])
-            obj["status"] = req.status
-            obj["notes"] = req.process_notes
+        for processed_request in response["processed"]:
+            request_object = Request.objects.get(
+                course_requested=approved_request["course_code"]
+            )
+            processed_request["status"] = request_object.status
+            processed_request["notes"] = request_object.process_notes
 
-        done["response"] = datetime.datetime.now().strftime("%m/%d/%y %I:%M%p")
+        response["response"] = datetime.now().strftime("%m/%d/%y %I:%M%p")
 
         log_path = Path("course/static/log")
 
@@ -1422,11 +1424,11 @@ def process_requests(request):
             mkdir(log_path)
 
         with open("course/static/log/result.json", "w+") as fp:
-            json.dump(done, fp)
+            json.dump(response, fp)
     else:
-        done["processed"] = "No Approved Requests to Process"
+        response["processed"] = "No Approved Requests to Process"
 
-    return JsonResponse(done)
+    return JsonResponse(response)
 
 
 @staff_member_required
@@ -1437,7 +1439,7 @@ def view_requests(request):
 
         return JsonResponse(data)
     except Exception:
-        return JsonResponse({"data": "no data to display"})
+        return JsonResponse({"response": "no data to display"})
 
 
 @staff_member_required
