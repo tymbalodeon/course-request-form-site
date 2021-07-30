@@ -284,9 +284,12 @@ def create_canvas_sites(
         else:
             namebit = course_requested.course_name
 
-        serialized.data["additonal_sections"] = serialized.data[
-            "additional_sections"
-        ].extend(sections)
+        if serialized.data["additional_sections"]:
+            serialized.data["additonal_sections"] = serialized.data[
+                "additional_sections"
+            ].extend(sections)
+        else:
+            serialized.data["additional_sections"] = sections
 
         for section in serialized.data["additional_sections"]:
             try:

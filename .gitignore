@@ -16,3 +16,5 @@ ACP/data/
 **/.DS_Store
 
 .flake8
+
+course/static/log
