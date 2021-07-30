@@ -1,11 +1,11 @@
-from datetime import datetime
 import json
 import urllib.parse
 from configparser import ConfigParser
+from datetime import datetime
 from os import listdir, mkdir
 from pathlib import Path
 
-from canvas import api as canvas_api
+from canvas.api import CanvasException, get_canvas, get_user_by_sis, mycreate_user
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import authenticate, login
@@ -1349,7 +1349,7 @@ def myproxy(request, username):
 
     print("user", username)
     login_id = username
-    data = canvas_api.get_user_by_sis(login_id)
+    data = get_user_by_sis(login_id)
     print(data)
     print(data.get_courses())
     other = []
@@ -1368,7 +1368,7 @@ def autocompleteCanvasCourse(request, search):
     if True:  # request.is_ajax():
         q = urllib.parse.unquote(search)
         print("q", q)  #
-        canvas = canvas_api.Canvas(canvas_api.API_URL, canvas_api.API_KEY)
+        canvas = get_canvas()
         account = canvas.get_account(96678)
         search_qs = account.get_courses(
             search_term=q, search_by="course", sort="course_name", per_page=10
@@ -1467,7 +1467,7 @@ def quickconfig(request):
     data = {"Job": "", "Info": {"Errors": ""}}
     print("start")
     if request.method == "POST":
-        canvas = canvas_api.Canvas(canvas_api.API_URL, canvas_api.API_KEY)
+        canvas = get_canvas()
         print(request.POST)
         config = request.POST.get("config")
         pennkey = request.POST.get("pennkey")
@@ -1493,14 +1493,14 @@ def quickconfig(request):
                 else:
                     pass  # else found user info in DW
                 # check if user in Canvas
-                user_canvas = canvas_api.get_user_by_sis(pennkey)
+                user_canvas = get_user_by_sis(pennkey)
                 if user_canvas is None:  # user doesnt exist
                     data["Job"] = "AccountCreation"
                     # get user in DW info:
                     user_crf = user  # variable already exists from above
                     # create Canvas account
                     try:
-                        user_canvas = canvas_api.mycreate_user(
+                        user_canvas = mycreate_user(
                             pennkey,
                             user_crf.profile.penn_id,
                             user_crf.email,
@@ -1535,7 +1535,7 @@ def quickconfig(request):
                             data["Role"] = "LibrarianEnrollment"
                             # data += 'enrolled %s as %s in %s (https://canvas.upenn.edu/courses/%s)' % (pennkey, roles[role], canvas_course.name, course_id)
 
-                        except canvas_api.CanvasException as e:
+                        except CanvasException as e:
                             print("CanvasException: ", e)
                             if (
                                 e.message
@@ -1556,7 +1556,7 @@ def quickconfig(request):
                                     canvas_course.update(
                                         course={"term_id": enrollment_term_id}
                                     )
-                                except canvas_api.CanvasException as e:
+                                except CanvasException as e:
                                     print("CanvasException 2: ", e)
                                     data["Info"]["Errors"] += "CanvasException: %s" % e
                             else:
@@ -1570,7 +1570,7 @@ def quickconfig(request):
                             )
 
                             # data += 'enrolled %s as %s in %s (https://canvas.upenn.edu/courses/%s)' % (pennkey, roles[role], canvas_course.name, course_id)
-                        except canvas_api.CanvasException as e:
+                        except CanvasException as e:
                             print(
                                 "CanvasException 1: ",
                                 e,
@@ -1594,7 +1594,7 @@ def quickconfig(request):
                                     canvas_course.update(
                                         course={"term_id": enrollment_term_id}
                                     )
-                                except canvas_api.CanvasException as e:
+                                except CanvasException as e:
                                     print("CanvasException 2: ", e)
                                     data["Info"]["Errors"] += "CanvasException: %s" % e
                             else:
