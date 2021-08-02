@@ -161,6 +161,8 @@ def create_canvas_sites(
 
         return
 
+    section_already_exists = False
+
     for request in requested_courses:
         request.status = "IN_PROCESS"
         request.save()
@@ -187,7 +189,7 @@ def create_canvas_sites(
                         f"{course_requested.primary_crosslist} not set", request
                     )
 
-                    return
+                    continue
             else:
                 section_name_code = (
                     f"{course_requested.course_subject.abbreviation}"
@@ -236,7 +238,7 @@ def create_canvas_sites(
                     if verbose:
                         print(f"\t- ERROR: failed to create site ({error})")
 
-                    return
+                    continue
 
             try:
                 canvas_course.update(course={"storage_quota_mb": 2000})
@@ -266,14 +268,16 @@ def create_canvas_sites(
                     if verbose:
                         print(f"\t- ERROR: failed to create main section ({error})")
 
-                    return "section already exists"
+                    section_already_exists = True
+
+                    continue
         else:
             add_request_process_notes("failed to locate Canvas Account", request)
 
             if verbose:
                 print("\t- ERROR: failed to locate Canvas Account")
 
-            return
+            continue
 
         if request.title_override:
             namebit = request.title_override
@@ -316,7 +320,7 @@ def create_canvas_sites(
                 if verbose:
                     print(f"\t- ERROR: failed to create section ({error})")
 
-                return
+                continue
 
         enrollment_types = {
             "INST": "TeacherEnrollment",
@@ -524,3 +528,6 @@ def create_canvas_sites(
 
     if verbose:
         print("FINISHED")
+
+    if section_already_exists:
+        return "section already exists"
