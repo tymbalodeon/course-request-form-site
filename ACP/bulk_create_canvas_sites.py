@@ -147,7 +147,7 @@ def bulk_create_canvas_sites(
                 )
 
                 if creation_error:
-                    print(f"\t> Aborting... (SECTION ALREADY EXISTS)")
+                    print("\t> Aborting... (SECTION ALREADY EXISTS)")
                     canvas_logger.info(
                         f"ERROR: Failed to create main section for {course} (SECTION"
                         " ALREADY EXISTS)"
