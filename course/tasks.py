@@ -3,9 +3,7 @@ from __future__ import absolute_import, unicode_literals
 import sys
 import time
 from datetime import datetime
-
-from canvasapi.tab import Tab
-from celery import task
+from logging import getLogger
 
 from canvas.api import (
     find_account,
@@ -14,10 +12,13 @@ from canvas.api import (
     get_user_by_sis,
     mycreate_user,
 )
+from canvasapi.tab import Tab
+from datawarehouse import datawarehouse
+
+from celery import task
 from course import utils
 from course.models import CanvasSite, Course, Request, User
 from course.serializers import RequestSerializer
-from datawarehouse import datawarehouse
 
 
 @task()
@@ -233,8 +234,11 @@ def create_canvas_sites(
                         request,
                     )
 
+                    message = f"\t- ERROR: failed to create site ({error})"
+                    getLogger("error_logger").error(message)
+
                     if verbose:
-                        print(f"\t- ERROR: failed to create site ({error})")
+                        print(message)
 
                     continue
 
@@ -263,8 +267,11 @@ def create_canvas_sites(
                 except Exception as error:
                     add_request_process_notes(f"failed to create main section", request)
 
+                    message = f"\t- ERROR: failed to create main section ({error})"
+                    getLogger("error_logger").error(message)
+
                     if verbose:
-                        print(f"\t- ERROR: failed to create main section ({error})")
+                        print(message)
 
                     section_already_exists = True
 
@@ -272,8 +279,11 @@ def create_canvas_sites(
         else:
             add_request_process_notes("failed to locate Canvas Account", request)
 
+            message = "\t- ERROR: failed to locate Canvas Account"
+            getLogger("error_logger").error(message)
+
             if verbose:
-                print("\t- ERROR: failed to locate Canvas Account")
+                print(message)
 
             continue
 
@@ -315,8 +325,11 @@ def create_canvas_sites(
             except Exception as error:
                 add_request_process_notes(f"failed to create section", request)
 
+                message = f"\t- ERROR: failed to create section ({error})"
+                getLogger("error_logger").error(message)
+
                 if verbose:
-                    print(f"\t- ERROR: failed to create section ({error})")
+                    print(message)
 
                 continue
 
@@ -433,8 +446,11 @@ def create_canvas_sites(
                 if tab.visibility != "public":
                     add_request_process_notes("failed to configure ARES", request)
             except Exception as error:
+                message = f"\t- ERROR: {error}"
+                getLogger("error_logger").error(message)
+
                 if verbose:
-                    print(f"\t- ERROR: {error}")
+                    print(message)
 
                 add_request_process_notes("failed to try to configure ARES", request)
 
@@ -492,8 +508,11 @@ def create_canvas_sites(
                         print(f"\t- Event '{deleted}' deleted.")
 
             except Exception as error:
+                message = f"\t- ERROR: {error}"
+                getLogger("error_logger").error(message)
+
                 if verbose:
-                    print(f"\t- ERROR: {error}")
+                    print(message)
 
         instructors = canvas_course.get_enrollments(type="TeacherEnrollment")._elements
         canvas_id = canvas_course.id
