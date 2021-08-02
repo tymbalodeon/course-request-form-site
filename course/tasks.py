@@ -373,6 +373,7 @@ def create_canvas_sites(
             user = enrollment["user"]
             role = enrollment["role"]
             user_canvas = get_user_by_sis(user)
+
             if user_canvas is None:
                 try:
                     user_crf = User.objects.get(username=user)
