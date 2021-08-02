@@ -1394,7 +1394,7 @@ def autocompleteCanvasCourse(request, search):
 @staff_member_required
 def process_requests(request):
 
-    response = {"response": "response", "processed": []}
+    response = {"response": "response", "processed": [], "error": ""}
     approved_requests = Request.objects.filter(status="APPROVED")
 
     if approved_requests.exists():
@@ -1407,7 +1407,10 @@ def process_requests(request):
                 }
             ]
 
-        create_canvas_sites()
+        try:
+            create_canvas_sites()
+        except Exception as error:
+            response["error"] = str(error)
 
         for processed_request in response["processed"]:
             request_object = Request.objects.get(

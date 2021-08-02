@@ -185,9 +185,7 @@ def create_canvas_sites(
                 if course_requested.primary_crosslist:
                     section_name_code = course_requested.srs_format_primary()
                 else:
-                    add_request_process_notes(
-                        f"{course_requested.primary_crosslist} not set", request
-                    )
+                    add_request_process_notes("Primary crosslist not set", request)
 
                     continue
             else:
