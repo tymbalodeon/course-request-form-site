@@ -1,9 +1,11 @@
 from __future__ import absolute_import, unicode_literals
 
-import sys
 import time
 from datetime import datetime
 from logging import getLogger
+
+from canvasapi.tab import Tab
+from celery import task
 
 from canvas.api import (
     find_account,
@@ -12,13 +14,10 @@ from canvas.api import (
     get_user_by_sis,
     mycreate_user,
 )
-from canvasapi.tab import Tab
-from datawarehouse import datawarehouse
-
-from celery import task
 from course import utils
 from course.models import CanvasSite, Course, Request, User
 from course.serializers import RequestSerializer
+from datawarehouse import datawarehouse
 
 
 @task()
@@ -265,7 +264,7 @@ def create_canvas_sites(
                     ] = course_requested.instructors.all()
                     additional_sections += [additional_section]
                 except Exception as error:
-                    add_request_process_notes(f"failed to create main section", request)
+                    add_request_process_notes("failed to create main section", request)
 
                     message = f"\t- ERROR: failed to create main section ({error})"
                     getLogger("error_logger").error(message)
@@ -323,7 +322,7 @@ def create_canvas_sites(
                 additional_section["instructors"] = section_course.instructors.all()
                 additional_sections += [additional_section]
             except Exception as error:
-                add_request_process_notes(f"failed to create section", request)
+                add_request_process_notes("failed to create section", request)
 
                 message = f"\t- ERROR: failed to create section ({error})"
                 getLogger("error_logger").error(message)

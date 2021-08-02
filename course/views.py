@@ -5,7 +5,6 @@ from datetime import datetime
 from os import listdir, mkdir
 from pathlib import Path
 
-from canvas.api import CanvasException, get_canvas, get_user_by_sis, mycreate_user
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import authenticate, login
@@ -17,7 +16,6 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django_celery_beat.models import PeriodicTask
 from django_filters import rest_framework as filters
-from OpenData import library
 from rest_framework import permissions, serializers, status, viewsets
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -27,6 +25,7 @@ from rest_framework.reverse import reverse
 from rest_framework.utils import html
 from rest_framework.views import APIView, exception_handler
 
+from canvas.api import CanvasException, get_canvas, get_user_by_sis, mycreate_user
 from course import email_processor
 from course.forms import (
     CanvasSiteForm,
@@ -60,6 +59,7 @@ from course.serializers import (
 )
 from course.tasks import create_canvas_sites
 from course.utils import datawarehouse_lookup, updateCanvasSites, validate_pennkey
+from OpenData import library
 
 
 def emergency_redirect(request):
@@ -1542,7 +1542,8 @@ def quickconfig(request):
                             print("CanvasException: ", e)
                             if (
                                 e.message
-                                == '{"message":"Can\'t add an enrollment to a concluded course."}'
+                                == '{"message":"Can\'t add an enrollment to a concluded'
+                                ' course."}'
                             ):
                                 # change term n try again
                                 print("we are adjusting the term")
@@ -1579,11 +1580,13 @@ def quickconfig(request):
                                 e,
                                 e.message[0],
                                 e.message
-                                == '{"message":"Can\'t add an enrollment to a concluded course."}',
+                                == '{"message":"Can\'t add an enrollment to a concluded'
+                                ' course."}',
                             )
                             if (
                                 e.message
-                                == '{"message":"Can\'t add an enrollment to a concluded course."}'
+                                == '{"message":"Can\'t add an enrollment to a concluded'
+                                ' course."}'
                             ):
                                 # change term n try again
                                 print("we are adjusting the term")
