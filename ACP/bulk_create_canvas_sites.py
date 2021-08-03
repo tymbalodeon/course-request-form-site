@@ -69,7 +69,7 @@ def request_course(course, status="APPROVED", verbose=True):
             "reserves": True,
         },
     )
-    request.status = status
+    request[0].status = status
     request.save()
     course.save()
 
