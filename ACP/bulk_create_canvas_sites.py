@@ -68,8 +68,8 @@ def request_course(course, status="APPROVED", verbose=True):
             "created": datetime.now(),
             "reserves": True,
         },
-    )
-    request[0].status = status
+    )[0]
+    request.status = status
     request.save()
     course.save()
 
