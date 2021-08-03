@@ -9,7 +9,6 @@ from re import findall
 from string import capwords
 
 import cx_Oracle
-
 from course import utils
 from course.models import Activity, Course, Profile, School, Subject, User
 from OpenData.library import OpenData
@@ -30,6 +29,7 @@ def get_cursor():
     connection = cx_Oracle.connect(
         values["user"], values["password"], values["service"]
     )
+
     return connection.cursor()
 
 
@@ -37,6 +37,7 @@ def get_open_data():
     config = ConfigParser()
     config.read("config/config.ini")
     values = dict(config.items("opendata"))
+
     return OpenData(base_url=values["domain"], id=values["id"], key=values["key"])
 
 
@@ -61,13 +62,13 @@ def get_user(penn_id):
         WHERE PENN_ID= :penn_id """,
         penn_id=str(penn_id),
     )
+
     for first_name, last_name, email, pennkey in cursor:
         return [first_name, last_name, email, pennkey]
 
 
 def inspect_course(section, term=None):
-    section = section.replace("-", "")
-    section = section.replace(" ", "")
+    section = section.replace("-", "").replace(" ", "")
     cursor = get_cursor()
     cursor.execute(
         """
@@ -452,26 +453,25 @@ def available_terms():
     cursor = get_cursor()
     cursor.execute(
         """
-    SELECT
-      current_academic_term,
-      next_academic_term,
-      previous_academic_term,
-      next_next_academic_term,
-      previous_previous_acad_term
-    FROM
-      dwadmin.present_period"""
+        SELECT
+            current_academic_term,
+            next_academic_term,
+            previous_academic_term,
+            next_next_academic_term,
+            previous_previous_acad_term
+        FROM
+            dwadmin.present_period
+        """
     )
-    for x in cursor:
-        print(x)
+    for term in cursor:
+        print(term)
 
 
 def daily_sync(term):
     pull_courses(term)
     pull_instructors(term)
     utils.process_canvas()
-    utils.update_sites_info(
-        term
-    )  # info # -- for each Canvas Site in the CRF check if its been altered
+    utils.update_sites_info(term)
     delete_canceled_courses(term)
 
 
@@ -513,69 +513,58 @@ def delete_canceled_courses(term):
         """,
         term=term,
     )
-    # AND cs.status IN ('X','H')
 
-    f = open("course/static/log/deleted_courses_issues.log", "a")
-    time_start = datetime.now().strftime("%Y-%m-%d")
-    f.write("-----" + time_start + "-----\n")
-    for (
-        course_code,
-        section_id,
-        term,
-        subject_area,
-        school,
-        xc,
-        xc_code,
-        activity,
-        section_dept,
-        section_division,
-        title,
-        status,
-        rev,
-    ) in cursor:
-        # print(course_code, section_id, term, subject_area, school, xc,
-        # xc_code, activity, section_dept,section_division, title,status, rev)
-        course_code = course_code.replace(" ", "")
-        subject_area = subject_area.replace(" ", "")
-        xc_code = xc_code.replace(" ", "")
+    start = datetime.now().strftime("%Y-%m-%d")
 
-        try:
-            course = Course.objects.get(course_code=course_code)
-            if course.requested:
-                # does this course have course.request ,
-                # course.multisection_request or course.crosslisted_request
-                try:
-                    canvas_site = course.request.canvas_instance
-                except Exception:
-                    print("no main request:%s" % course.course_code)
-                    if course.multisection_request:
-                        canvas_site = course.multisection_request.canvas_instance
-                    elif course.crosslisted_request:
-                        canvas_site = course.crosslisted_request.canvas_instance
+    with open("course/static/log/deleted_courses_issues.log", "a") as log:
+        log.write(f"-----{start}-----\n")
+
+        for (
+            course_code,
+            section_id,
+            term,
+            subject_area,
+            school,
+            xc,
+            xc_code,
+            activity,
+            section_dept,
+            section_division,
+            title,
+            status,
+            rev,
+        ) in cursor:
+            course_code = course_code.replace(" ", "")
+            subject_area = subject_area.replace(" ", "")
+            xc_code = xc_code.replace(" ", "")
+
+            try:
+                course = Course.objects.get(course_code=course_code)
+
+                if course.requested:
+                    try:
+                        canvas_site = course.request.canvas_instance
+                    except Exception:
+                        print(f"- No main request for {course.course_code}.")
+
+                        if course.multisection_request:
+                            canvas_site = course.multisection_request.canvas_instance
+                        elif course.crosslisted_request:
+                            canvas_site = course.crosslisted_request.canvas_instance
+                        else:
+                            canvas_site = None
+
+                    if canvas_site and canvas_site.workflow_state != "deleted":
+                        log.write(f"- Canvas site already exists for {course_code}.\n")
                     else:
-                        # doesnt seem to be tied to a request.
-                        canvas_site = None
-
-                if canvas_site:
-                    if canvas_site.workflow_state == "deleted":
-                        # no issue
-                        pass
-                    else:
-                        f.write(
-                            "Canvas Site already Exists:" + course_code + " " + "\n"
+                        log.write(
+                            "- Canceled course requested but no Canvas site for"
+                            f" {course_code}.\n"
                         )
                 else:
-                    f.write(
-                        "Canceled Course is Requested and no Site:"
-                        + course_code
-                        + " "
-                        + "\n"
-                    )
-            else:
-                print("deleting ", course_code)
-                course.delete()
-        except Exception:
-            # the canceled course doesnt exist in the CRF... no problem for us then
-            pass
-
-    f.close()
+                    print(") Deleting {course_code}...")
+                    course.delete()
+            except Exception:
+                print(
+                    "- The canceled course {course_code} doesn't exist in the CRF yet."
+                )

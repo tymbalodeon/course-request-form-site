@@ -1,8 +1,7 @@
 from configparser import ConfigParser
 
-from django.core.management.base import BaseCommand
-
 from course.models import Activity
+from django.core.management.base import BaseCommand
 from OpenData.library import OpenData
 
 config = ConfigParser()
