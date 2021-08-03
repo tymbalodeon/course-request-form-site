@@ -1,5 +1,5 @@
 from configparser import ConfigParser
-from datetime import datetime
+from django.utils import timezone
 
 from canvas.api import get_canvas
 from canvasapi.exceptions import CanvasException
@@ -66,7 +66,7 @@ def request_course(course, status="APPROVED", verbose=True):
                     " for more information."
                 ),
                 "owner": OWNER,
-                "created": datetime.now(),
+                "created": timezone.now(),
                 "reserves": True,
             },
         )[0]
