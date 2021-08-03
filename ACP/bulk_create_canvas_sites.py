@@ -16,7 +16,6 @@ OWNER = User.objects.get(username=config.items("users")[0][0])
 
 def get_unrequested_courses(year_and_term, school_abbreviation):
     print(") Finding unrequested courses...")
-
     term = year_and_term[-1]
     year = year_and_term[:-1]
 
@@ -42,7 +41,6 @@ def get_unrequested_courses(year_and_term, school_abbreviation):
         )
 
     total_unrequested = len(unrequested_courses)
-
     print(f"FOUND {total_unrequested} UNREQUESTED COURSES.")
 
     return list(unrequested_courses)
@@ -149,7 +147,7 @@ def bulk_create_canvas_sites(
                 if creation_error:
                     print("\t> Aborting... (SECTION ALREADY EXISTS)")
                     canvas_logger.info(
-                        f"ERROR: Failed to create main section for {course} (SECTION"
+                        f"Failed to create main section for {course} (SECTION"
                         " ALREADY EXISTS)"
                     )
                     course_request[0].status = "COMPLETED"
@@ -165,9 +163,10 @@ def bulk_create_canvas_sites(
                 else:
                     print(f"\t* ERROR: Request incomplete. ({request.process_notes})")
                     canvas_logger.info(
-                        f"ERROR: Request incomplete for {course}"
+                        f"Request incomplete for {course}"
                         f" ({request.process_notes})."
                     )
+
                     continue
 
                 if enable:
@@ -175,12 +174,12 @@ def bulk_create_canvas_sites(
                     enable_tools(canvas_id, tools, label, test)
             except Exception as error:
                 print(f"\t* ERROR: Failed to create site ({error}).")
-                crf_logger.info(f"ERROR: Failed to create site for {course} ({error}).")
+                canvas_logger.info(f"Failed to create site for {course} ({error}).")
 
             print("\tCOMPLETE")
         else:
             print(f"\t* SKIPPING: {sis_id} is already in use.")
-            canvas_logger.warning(f"{sis_id} is already in use.")
+            canvas_logger.info(f"{sis_id} is already in use.")
 
             if not course.requested:
                 request_course(course, "COMPLETED", False)
