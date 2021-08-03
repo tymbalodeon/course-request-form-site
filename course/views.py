@@ -113,9 +113,7 @@ class TestUserProfileCreated(UserPassesTestMixin):
         return False
 
 
-class MixedPermissionModelViewSet(
-    viewsets.ModelViewSet
-):  # LoginRequiredMixin, -- causes problems with API?
+class MixedPermissionModelViewSet(viewsets.ModelViewSet):
     """
     Mixed permission base model allowing for action level
     permission control. Subclasses may define their permissions
@@ -134,27 +132,24 @@ class MixedPermissionModelViewSet(
 
     permission_classes_by_action = {}
     login_url = "/accounts/login/"
-    # permission_classes = (IsAuthenticated,)
 
     def get_permissions(self):
-        # print("we here")
+        print(f"Action: {self.action}")
 
         try:
-            print("self.action", self.action)
-            # return permission_classes depending on `action`
-            # print([permission() for permission in self.permission_classes_by_action[self.action]])
             return [
                 permission()
                 for permission in self.permission_classes_by_action[self.action]
             ]
         except KeyError:
-            # action is not set return default permission_classes
-            print("KeyError for permission: ", self.action)
+            print(f"KeyError for permission: {self.action}")
+
             return [permission() for permission in self.permission_classes]
 
     def handle_no_permission(self):
         if self.raise_exception or self.request.user.is_authenticated:
             raise PermissionDenied(self.get_permission_denied_message())
+
         return redirect_to_login(
             self.request.get_full_path(),
             self.get_login_url(),
@@ -1072,7 +1067,7 @@ class HomePage(APIView, UserPassesTestMixin):  # ,
 
     def test_func(self):
         user_name = self.request.user.username
-        print(f') Checking Users for "{user_name}"...')
+        print(f'Checking Users for "{user_name}"...')
         user = User.objects.get(username=self.request.user.username)
 
         try:
