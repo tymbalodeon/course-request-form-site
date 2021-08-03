@@ -59,7 +59,7 @@ from course.serializers import (
     UserSerializer,
 )
 from course.tasks import create_canvas_sites
-from course.utils import datawarehouse_lookup, updateCanvasSites, validate_pennkey
+from course.utils import datawarehouse_lookup, update_canvas_sites, validate_pennkey
 from OpenData import library
 
 
@@ -1089,7 +1089,7 @@ class HomePage(APIView, UserPassesTestMixin):  # ,
                 user.last_name = last_name
                 user.email = userdata["email"]
                 Profile.objects.create(user=user, penn_id=userdata["penn_id"])
-                updateCanvasSites(user.username)
+                update_canvas_sites(user.username)
                 return True
             else:
                 return False
@@ -1460,10 +1460,13 @@ def view_canceled_SRS(request):
 def remove_canceled_requests(request):
 
     done = {"response": "", "processed": []}
-    _to_process = Request.objects.filter(status="CANCELED")
-    for obj in _to_process:
-        done["processed"] += [obj.course_requested.course_code]
-    done["response"] = datetime.datetime.now().strftime("%m/%d/%y %I:%M%p")
+    canceled_requests = Request.objects.filter(status="CANCELED")
+
+    for request in canceled_requests:
+        done["processed"] += [request.course_requested.course_code]
+
+    done["response"] = datetime.now().strftime("%m/%d/%y %I:%M%p")
+
     return JsonResponse(done)
 
 

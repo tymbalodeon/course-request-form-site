@@ -198,20 +198,21 @@ def get_template_sites(user):
     print(other)
 
 
-def updateCanvasSites(pennkey):
-    canvas_courses = canvas_api.get_user_courses(pennkey)
-    if canvas_courses != None:
+def update_user_courses(penn_key):
+    canvas_courses = canvas_api.get_user_courses(penn_key)
+
+    if canvas_courses:
         for canvas_course in canvas_courses:
             try:
-                here = CanvasSite.objects.update_or_create(
+                course = CanvasSite.objects.update_or_create(
                     canvas_id=str(canvas_course.id),
                     workflow_state=canvas_course.workflow_state,
                     sis_course_id=canvas_course.sis_course_id,
                     name=canvas_course.name,
                 )
-                here[0].owners.add(User.objects.get(username=pennkey))
+                course[0].owners.add(User.objects.get(username=penn_key))
             except:
-                print("couldnt add course", canvas_course.id)
+                print(f"- Failed to add {canvas_course.id}")
 
 
 def find_no_canvas_account():
@@ -317,7 +318,6 @@ def update_sites_info(term):
 
 
 def process_canvas():
-    users = User.objects.all()
-    for user in users:
-        print("adding for ", user.username)
-        updateCanvasSites(user.username)
+    for user in User.objects.all():
+        print(f") Adding courses for {user.username}...")
+        update_user_courses(user.username)
