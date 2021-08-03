@@ -334,17 +334,22 @@ class Course(models.Model):
 
     def get_request(self):
         try:
-            requestinfo = self.request
-            return requestinfo
-        except Request.DoesNotExist:
-            print("Request.DoesNotExist!")
+            return self.request
+        except Exception as error:
+            print(f"Request NOT FOUND for {self} ({error}).")
+            print("Looking for multisection request...")
 
         if self.multisection_request:
-            return self.multisection_request
+            request = self.multisection_request
         elif self.crosslisted_request:
-            return self.crosslisted_request
+            request = self.crosslisted_request
         else:
-            return None
+            request = None
+
+        if not request:
+            print("Multi-section and cross-listed requests NOT FOUND.")
+        else:
+            print(f"FOUND request: {request}.")
 
     def get_subjects(self):
         return self.course_subject.abbreviation
