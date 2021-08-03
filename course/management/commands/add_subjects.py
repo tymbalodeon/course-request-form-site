@@ -2,9 +2,8 @@ import json
 import logging
 from configparser import ConfigParser
 
-from django.core.management.base import BaseCommand
-
 from course.models import School, Subject
+from django.core.management.base import BaseCommand
 from OpenData.library import OpenData
 
 config = ConfigParser()

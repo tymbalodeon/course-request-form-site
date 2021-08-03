@@ -1,8 +1,7 @@
+from course.models import CanvasSite, Subject
 from dal import autocomplete
 from django.contrib.auth.models import User
 from django.db.models import Q
-
-from course.models import CanvasSite, Subject
 
 # https://django-autocomplete-light.readthedocs.io/en/master/
 

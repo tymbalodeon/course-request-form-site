@@ -4,10 +4,9 @@ import sys
 from configparser import ConfigParser
 
 from canvasapi import Canvas
-from dateutil import tz
-
 from course.models import CanvasSite, Course, Request, User
 from datawarehouse.helpers import is_canceled
+from dateutil import tz
 
 config = ConfigParser()
 config.read("config/config.ini")
