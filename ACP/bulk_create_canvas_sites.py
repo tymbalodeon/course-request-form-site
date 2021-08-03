@@ -57,26 +57,29 @@ def should_request(sis_id, test=False):
 
 
 def request_course(course, status="APPROVED", verbose=True):
-    request = Request.objects.update_or_create(
-        course_requested=course,
-        defaults={
-            "additional_instructions": (
-                "Request automatically generated; contact Courseware Support"
-                " for more information."
-            ),
-            "owner": OWNER,
-            "created": datetime.now(),
-            "reserves": True,
-        },
-    )[0]
-    request.status = status
-    request.save()
-    course.save()
+    try:
+        request = Request.objects.update_or_create(
+            course_requested=course,
+            defaults={
+                "additional_instructions": (
+                    "Request automatically generated; contact Courseware Support"
+                    " for more information."
+                ),
+                "owner": OWNER,
+                "created": datetime.now(),
+                "reserves": True,
+            },
+        )[0]
+        request.status = status
+        request.save()
+        course.save()
 
-    if verbose:
-        print("\t* Request created.")
+        if verbose:
+            print("\t* Request created.")
 
-    return [request]
+        return [request]
+    except Exception as error:
+        return error
 
 
 def enable_tools(canvas_id, tools, label, test):
