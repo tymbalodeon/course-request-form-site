@@ -6,11 +6,12 @@ import sys
 from configparser import ConfigParser
 
 from canvasapi import Canvas
+from django.core.management.base import BaseCommand
+from django.utils.crypto import get_random_string
+
 from course.models import *
 from course.utils import *
 from crf2.settings import BASE_DIR
-from django.core.management.base import BaseCommand
-from django.utils.crypto import get_random_string
 from OpenData.library import *
 
 config = ConfigParser()

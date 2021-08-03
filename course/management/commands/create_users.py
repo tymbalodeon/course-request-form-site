@@ -1,10 +1,11 @@
 from configparser import ConfigParser
 
 import cx_Oracle
-from course.models import Profile
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.utils.crypto import get_random_string
+
+from course.models import Profile
 
 config = ConfigParser()
 config.read("config/config.ini")

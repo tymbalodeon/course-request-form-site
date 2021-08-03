@@ -4,6 +4,7 @@ import logging
 from configparser import ConfigParser
 
 import cx_Oracle
+
 from canvas import api as canvas_api
 from course.models import *
 from datawarehouse.datawarehouse import *
@@ -222,7 +223,7 @@ def find_no_canvas_account():
             print(user.username)
             try:
                 profile = user.profile
-                canvas_api.mycreate_user(
+                canvas_api.create_canvas_user(
                     user.username,
                     user.profile.penn_id,
                     user.email,
@@ -233,7 +234,7 @@ def find_no_canvas_account():
                 userdata = datawarehouse_lookup(PPENN_KEY=user.username)
                 if userdata:
                     Profile.objects.create(user=user, penn_id=userdata["penn_id"])
-                    canvas_api.mycreate_user(
+                    canvas_api.create_canvas_user(
                         user.username,
                         user.profile.penn_id,
                         user.email,
