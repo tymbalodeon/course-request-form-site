@@ -22,20 +22,12 @@ from datawarehouse import datawarehouse
 
 @task()
 def task_nightly_sync(term):
-    time_start = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    f = open("course/static/log/night_sync.log", "a")
+    start = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     datawarehouse.daily_sync(term)
-    time_end = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    f.write("Nighly Update " + term + ":" + time_start + " - " + time_end + "\n")
-    f.close()
+    end = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-
-@task()
-def task_test():
-    time_start = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    f = open("course/static/log/test.log", "a")
-    f.write(time_start + "\n")
-    f.close()
+    with open("course/static/log/night_sync.log", "a") as log:
+        log.write(f"Nighly Update for {term}: {start} -- {end}\n")
 
 
 @task()
@@ -50,12 +42,12 @@ def update_instrutors(term):
 
 @task()
 def task_clear_instructors(term):
-    datawarehouse.clear_instructors(term)  # -- only for non requested courses
+    datawarehouse.clear_instructors(term)
 
 
 @task()
 def task_pull_instructors(term):
-    datawarehouse.pull_instructors(term)  # -- only for non requested courses
+    datawarehouse.pull_instructors(term)
 
 
 @task()
@@ -65,11 +57,9 @@ def task_process_canvas():
 
 @task()
 def task_update_sites_info(term):
-    print("term", term)
-    utils.update_sites_info(
-        term
-    )  # info # -- for each Canvas Site in the CRF check if its been altered
-    print("finished canvas site metadata update")
+    print(") Updating site info for {term} courses...")
+    utils.update_sites_info(term)
+    print("FINISHED")
 
 
 @task()
@@ -77,64 +67,28 @@ def task_delete_canceled_courses(term):
     datawarehouse.delete_canceled_courses(term)
 
 
-# ----------- CHECK COURSE IN CANVAS ---------------
-# FREQUENCY = NIGHTLY
-@task()
-def task_check_courses_in_canvas():
-    """
-    check to see if any of the courses that do not have a request object
-    associated with them exist yet in Canvas if they do then write to the file
-    and set the course to request_override
-    """
-    # courses = Course.objects.filter(requested=False).filter(requested_override=False)
-    # for course in courses:
-    #     # if the section doesnt exist then it will return None
-    #     found = find_in_canvas("SRS_" + course.srs_format())
-    #     # found == None if there is NO CANVAS SECTION
-    #     if found is None:
-    #         pass  # this course doesnt exist in canvas yet
-    #     else:
-    #         # set the course to requested
-    #         # course.requested_override = True
-    #         # check that the canvas site exists in the CRF
-    #         try:
-    #             canvas_site = CanvasSite.objects.get(canvas_id=found.course_id)
-
-    #         except Exception:  # doesnt exist in CRF
-    #             # Create in CRF
-    #             canvas_site = CanvasSite
-    #             pass
-
-
-# ----------- REMOVE CANCELED REQUESTS ---------------
 @task()
 def delete_canceled_requests():
-    _to_process = Request.objects.filter(status="CANCELED")
-    for request in _to_process:
+    canceled_requests = Request.objects.filter(status="CANCELED")
+
+    for request in canceled_requests:
         request.delete()
 
 
-# ----------- CREATE COURSE IN CANVAS ---------------
-# FREQUENCY = NIGHTLY
-# https://github.com/upenn-libraries/accountservices/blob/master/siterequest/management/commands/process_approved_items.py
-
-
-# CREATE LOGIN -- USERNAME: PENNKEY, SIS ID: PENN_ID, fullname
 @task()
-def check_for_account(pennkey):
-    user = get_user_by_sis(pennkey)
+def check_for_account(penn_key):
+    user = get_user_by_sis(penn_key)
+
     if user is None:
         try:
-            crf_account = User.objects.get(username=pennkey)
-            pennid = crf_account.profile.pennid
+            crf_account = User.objects.get(username=penn_key)
+            penn_id = crf_account.profile.pennid
             full_name = crf_account.get_full_name()
-            canvas_account = mycreate_user(pennkey, pennid, full_name)
-            if canvas_account:
-                return canvas_account
-            else:
-                return None
-        except Exception:
-            pass
+            canvas_account = mycreate_user(penn_key, penn_id, full_name)
+
+            return canvas_account if canvas_account else None
+        except Exception as error:
+            print(f"- ERROR: Failed to create canvas account for {penn_key} ({error}).")
 
 
 def add_request_process_notes(message, request):
