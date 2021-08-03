@@ -1071,29 +1071,32 @@ class HomePage(APIView, UserPassesTestMixin):  # ,
     permission_classes = (permissions.IsAuthenticated,)
 
     def test_func(self):
-        # this is to test that for each new user a profile exists for them
-        # the User object is automatically created with the shib login
-        # for more info please refer to https://ccbv.co.uk/projects/Django/1.9/django.contrib.auth.mixins/UserPassesTestMixin/
-
-        print("testing user")
+        user_name = self.request.user.username
+        print(f') Checking Users for "{user_name}"...')
         user = User.objects.get(username=self.request.user.username)
+
         try:
             if user.profile:
+                print(f'- FOUND user "{user_name}".')
+
                 return True
         except Exception:
-            userdata = datawarehouse_lookup(PPENN_KEY=user.username)
-            if userdata:  # if no result userdata== False
-                first_name = userdata["firstname"].title()
-                last_name = userdata["lastname"].title()
-                user.first_name = first_name
-                user.last_name = last_name
-                user.email = userdata["email"]
-                Profile.objects.create(user=user, penn_id=userdata["penn_id"])
+            user_data = datawarehouse_lookup(PPENN_KEY=user.username)
+
+            if user_data:
+                user.first_name = user_data["firstname"].title()
+                user.last_name = user_data["lastname"].title()
+                user.email = user_data["email"]
+                Profile.objects.create(user=user, penn_id=user_data["penn_id"])
                 update_user_courses(user.username)
+
+                print(f'- CREATED user "{user_name}".')
+
                 return True
             else:
+                print(f'- FAILED to create user "{user_name}".')
+
                 return False
-        return False
 
     def get(self, request, *args, **kwargs):
         # # TODO:
