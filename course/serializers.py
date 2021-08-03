@@ -1,8 +1,5 @@
 import collections
 
-from django.contrib.auth.models import User
-from rest_framework import serializers
-
 from course.models import (
     Activity,
     AdditionalEnrollment,
@@ -17,6 +14,8 @@ from course.models import (
     UpdateLog,
 )
 from course.utils import validate_pennkey
+from django.contrib.auth.models import User
+from rest_framework import serializers
 
 
 class DynamicFieldsModelSerializer(serializers.ModelSerializer):
