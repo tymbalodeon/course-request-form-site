@@ -1,5 +1,6 @@
-from course import utils
 from django.contrib.auth.models import User
+
+from course import utils
 
 """"
 Since we are doing SSO authentication we need to

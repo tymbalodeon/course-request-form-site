@@ -4,6 +4,9 @@ import time
 from datetime import datetime
 from logging import getLogger
 
+from canvasapi.tab import Tab
+from celery import task
+
 from canvas.api import (
     find_account,
     find_term_id,
@@ -11,8 +14,6 @@ from canvas.api import (
     get_user_by_sis,
     mycreate_user,
 )
-from canvasapi.tab import Tab
-from celery import task
 from course import utils
 from course.models import CanvasSite, Course, Request, User
 from course.serializers import RequestSerializer
