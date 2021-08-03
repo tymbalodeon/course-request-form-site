@@ -1,9 +1,8 @@
 from configparser import ConfigParser
 from datetime import datetime
 
-from canvasapi.exceptions import CanvasException
-
 from canvas.api import get_canvas
+from canvasapi.exceptions import CanvasException
 from course.models import Course, Request, School, User
 from course.tasks import create_canvas_sites
 
@@ -86,9 +85,9 @@ def enable_tools(canvas_id, tools, label, test):
             tabs = canvas_site.get_tabs()
 
             if label:
-                tool_tab = next(filter(lambda tab: tab.label == tool, tabs), None)
+                tool_tab = next((tab for tab in tabs if tab.label == tool), None)
             else:
-                tool_tab = next(filter(lambda tab: tab.id == tool, tabs), None)
+                tool_tab = next((tab for tab in tabs if tab.id == tool), None)
 
             if tool_tab.visibility != "public":
                 tool_tab.update(hidden=False, position=3)
