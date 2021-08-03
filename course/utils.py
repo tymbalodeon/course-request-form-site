@@ -4,6 +4,7 @@ import logging
 from configparser import ConfigParser
 
 import cx_Oracle
+
 from canvas import api as canvas_api
 from course.models import *
 from datawarehouse.datawarehouse import *
