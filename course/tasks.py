@@ -244,7 +244,7 @@ def create_canvas_sites(
 
         for section in serialized.data["additional_sections"]:
             try:
-                section_course = Course.objects.get(course_code=section)
+                section_course = Course.objects.get(course_code=section.course_code)
 
                 if section_course.course_activity.abbr != "LEC":
                     namebit = section_course.course_activity.abbr
