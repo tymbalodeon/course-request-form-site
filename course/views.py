@@ -1077,7 +1077,7 @@ class HomePage(APIView, UserPassesTestMixin):  # ,
 
         try:
             if user.profile:
-                print(f'- FOUND user "{user_name}".')
+                print(f'FOUND user "{user_name}".')
 
                 return True
         except Exception:
@@ -1090,11 +1090,11 @@ class HomePage(APIView, UserPassesTestMixin):  # ,
                 Profile.objects.create(user=user, penn_id=user_data["penn_id"])
                 update_user_courses(user.username)
 
-                print(f'- CREATED user "{user_name}".')
+                print(f'CREATED user "{user_name}".')
 
                 return True
             else:
-                print(f'- FAILED to create user "{user_name}".')
+                print(f'FAILED to create user "{user_name}".')
 
                 return False
 
