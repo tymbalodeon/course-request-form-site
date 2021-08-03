@@ -1,6 +1,7 @@
-from course.models import Profile
 from django.contrib.auth.middleware import RemoteUserMiddleware
 from django.contrib.auth.models import User
+
+from course.models import Profile
 
 
 class CustomRemoteUserMiddleware(RemoteUserMiddleware):

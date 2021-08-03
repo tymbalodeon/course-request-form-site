@@ -1,9 +1,10 @@
 import logging
 
-from course.forms import ContactForm, EmailChangeForm
-from course.models import *
 from django.core.mail import EmailMessage
 from django.template.loader import get_template
+
+from course.forms import ContactForm, EmailChangeForm
+from course.models import *
 
 """
 Types of emails being sent:

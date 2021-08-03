@@ -1,7 +1,8 @@
-from course.models import AdditionalEnrollment, CanvasSite, Subject
 from dal import autocomplete
 from django import forms
 from django.contrib.auth.models import User
+
+from course.models import AdditionalEnrollment, CanvasSite, Subject
 
 
 # our new form
