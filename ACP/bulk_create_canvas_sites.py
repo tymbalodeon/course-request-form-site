@@ -1,8 +1,9 @@
 from configparser import ConfigParser
+
+from canvasapi.exceptions import CanvasException
 from django.utils import timezone
 
 from canvas.api import get_canvas
-from canvasapi.exceptions import CanvasException
 from course.models import Course, Request, School, User
 from course.tasks import create_canvas_sites
 
@@ -167,8 +168,7 @@ def bulk_create_canvas_sites(
                 else:
                     print(f"\t* ERROR: Request incomplete. ({request.process_notes})")
                     canvas_logger.info(
-                        f"Request incomplete for {course}"
-                        f" ({request.process_notes})."
+                        f"Request incomplete for {course} ({request.process_notes})."
                     )
 
                     continue

@@ -4,49 +4,39 @@ import time
 from datetime import datetime
 from logging import getLogger
 
+from canvasapi.tab import Tab
+from celery import task
+
 from canvas.api import (
+    create_canvas_user,
     find_account,
     find_term_id,
     get_canvas,
     get_user_by_sis,
-    mycreate_user,
 )
-from canvasapi.tab import Tab
-from celery import task
 from course import utils
 from course.models import CanvasSite, Course, Request, User
 from course.serializers import RequestSerializer
-from datawarehouse import datawarehouse
+from datawarehouse.datawarehouse import (
+    daily_sync,
+    delete_canceled_courses,
+    pull_instructors,
+)
 
 
 @task()
 def task_nightly_sync(term):
     start = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    datawarehouse.daily_sync(term)
+    daily_sync(term)
     end = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     with open("course/static/log/night_sync.log", "a") as log:
-        log.write(f"Nighly Update for {term}: {start} -- {end}\n")
-
-
-@task()
-def task_pull_courses(term):
-    datawarehouse.pull_courses(term)
-
-
-def update_instrutors(term):
-    chain = task_clear_instructors.s(term) | task_pull_instructors.s(term)
-    chain()
-
-
-@task()
-def task_clear_instructors(term):
-    datawarehouse.clear_instructors(term)
+        log.write(f"Nighly Update for {term}: {start} - {end} \n")
 
 
 @task()
 def task_pull_instructors(term):
-    datawarehouse.pull_instructors(term)
+    pull_instructors(term)
 
 
 @task()
@@ -63,7 +53,7 @@ def task_update_sites_info(term):
 
 @task()
 def task_delete_canceled_courses(term):
-    datawarehouse.delete_canceled_courses(term)
+    delete_canceled_courses(term)
 
 
 @task()
@@ -83,7 +73,7 @@ def check_for_account(penn_key):
             crf_account = User.objects.get(username=penn_key)
             penn_id = crf_account.profile.pennid
             full_name = crf_account.get_full_name()
-            canvas_account = mycreate_user(penn_key, penn_id, full_name)
+            canvas_account = create_canvas_user(penn_key, penn_id, full_name)
 
             return canvas_account if canvas_account else None
         except Exception as error:
@@ -303,7 +293,7 @@ def create_canvas_sites(
 
                 if user is None:
                     try:
-                        user = mycreate_user(
+                        user = create_canvas_user(
                             instructor.username,
                             instructor.profile.penn_id,
                             instructor.email,
@@ -342,7 +332,7 @@ def create_canvas_sites(
             if user_canvas is None:
                 try:
                     user_crf = User.objects.get(username=user)
-                    user_canvas = mycreate_user(
+                    user_canvas = create_canvas_user(
                         user,
                         user_crf.profile.penn_id,
                         user_crf.email,
