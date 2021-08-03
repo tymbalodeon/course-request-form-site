@@ -57,15 +57,17 @@ def should_request(sis_id, test=False):
 
 
 def request_course(course, status="APPROVED", verbose=True):
-    request = Request.objects.create(
+    request = Request.objects.update_or_create(
         course_requested=course,
-        additional_instructions=(
-            "Request automatically generated; contact Courseware Support"
-            " for more information."
-        ),
-        owner=OWNER,
-        created=datetime.now(),
-        reserves=True,
+        defaults={
+            "additional_instructions": (
+                "Request automatically generated; contact Courseware Support"
+                " for more information."
+            ),
+            "owner": OWNER,
+            "created": datetime.now(),
+            "reserves": True,
+        },
     )
     request.status = status
     request.save()
