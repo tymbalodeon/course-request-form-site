@@ -343,7 +343,7 @@ class Course(models.Model):
             else:
                 request = None
 
-            if not request:
+            if not request and self.requested:
                 print(f"Request NOT FOUND for {self.course_code} ({error}).")
 
             return request
