@@ -2,28 +2,9 @@ import json
 import urllib.parse
 from configparser import ConfigParser
 from datetime import datetime
+from logging import getLogger
 from os import listdir, mkdir
 from pathlib import Path
-
-from django.contrib import messages
-from django.contrib.admin.views.decorators import staff_member_required
-from django.contrib.auth import authenticate, login
-from django.contrib.auth.mixins import UserPassesTestMixin
-from django.contrib.auth.models import User
-from django.contrib.auth.views import redirect_to_login
-from django.db.models import Q
-from django.http import HttpResponse, JsonResponse
-from django.shortcuts import redirect, render
-from django_celery_beat.models import PeriodicTask
-from django_filters import rest_framework as filters
-from rest_framework import permissions, serializers, status, viewsets
-from rest_framework.exceptions import PermissionDenied
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
-from rest_framework.renderers import TemplateHTMLRenderer
-from rest_framework.response import Response
-from rest_framework.reverse import reverse
-from rest_framework.utils import html
-from rest_framework.views import APIView, exception_handler
 
 from canvas.api import CanvasException, get_canvas, get_user_by_sis, mycreate_user
 from course import email_processor
@@ -59,7 +40,26 @@ from course.serializers import (
 )
 from course.tasks import create_canvas_sites
 from course.utils import datawarehouse_lookup, updateCanvasSites, validate_pennkey
+from django.contrib import messages
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.mixins import UserPassesTestMixin
+from django.contrib.auth.models import User
+from django.contrib.auth.views import redirect_to_login
+from django.db.models import Q
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import redirect, render
+from django_celery_beat.models import PeriodicTask
+from django_filters import rest_framework as filters
 from OpenData import library
+from rest_framework import permissions, serializers, status, viewsets
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.renderers import TemplateHTMLRenderer
+from rest_framework.response import Response
+from rest_framework.reverse import reverse
+from rest_framework.utils import html
+from rest_framework.views import APIView, exception_handler
 
 
 def emergency_redirect(request):
@@ -1410,7 +1410,9 @@ def process_requests(request):
         try:
             create_canvas_sites()
         except Exception as error:
-            response["error"] = str(error)
+            error = str(error)
+            response["error"] = error
+            getLogger("error_logger").error(error)
 
         for processed_request in response["processed"]:
             request_object = Request.objects.get(

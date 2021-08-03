@@ -1,8 +1,7 @@
 from configparser import ConfigParser
 
-from django.core.management.base import BaseCommand
-
 from course.models import School
+from django.core.management.base import BaseCommand
 
 config = ConfigParser()
 config.read("config/config.ini")

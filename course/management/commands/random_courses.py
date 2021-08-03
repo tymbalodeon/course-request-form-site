@@ -1,11 +1,10 @@
 import random
 from configparser import ConfigParser
 
+from course.models import *
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.utils.crypto import get_random_string
-
-from course.models import *
 
 config = ConfigParser()
 config.read("config/config.ini")
