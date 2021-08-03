@@ -9,7 +9,6 @@ from re import findall
 from string import capwords
 
 import cx_Oracle
-
 from course import utils
 from course.models import Activity, Course, Profile, School, Subject, User
 from OpenData.library import OpenData
@@ -559,7 +558,8 @@ def delete_canceled_courses(term):
                         log.write(f"- Canvas site already exists for {course_code}.\n")
                     else:
                         log.write(
-                            f"- Canceled course requested but no Canvas site for {course_code}.\n"
+                            "- Canceled course requested but no Canvas site for"
+                            f" {course_code}.\n"
                         )
                 else:
                     print(") Deleting {course_code}...")

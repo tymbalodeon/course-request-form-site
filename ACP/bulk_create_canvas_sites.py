@@ -1,9 +1,8 @@
 from configparser import ConfigParser
 from datetime import datetime
 
-from canvasapi.exceptions import CanvasException
-
 from canvas.api import get_canvas
+from canvasapi.exceptions import CanvasException
 from course.models import Course, Request, School, User
 from course.tasks import create_canvas_sites
 
