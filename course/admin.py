@@ -214,7 +214,6 @@ class RequestAdmin(admin.ModelAdmin):
     def requestors(self, object):
         if object.masquerade != "":
             masquerade = f"{object.owner.username} ({object.masquerade})"
-            print(f"Masquerade: {masquerade}")
         else:
             masquerade = object.owner.username
 
