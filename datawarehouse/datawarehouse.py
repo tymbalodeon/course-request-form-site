@@ -6,7 +6,7 @@ from datetime import datetime
 from logging import getLogger
 from pathlib import Path
 from re import findall
-from string import capwords
+from string import capwords, sub
 
 import cx_Oracle
 
@@ -21,6 +21,9 @@ if platform.system() == "Darwin":
         lib_dir=str(lib_dir),
         config_dir=str(config_dir),
     )
+
+ROMAN_NUMERAL_REGEX = "(?=[MDCLXVI])M*(C[MD]|D?C{0,3})(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})$"
+ERA_REGEX = "\s((B?C{1}E?)|(AD))\s"
 
 
 def get_cursor():
@@ -42,14 +45,24 @@ def get_open_data():
     return OpenData(base_url=values["domain"], id=values["id"], key=values["key"])
 
 
-def roman_title(title):
-    roman_numeral = findall(" [MDCLXVI]{2,}", title)
-    title = capwords(title)
+def title_case(title):
+    title = title.upper()
+    roman_numeral = findall(ROMAN_NUMERAL_REGEX, title)
+    era = findall(ERA_REGEX, title)
 
     if roman_numeral:
-        title_case = capwords(roman_numeral[-1])
-        upper_case = roman_numeral[-1].upper()
-        title = title.replace(title_case, upper_case)
+        title = sub(ROMAN_NUMERAL_REGEX, "", title)
+
+    if era:
+        title = sub(ERA_REGEX, "", title)
+
+    title = capwords(title)
+
+    if era:
+        title = f"{title}{''.join(era)}"
+
+    if roman_numeral:
+        title = f"{title}{''.join(roman_numeral)}"
 
     return title
 
@@ -287,7 +300,7 @@ def pull_courses(term):
             n_s = course_code[:-5][-6:]
             course_number = n_s[:3]
             section_number = n_s[-3:]
-            title = roman_title(title)
+            title = title_case(title)
             year = term[:4]
 
             course, created = Course.objects.update_or_create(
