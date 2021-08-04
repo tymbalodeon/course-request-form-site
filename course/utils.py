@@ -87,15 +87,13 @@ def check_by_penn_id(PENN_ID):
 
 def datawarehouse_lookup(PPENN_KEY=None, PPENN_ID=None):
     input_id = PPENN_ID
-    ## connects to the db and makes a query
     config = ConfigParser()
     config.read("config/config.ini")  # this works
     info = dict(config.items("datawarehouse"))
 
-    # print("not ok",PPENN_KEY,input_id,(PPENN_ID !=None))
-
     connection = cx_Oracle.connect(info["user"], info["password"], info["service"])
     cursor = connection.cursor()
+
     if PPENN_KEY:
         print("looking by penn key")
         cursor.execute(
@@ -223,7 +221,7 @@ def find_no_canvas_account():
             print(user.username)
             try:
                 profile = user.profile
-                canvas_api.mycreate_user(
+                canvas_api.create_canvas_user(
                     user.username,
                     user.profile.penn_id,
                     user.email,
@@ -234,7 +232,7 @@ def find_no_canvas_account():
                 userdata = datawarehouse_lookup(PPENN_KEY=user.username)
                 if userdata:
                     Profile.objects.create(user=user, penn_id=userdata["penn_id"])
-                    canvas_api.mycreate_user(
+                    canvas_api.create_canvas_user(
                         user.username,
                         user.profile.penn_id,
                         user.email,

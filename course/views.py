@@ -26,7 +26,7 @@ from rest_framework.reverse import reverse
 from rest_framework.utils import html
 from rest_framework.views import APIView, exception_handler
 
-from canvas.api import CanvasException, get_canvas, get_user_by_sis, mycreate_user
+from canvas.api import CanvasException, create_canvas_user, get_canvas, get_user_by_sis
 from course import email_processor
 from course.forms import (
     CanvasSiteForm,
@@ -59,7 +59,7 @@ from course.serializers import (
     UserSerializer,
 )
 from course.tasks import create_canvas_sites
-from course.utils import datawarehouse_lookup, update_canvas_sites, validate_pennkey
+from course.utils import datawarehouse_lookup, update_user_courses, validate_pennkey
 from OpenData import library
 
 
@@ -113,9 +113,7 @@ class TestUserProfileCreated(UserPassesTestMixin):
         return False
 
 
-class MixedPermissionModelViewSet(
-    viewsets.ModelViewSet
-):  # LoginRequiredMixin, -- causes problems with API?
+class MixedPermissionModelViewSet(viewsets.ModelViewSet):
     """
     Mixed permission base model allowing for action level
     permission control. Subclasses may define their permissions
@@ -134,27 +132,24 @@ class MixedPermissionModelViewSet(
 
     permission_classes_by_action = {}
     login_url = "/accounts/login/"
-    # permission_classes = (IsAuthenticated,)
 
     def get_permissions(self):
-        # print("we here")
+        print(f"Action: {self.action}")
 
         try:
-            print("self.action", self.action)
-            # return permission_classes depending on `action`
-            # print([permission() for permission in self.permission_classes_by_action[self.action]])
             return [
                 permission()
                 for permission in self.permission_classes_by_action[self.action]
             ]
         except KeyError:
-            # action is not set return default permission_classes
-            print("KeyError for permission: ", self.action)
+            print(f"KeyError for permission: {self.action}")
+
             return [permission() for permission in self.permission_classes]
 
     def handle_no_permission(self):
         if self.raise_exception or self.request.user.is_authenticated:
             raise PermissionDenied(self.get_permission_denied_message())
+
         return redirect_to_login(
             self.request.get_full_path(),
             self.get_login_url(),
@@ -1071,29 +1066,32 @@ class HomePage(APIView, UserPassesTestMixin):  # ,
     permission_classes = (permissions.IsAuthenticated,)
 
     def test_func(self):
-        # this is to test that for each new user a profile exists for them
-        # the User object is automatically created with the shib login
-        # for more info please refer to https://ccbv.co.uk/projects/Django/1.9/django.contrib.auth.mixins/UserPassesTestMixin/
-
-        print("testing user")
+        user_name = self.request.user.username
+        print(f'Checking Users for "{user_name}"...')
         user = User.objects.get(username=self.request.user.username)
+
         try:
             if user.profile:
+                print(f'FOUND user "{user_name}".')
+
                 return True
         except Exception:
-            userdata = datawarehouse_lookup(PPENN_KEY=user.username)
-            if userdata:  # if no result userdata== False
-                first_name = userdata["firstname"].title()
-                last_name = userdata["lastname"].title()
-                user.first_name = first_name
-                user.last_name = last_name
-                user.email = userdata["email"]
-                Profile.objects.create(user=user, penn_id=userdata["penn_id"])
-                update_canvas_sites(user.username)
+            user_data = datawarehouse_lookup(PPENN_KEY=user.username)
+
+            if user_data:
+                user.first_name = user_data["firstname"].title()
+                user.last_name = user_data["lastname"].title()
+                user.email = user_data["email"]
+                Profile.objects.create(user=user, penn_id=user_data["penn_id"])
+                update_user_courses(user.username)
+
+                print(f'CREATED user "{user_name}".')
+
                 return True
             else:
+                print(f'FAILED to create user "{user_name}".')
+
                 return False
-        return False
 
     def get(self, request, *args, **kwargs):
         # # TODO:
@@ -1509,7 +1507,7 @@ def quickconfig(request):
                     user_crf = user  # variable already exists from above
                     # create Canvas account
                     try:
-                        user_canvas = mycreate_user(
+                        user_canvas = create_canvas_user(
                             pennkey,
                             user_crf.profile.penn_id,
                             user_crf.email,
@@ -1548,7 +1546,8 @@ def quickconfig(request):
                             print("CanvasException: ", e)
                             if (
                                 e.message
-                                == '{"message":"Can\'t add an enrollment to a concluded course."}'
+                                == '{"message":"Can\'t add an enrollment to a concluded'
+                                ' course."}'
                             ):
                                 # change term n try again
                                 print("we are adjusting the term")
@@ -1585,11 +1584,13 @@ def quickconfig(request):
                                 e,
                                 e.message[0],
                                 e.message
-                                == '{"message":"Can\'t add an enrollment to a concluded course."}',
+                                == '{"message":"Can\'t add an enrollment to a concluded'
+                                ' course."}',
                             )
                             if (
                                 e.message
-                                == '{"message":"Can\'t add an enrollment to a concluded course."}'
+                                == '{"message":"Can\'t add an enrollment to a concluded'
+                                ' course."}'
                             ):
                                 # change term n try again
                                 print("we are adjusting the term")
