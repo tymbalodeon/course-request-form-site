@@ -96,7 +96,7 @@ class TestUserProfileCreated(UserPassesTestMixin):
             if user.profile:
                 return True
         except Exception:
-            userdata = datawarehouse_lookup(PPENN_KEY=user.username)
+            userdata = datawarehouse_lookup(penn_key=user.username)
 
             if userdata:
                 first_name = userdata["firstname"].title()
@@ -1062,7 +1062,7 @@ class HomePage(APIView, UserPassesTestMixin):  # ,
 
                 return True
         except Exception:
-            user_data = datawarehouse_lookup(PPENN_KEY=user.username)
+            user_data = datawarehouse_lookup(penn_key=user.username)
 
             if user_data:
                 user.first_name = user_data["firstname"].title()

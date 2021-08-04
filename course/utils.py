@@ -25,7 +25,7 @@ def validate_pennkey(pennkey):
     try:
         user = User.objects.get(username=pennkey)
     except User.DoesNotExist:
-        userdata = datawarehouse_lookup(PPENN_KEY=pennkey)
+        userdata = datawarehouse_lookup(penn_key=pennkey)
         logging.warning(userdata)
 
         if userdata:
@@ -55,7 +55,7 @@ def check_by_penn_id(PENN_ID):
     except:  # User.DoesNotExist or Profile.DoesNotExist:
         # check if in penn db
         print("checking datawarehouse for: ", PENN_ID)
-        lookupuser = datawarehouse_lookup(PPENN_ID=PENN_ID)
+        lookupuser = datawarehouse_lookup(penn_id=PENN_ID)
         print("we looked up user", lookupuser)
         if lookupuser:
             print("we are now creating the user", lookupuser["penn_key"])
@@ -76,51 +76,64 @@ def check_by_penn_id(PENN_ID):
         return user
 
 
-def datawarehouse_lookup(PPENN_KEY=None, PPENN_ID=None):
-    input_id = PPENN_ID
+def datawarehouse_lookup(penn_key, penn_id=None):
     config = ConfigParser()
     config.read("config/config.ini")
-    info = dict(config.items("datawarehouse"))
-    connection = cx_Oracle.connect(info["user"], info["password"], info["service"])
+    credentials = dict(config.items("datawarehouse"))
+    connection = cx_Oracle.connect(
+        credentials["user"], credentials["password"], credentials["service"]
+    )
     cursor = connection.cursor()
 
-    if PPENN_KEY:
-        print(f"Checking Data Warehouse for pennkey {PPENN_KEY}...")
+    if penn_key:
+        print(f"Checking Data Warehouse for pennkey {penn_key}...")
 
         cursor.execute(
             """
-            SELECT FIRST_NAME, LAST_NAME, EMAIL_ADDRESS, PENN_ID
-            FROM EMPLOYEE_GENERAL
-            WHERE PENNKEY = :pennkey""",
-            pennkey=PPENN_KEY,
+            SELECT
+                first_name, last_name, email_address, penn_id
+            FROM
+                employee_general
+            WHERE
+                pennkey = :pennkey
+            """,
+            pennkey=penn_key,
         )
 
-        for fname, lname, email, pennid in cursor:
-            print("Values:", [fname, lname, email, pennid])
+        for first_name, last_name, email, dw_penn_id in cursor:
+            print(
+                f'FOUND "{penn_key}": {first_name} {last_name} ({dw_penn_id}) {email.strip()}'
+            )
 
             return {
-                "firstname": fname,
-                "lastname": lname,
+                "firstname": first_name,
+                "lastname": last_name,
                 "email": email,
-                "penn_id": pennid,
+                "penn_id": dw_penn_id,
             }
-    elif input_id:
-        print(f"Checking Data Warehouse for penn id {PPENN_ID}...")
+    elif penn_id:
+        print(f"Checking Data Warehouse for penn id {penn_id}...")
 
         cursor.execute(
             """
-            SELECT FIRST_NAME, LAST_NAME, EMAIL_ADDRESS, PENNKEY
-            FROM EMPLOYEE_GENERAL
-            WHERE PENN_ID = :pennid""",
-            pennid=input_id,
+            SELECT
+                first_name, last_name, email_address, pennkey
+            FROM
+                employee_general
+            WHERE
+                penn_id = :penn_id
+            """,
+            penn_id=penn_id,
         )
 
-        for fname, lname, email, penn_key in cursor:
-            print("Values:", [fname, lname, email, penn_key])
+        for first_name, last_name, email, dw_penn_key in cursor:
+            print(
+                f'FOUND "{penn_id}": {first_name} {last_name} ({dw_penn_key}) {email.strip()}'
+            )
 
             return {
-                "firstname": fname,
-                "lastname": lname,
+                "firstname": first_name,
+                "lastname": last_name,
                 "email": email,
                 "penn_key": penn_key,
             }
@@ -200,8 +213,8 @@ def update_user_courses(penn_key):
                     name=canvas_course.name,
                 )
                 course[0].owners.add(User.objects.get(username=penn_key))
-            except:
-                print(f"- Failed to add {canvas_course.id}")
+            except Exception as error:
+                print(f"FAILED to add course {canvas_course} ({error}).")
 
 
 def find_no_canvas_account():
@@ -222,7 +235,7 @@ def find_no_canvas_account():
                     user.first_name + " " + user.last_name,
                 )
             except:
-                userdata = datawarehouse_lookup(PPENN_KEY=user.username)
+                userdata = datawarehouse_lookup(penn_key=user.username)
 
                 if userdata:
                     Profile.objects.create(user=user, penn_id=userdata["penn_id"])
