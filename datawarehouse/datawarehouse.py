@@ -23,9 +23,9 @@ if platform.system() == "Darwin":
     )
 
 ROMAN_NUMERAL_REGEX = (
-    r"(?=[MDCLXVI])M*(C[MD]|D?C{0,3})(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})$"
+    r"(?=[MDCLXVI])M*(C[MD]|D?C{0,3})(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})\)?$"
 )
-ERA_REGEX = r"\s((B?C{1}E?)|(AD))\s"
+ERA_REGEX = r"\s((B?C{1}E?)|(AD))\s?"
 
 
 def get_cursor():
