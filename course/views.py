@@ -711,23 +711,24 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
 
 
 def clean_custom_input(partial):
-    ok = partial[0].dict()
-    # removing spaces from keys & storing them in sam dictionary
-    ok = {x.replace("[", "").replace("]", ""): v for x, v in ok.items()}
+    parsed_partial = partial[0].dict()
+    parsed_partial = {
+        key.replace("[", "").replace("]", ""): value
+        for key, value in parsed_partial.items()
+    }
     final_add = []
+
     for add in partial:
         add = add.dict()
-        new_add = {x.replace("[", "").replace("]", ""): v for x, v in add.items()}
-        print("newadd", new_add)
-        if "" in new_add.values():
-            # print("")
-            pass
-        else:
-            if "user" in new_add.keys():
-                new_add["user"] = new_add["user"].lower()
+        new_add = {
+            key.replace("[", "").replace("]", ""): value for key, value in add.items()
+        }
 
+        if "" not in new_add.values() and "user" in new_add.keys():
+            new_add["user"] = new_add["user"].lower()
             final_add += [new_add]
-    print("(create)final_add", final_add)
+            print(f"Adding {new_add['course_code']}...")
+
     return final_add
 
 
@@ -976,34 +977,25 @@ class CanvasSiteViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
     }
 
     def get_queryset(self):
-        """
-        This view should return a list of all the purchases
-        for the currently authenticated user.
-        """
-        # masquerade = self.request.session['on_behalf_of']
-        # if masquerade:
-        #    user = User.objects.get(username=masquerade)
-        # else:
-        #    user = self.request.user
         user = self.request.user
+
         return CanvasSite.objects.filter(Q(owners=user) | Q(added_permissions=user))
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
+
         if page is not None:
             serializer = self.get_serializer(page, many=True)
-            response = self.get_paginated_response(
-                serializer.data
-            )  # http://www.cdrf.co/3.9/rest_framework.viewsets/ModelViewSet.html#paginate_queryset
+            response = self.get_paginated_response(serializer.data)
+
             if request.accepted_renderer.format == "html":
                 response.template_name = "canvassite_list.html"
                 response.data = {"results": response.data, "paginator": self.paginator}
-                print("iiiii")
+
             return response
 
     def retrieve(self, request, *args, **kwargs):
-        # print("request.data",request.data)
         response = super(CanvasSiteViewSet, self).retrieve(request, *args, **kwargs)
         if request.accepted_renderer.format == "html":
             return Response(
@@ -1013,13 +1005,7 @@ class CanvasSiteViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         return response
 
     def update(self, request, *args, **kwargs):
-        # print("update?")
-        # print("args",args)
-        # print("kwargs", kwargs)
-        # print("request.data", request.data)
-
         instance = self.get_object()
-        # re-format data
         data = {"added_permissions": [request.data["username"]]}
         print("mydata", data)
         serializer = self.get_serializer(instance, data=data, partial=True)

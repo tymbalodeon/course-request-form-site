@@ -17,29 +17,18 @@ logging.basicConfig(
     datefmt="%m/%d/%Y %I:%M:%S %p",
 )
 
-"""
-
-None of these files are good yet, purely copied from last
-
-see: https://github.com/upenn-libraries/accountservices/blob/master/accounts/models.py
-about how users are added
-"""
-
 
 def validate_pennkey(pennkey):
-    # assumes usernames are valid pennkeys
     if isinstance(pennkey, str):
         pennkey = pennkey.lower()
-    print("validating pennkey (utils.py)", pennkey)
+
     try:
         user = User.objects.get(username=pennkey)
     except User.DoesNotExist:
-        # check if in penn db
-        print("checking datawarehouse for: ", pennkey)
         userdata = datawarehouse_lookup(PPENN_KEY=pennkey)
         logging.warning(userdata)
+
         if userdata:
-            # clean up first and last names
             first_name = userdata["firstname"].title()
             last_name = userdata["lastname"].title()
             user = User.objects.create_user(
@@ -49,9 +38,11 @@ def validate_pennkey(pennkey):
                 email=userdata["email"],
             )
             Profile.objects.create(user=user, penn_id=userdata["penn_id"])
+            print(f'CREATED Profile for "{pennkey}".')
         else:
             user = None
-    # do a lookup in the data warehouse ?
+            print(f'FAILED to create Profile for "{pennkey}".')
+
     return user
 
 
@@ -88,14 +79,14 @@ def check_by_penn_id(PENN_ID):
 def datawarehouse_lookup(PPENN_KEY=None, PPENN_ID=None):
     input_id = PPENN_ID
     config = ConfigParser()
-    config.read("config/config.ini")  # this works
+    config.read("config/config.ini")
     info = dict(config.items("datawarehouse"))
-
     connection = cx_Oracle.connect(info["user"], info["password"], info["service"])
     cursor = connection.cursor()
 
     if PPENN_KEY:
-        print("looking by penn key")
+        print(f"Checking Data Warehouse for pennkey {PPENN_KEY}...")
+
         cursor.execute(
             """
             SELECT FIRST_NAME, LAST_NAME, EMAIL_ADDRESS, PENN_ID
@@ -103,6 +94,7 @@ def datawarehouse_lookup(PPENN_KEY=None, PPENN_ID=None):
             WHERE PENNKEY = :pennkey""",
             pennkey=PPENN_KEY,
         )
+
         for fname, lname, email, pennid in cursor:
             print("Values:", [fname, lname, email, pennid])
 
@@ -112,10 +104,9 @@ def datawarehouse_lookup(PPENN_KEY=None, PPENN_ID=None):
                 "email": email,
                 "penn_id": pennid,
             }
+    elif input_id:
+        print(f"Checking Data Warehouse for penn id {PPENN_ID}...")
 
-    # FIRST_NAME, LAST_NAME, EMAIL_ADDRESS, PENN_KEY
-    if input_id:
-        print("looking by penn id")
         cursor.execute(
             """
             SELECT FIRST_NAME, LAST_NAME, EMAIL_ADDRESS, PENNKEY
@@ -123,7 +114,7 @@ def datawarehouse_lookup(PPENN_KEY=None, PPENN_ID=None):
             WHERE PENN_ID = :pennid""",
             pennid=input_id,
         )
-        print(cursor)
+
         for fname, lname, email, penn_key in cursor:
             print("Values:", [fname, lname, email, penn_key])
 
@@ -133,9 +124,9 @@ def datawarehouse_lookup(PPENN_KEY=None, PPENN_ID=None):
                 "email": email,
                 "penn_key": penn_key,
             }
+    else:
+        print("Checking Data Warehouse: NO PENNKEY OR PENN ID PROVIDED.")
 
-    # if no results
-    print("no result?")
     return False
 
 
@@ -215,10 +206,13 @@ def update_user_courses(penn_key):
 
 def find_no_canvas_account():
     users = User.objects.all()
+
     for user in users:
         this_user = canvas_api.get_user_by_sis(user.username)
+
         if this_user == None:
             print(user.username)
+
             try:
                 profile = user.profile
                 canvas_api.create_canvas_user(
@@ -228,8 +222,8 @@ def find_no_canvas_account():
                     user.first_name + " " + user.last_name,
                 )
             except:
-                # profile doesnt exist yet
                 userdata = datawarehouse_lookup(PPENN_KEY=user.username)
+
                 if userdata:
                     Profile.objects.create(user=user, penn_id=userdata["penn_id"])
                     canvas_api.create_canvas_user(
@@ -238,7 +232,6 @@ def find_no_canvas_account():
                         user.email,
                         user.first_name + " " + user.last_name,
                     )
-            # input("enter to continue")
 
 
 def fix_titles(roman_numeral):
