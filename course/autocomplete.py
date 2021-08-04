@@ -9,8 +9,10 @@ from course.models import CanvasSite, Subject
 
 class UserAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
-        # Don't forget to filter out results depending on the visitor !
-        print("self.request.user.is_authenticated", self.request.user.is_authenticated)
+        print(
+            f"{self.request.user} is {'' if self.request.user.is_authenticated else 'not'} authenticated."
+        )
+
         if not self.request.user.is_authenticated:
             return User.objects.none()
 
@@ -33,8 +35,6 @@ class UserAutocomplete(autocomplete.Select2QuerySetView):
 
 class SubjectAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
-        # Don't forget to filter out results depending on the visitor !
-        # print("self.request.user.is_authenticated",self.request.user.is_authenticated)
         if not self.request.user.is_authenticated:
             return Subject.objects.none()
 
@@ -58,8 +58,10 @@ class SubjectAutocomplete(autocomplete.Select2QuerySetView):
 
 class CanvasSiteAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
-        # Don't forget to filter out results depending on the visitor !
-        print("self.request.user.is_authenticated", self.request.user.is_authenticated)
+        print(
+            f"{self.request.user} is {'' if self.request.user.is_authenticated else 'not'} authenticated."
+        )
+
         if not self.request.user.is_authenticated:
             return CanvasSite.objects.none()
 
