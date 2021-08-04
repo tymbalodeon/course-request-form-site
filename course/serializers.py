@@ -352,17 +352,11 @@ class RequestSerializer(DynamicFieldsModelSerializer):
     def to_internal_value(self, data):
         def check_for_crf_account(enrollments):
             for enrollment in enrollments:
-                print(
-                    "- Checking Course Request Form accounts for user:"
-                    f" {enrollment['user']}... "
-                )
+                print(f"Checking Users for {enrollment['user']}...")
                 user = validate_pennkey(enrollment["user"])
 
                 if user is None:
-                    print(
-                        f"- ERROR: User {enrollment['user']} has no account in the"
-                        " Course Request Form."
-                    )
+                    print(f"FAILED to find User {enrollment['user']}.")
 
         data = dict(data)
 
@@ -384,17 +378,12 @@ class RequestSerializer(DynamicFieldsModelSerializer):
         if "additional_enrollments" in data.keys():
             if data["additional_enrollments"]:
                 for enrollment in data["additional_enrollments"]:
-                    print(
-                        "- Checking Course Request Form accounts for user:"
-                        f" {enrollment['user']}... "
-                    )
+                    print(f"Checking Users for {enrollment['user']}...")
                     user = validate_pennkey(enrollment["user"])
 
                     if user is None:
-                        print(
-                            "- ERROR: Failed to validate pennkey for"
-                            f" {enrollment['user']}"
-                        )
+                        print(f"FAILED to find User {enrollment['user']}.")
+
                         raise serializers.ValidationError(
                             {
                                 "error": (
