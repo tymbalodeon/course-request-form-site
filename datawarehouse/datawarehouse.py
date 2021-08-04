@@ -47,7 +47,7 @@ def get_open_data():
     return OpenData(base_url=values["domain"], id=values["id"], key=values["key"])
 
 
-def title_case(title):
+def format_title(title):
     title = title.upper()
     roman_numeral = findall(ROMAN_NUMERAL_REGEX, title)
     era = findall(ERA_REGEX, title)
@@ -61,12 +61,12 @@ def title_case(title):
     title = capwords(title)
 
     if era:
-        era_string = "".join([str(value) for value in era])
-        title = f"{title}{era_string}"
+        era_string = "".join([str(value) for value in era[0]])
+        title = f"{title} {era_string}"
 
     if roman_numeral:
-        roman_numeral_string = "".join([str(value) for value in roman_numeral])
-        title = f"{title}{roman_numeral_string}"
+        roman_numeral_string = "".join([str(value) for value in roman_numeral[0]])
+        title = f"{title} {roman_numeral_string}"
 
     return title
 
@@ -304,7 +304,7 @@ def pull_courses(term):
             n_s = course_code[:-5][-6:]
             course_number = n_s[:3]
             section_number = n_s[-3:]
-            title = title_case(title)
+            title = format_title(title)
             year = term[:4]
 
             course, created = Course.objects.update_or_create(
