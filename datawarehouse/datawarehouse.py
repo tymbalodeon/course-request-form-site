@@ -5,8 +5,8 @@ from configparser import ConfigParser
 from datetime import datetime
 from logging import getLogger
 from pathlib import Path
-from re import findall
-from string import capwords, sub
+from re import findall, sub
+from string import capwords
 
 import cx_Oracle
 
