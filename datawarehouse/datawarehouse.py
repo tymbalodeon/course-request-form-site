@@ -59,10 +59,12 @@ def title_case(title):
     title = capwords(title)
 
     if era:
-        title = f"{title}{''.join(era)}"
+        era_string = "".join(era)
+        title = f"{title}{era_string}"
 
     if roman_numeral:
-        title = f"{title}{''.join(roman_numeral)}"
+        roman_numeral_string = "".join(roman_numeral)
+        title = f"{title}{roman_numeral_string}"
 
     return title
 
