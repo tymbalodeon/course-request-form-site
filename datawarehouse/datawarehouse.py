@@ -25,7 +25,7 @@ if platform.system() == "Darwin":
 ROMAN_NUMERAL_REGEX = (
     r"(?=[MDCLXVI])M*(C[MD]|D?C{0,3})(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})\)?$"
 )
-ERA_REGEX = r"\s((B?C{1}E?)|(AD))\s?"
+ERA_REGEX = r"\s((B?C{1}E?)|(AD))(\s|$)"
 
 
 def get_cursor():
@@ -50,19 +50,11 @@ def get_open_data():
 def format_title(title):
     title = title.upper()
     roman_numeral = findall(ROMAN_NUMERAL_REGEX, title)
-    era = findall(ERA_REGEX, title)
 
     if roman_numeral:
         title = sub(ROMAN_NUMERAL_REGEX, "", title)
 
-    if era:
-        title = sub(ERA_REGEX, "", title)
-
     title = capwords(title)
-
-    if era:
-        era_string = "".join([str(value) for value in era[0]])
-        title = f"{title} {era_string}"
 
     if roman_numeral:
         roman_numeral_string = "".join([str(value) for value in roman_numeral[0]])
