@@ -88,13 +88,16 @@ def add_request_process_notes(message, request):
 
 @task()
 def create_canvas_sites(
-    requested_courses=Request.objects.filter(status="APPROVED"),
+    requested_courses=None,
     sections=None,
     test=False,
     verbose=True,
 ):
     if verbose:
         print(") Creating Canvas sites for requested courses...")
+
+    if requested_courses is None:
+        requested_courses = Request.objects.filter(status="APPROVED")
 
     if not requested_courses:
         if verbose:
