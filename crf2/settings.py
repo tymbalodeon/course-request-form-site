@@ -4,7 +4,7 @@ from configparser import ConfigParser
 from celery.schedules import crontab
 
 try:
-    from .logger_settings import *
+    from .logger_settings import LOGGING
 except Exception as error:
     print(f"- Failed to load logger settings ({error}).")
 
@@ -12,69 +12,21 @@ config = ConfigParser()
 config.read("config/config.ini")
 
 
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config.get("django", "secret_key", raw=True)
-
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
-
-CANVAS_ENVIRONMENT = "PRODUCTION"  # Could be 'BETA', or 'PRODUCTION'
-#
-ALLOWED_HOSTS = ["*", "localhost"]  #'128.91.177.58'
-# ]
-INTERNAL_IPS = [
-    # ...
-    "127.0.0.1",
-    # ...
-]
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/2.1/howto/static-files/
-# URL_PREFIX = '/siterequest'
+CANVAS_ENVIRONMENT = "PRODUCTION"
+ALLOWED_HOSTS = ["*", "localhost"]
+INTERNAL_IPS = ["127.0.0.1"]
 STATIC_URL = "/static/"
-STATIC_ROOT = os.path.join(
-    BASE_DIR, "static"
-)  #'/Users/mfhodges/Desktop/CRF2/course/static'#os.path.join(BASE_DIR, "static")
-# FORCE_SCRIPT_NAME = '/mysite'
-# LOGIN_REDIRECT_URL = URL_PREFIX
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
 LOGOUT_REDIRECT_URL = (
     "/Shibboleth.sso/Logout?return=https://idp.pennkey.upenn.edu/logout"
 )
-
-
 EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
-EMAIL_FILE_PATH = "course/static/emails"  # change this to a proper location
-# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # to have it sent to console
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend' # to actually use it
+EMAIL_FILE_PATH = "course/static/emails"
 EMAIL_USE_TLS = True
-# EMAIL_HOST = config.get('email', 'emailhost')
 EMAIL_PORT = 587
-# EMAIL_HOST_USER = config.get('email', 'emailhostuser')
-# EMAIL_HOST_PASSWORD = config.get('email', 'password')
-# DEFAULT_FROM_EMAIL = config.get('email', 'defaultfromemail')
-
-"""
-# For Django shib
-AUTHENTICATION_BACKENDS += (
-    'shibboleth.backends.ShibbolethRemoteUserBackend',
-)
-
-SHIBBOLETH_ATTRIBUTE_MAP = {
-    "shib-user": (True, "username"),
-    "shib-given-name": (False, "first_name"),
-    "shib-sn": (False, "last_name"),
-    "shib-mail": (False, "email"),
-}
-LOGIN_URL = ''
-#'https://weblogin.pennkey.upenn.edu/login?factors=UPENN.EDU&cosign-pennkey-idp-0&https://idp.pennkey.upenn.edu/idp/Authn/RemoteUser?conversation=e1s1'
-"""
-# Application definition
 INSTALLED_APPS = [
     "dal",
     "dal_select2",
@@ -95,7 +47,6 @@ INSTALLED_APPS = [
     "django_extensions",
     "rest_framework_swagger",
     "debug_toolbar",
-    #'shibboleth',
 ]
 
 MIDDLEWARE = [
@@ -106,18 +57,15 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
-    #'shibboleth.middleware.ShibbolethRemoteUserMiddleware',
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
-
 ROOT_URLCONF = "crf2.urls"
-
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [os.path.join(BASE_DIR, "templates")],
-        "APP_DIRS": True,  # why does this disagree with 'loaders'
+        "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.debug",
@@ -126,37 +74,17 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "course.context_processors.user_permissons",
             ],
-            #    'loaders': [
-            #    ('django.template.loaders.cached.Loader', [
-            #        'django.template.loaders.filesystem.Loader',
-            #        'django.template.loaders.app_directories.Loader',
-            #    ]),
-            # ],
-            #'libraries':{
-            #'template_extra'
-            # }
         },
     },
 ]
-
 WSGI_APPLICATION = "crf2.wsgi.application"
-
-
-# Database
-# https://docs.djangoproject.com/en/2.1/ref/settings/#databases
-
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
     }
 }
-
 CORS_ORIGIN_ALLOW_ALL = True
-
-# Password validation
-# https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": (
@@ -173,48 +101,22 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
-
-
-# Internationalization
-# https://docs.djangoproject.com/en/2.1/topics/i18n/
-
 LANGUAGE_CODE = "en-us"
-
-
 USE_I18N = True
-
 USE_L10N = True
-
-
 USE_TZ = True
 TIME_ZONE = "America/New_York"
-
-
 REST_FRAMEWORK = {
-    #    'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAdminUser','rest_framework.permissions.IsAuthenticated'),
-    #    'DEFAULT_AUTHENTICATION_CLASSES': (
-    #        'rest_framework.authentication.BasicAuthentication',
-    #        'rest_framework.authentication.SessionAuthentication',
-    #    ),
-    "DEFAULT_RENDERER_CLASSES": (
-        "rest_framework.renderers.JSONRenderer",
-        #'rest_framework.renderers.TemplateHTMLRenderer', # this line messes up the browsable api
-        #'rest_framework.renderers.BrowsableAPIRenderer',
-    ),
+    "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
     "DEFAULT_FILTER_BACKENDS": (
         "rest_framework.filters.SearchFilter",
         "django_filters.rest_framework.DjangoFilterBackend",
     ),
-    #'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     "DEFAULT_PAGINATION_CLASS": "drf_link_header_pagination.LinkHeaderPagination",
     "PAGE_SIZE": 30,
-    #'EXCEPTION_HANDLER': 'course.views.custom_exception_handler'
-    #'DEFAULT_PARSER_CLASSES': (
-    #    'rest_framework.parsers.JSONParser',
-    # )
 }
 
-if DEBUG == False:
+if DEBUG is False:
     MIDDLEWARE += ["django.contrib.auth.middleware.RemoteUserMiddleware"]
     AUTHENTICATION_BACKENDS = [
         "django.contrib.auth.backends.RemoteUserBackend",
@@ -235,14 +137,11 @@ DEBUG_TOOLBAR_PANELS = [
     "debug_toolbar.panels.redirects.RedirectsPanel",
     "debug_toolbar.panels.profiling.ProfilingPanel",
 ]
-
-
 CELERY_BROKER_URL = "redis://localhost:6379"
 CELERY_RESULT_BACKEND = "redis://localhost:6379"
 CELERY_ACCEPT_CONTENT = ["application/json"]
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TASK_SERIALIZER = "json"
-
 CELERY_BEAT_SCHEDULE = {
     "read_canvas_sites": {
         "task": "course.tasks.process_canvas",
