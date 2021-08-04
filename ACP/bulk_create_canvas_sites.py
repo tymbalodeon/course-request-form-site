@@ -1,13 +1,13 @@
 from configparser import ConfigParser
-from datetime import datetime
 
 from canvasapi.exceptions import CanvasException
+from django.utils import timezone
 
 from canvas.api import get_canvas
 from course.models import Course, Request, School, User
 from course.tasks import create_canvas_sites
 
-from .logger import canvas_logger
+from .logger import canvas_logger, crf_logger
 
 config = ConfigParser()
 config.read("config/config.ini")
@@ -58,24 +58,29 @@ def should_request(sis_id, test=False):
 
 
 def request_course(course, status="APPROVED", verbose=True):
-    request = Request.objects.create(
-        course_requested=course,
-        additional_instructions=(
-            "Request automatically generated; contact Courseware Support"
-            " for more information."
-        ),
-        owner=OWNER,
-        created=datetime.now(),
-        reserves=True,
-    )
-    request.status = status
-    request.save()
-    course.save()
+    try:
+        request = Request.objects.update_or_create(
+            course_requested=course,
+            defaults={
+                "additional_instructions": (
+                    "Request automatically generated; contact Courseware Support"
+                    " for more information."
+                ),
+                "owner": OWNER,
+                "created": timezone.now(),
+                "reserves": True,
+            },
+        )[0]
+        request.status = status
+        request.save()
+        course.save()
 
-    if verbose:
-        print("\t* Request created.")
+        if verbose:
+            print("\t* Request created.")
 
-    return [request]
+        return [request]
+    except Exception as error:
+        return error
 
 
 def enable_tools(canvas_id, tools, label, test):

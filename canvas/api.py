@@ -32,16 +32,19 @@ def get_user_by_sis(login_id, test=False):
         return None
 
 
-def mycreate_user(pennkey, pennid, email, fullname, test=False):
-    pseudonym = {"sis_user_id": pennid, "unique_id": pennkey}
+def create_canvas_user(penn_key, penn_id, email, full_name, test=False):
+    pseudonym = {"sis_user_id": penn_id, "unique_id": penn_key}
 
     try:
         account = find_account(96678, test=test)
-        user = account.create_user(pseudonym, user={"name": fullname})
+        user = account.create_user(pseudonym, user={"name": full_name})
         user.edit(user={"email": email})
 
         return user
-    except CanvasException as e:
+    except CanvasException as error:
+        print(
+            f"- ERROR: Failed to create canvas user {full_name}, {penn_key} ({error}) "
+        )
 
         return None
 

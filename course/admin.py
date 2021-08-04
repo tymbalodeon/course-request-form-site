@@ -211,23 +211,16 @@ class RequestAdmin(admin.ModelAdmin):
     def additional_sections(self, instance):
         return instance.additional_sections.course_code
 
-    # def formfield_for_manytomany(self, db_field, request, **kwargs):
-    #    if db_field.name == "request":
-    #        kwargs["queryset"] = Course.objects.filter(course_schools__abbreviation=request.user)
-    #    return super().formfield_for_manytomany(db_field, request, **kwargs)
-
     def requestors(self, object):
-        print("object.masquerade", object.masquerade)
-        if object.masquerade == None:
-            return object.owner.username
-        elif object.masquerade != "":
-            return object.owner.username + " (" + object.masquerade + ") "
+        if object.masquerade != "":
+            masquerade = f"{object.owner.username} ({object.masquerade})"
+            print(f"Masquerade: {masquerade}")
         else:
-            return object.owner.username
+            masquerade = object.owner.username
+
+        return masquerade
 
     def save_model(self, request, obj, form, change):
-        # print("checkin save")
-        # obj.owner = request.user
         obj.save()
 
 

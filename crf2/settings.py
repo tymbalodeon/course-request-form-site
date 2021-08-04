@@ -1,13 +1,12 @@
 import os
 from configparser import ConfigParser
 
-import django_heroku
 from celery.schedules import crontab
 
 try:
     from .logger_settings import *
-except Exception:
-    print("- ERROR: Failed to load logger settings.")
+except Exception as error:
+    print(f"- Failed to load logger settings ({error}).")
 
 config = ConfigParser()
 config.read("config/config.ini")
@@ -244,18 +243,17 @@ CELERY_ACCEPT_CONTENT = ["application/json"]
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TASK_SERIALIZER = "json"
 
-
 CELERY_BEAT_SCHEDULE = {
     "read_canvas_sites": {
-        "task": "course.tasks.task_process_canvas",
+        "task": "course.tasks.process_canvas",
         "schedule": crontab(minute="0", hour="0"),
     },
     "clear_canceled_requests": {
-        "task": "course.tasks.delete_canceled_requests",
+        "task": "course.tasks.remove_canceled",
         "schedule": crontab(minute="*/60"),
     },
     "process_approved_requests": {
-        "task": "course.tasks.create_canvas_sites",
+        "task": "course.tasks.create_canvas_site",
         "schedule": crontab(minute="*/20"),
     },
 }
