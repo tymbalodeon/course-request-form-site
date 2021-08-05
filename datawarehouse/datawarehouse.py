@@ -47,13 +47,6 @@ def get_open_data():
     return OpenData(base_url=values["domain"], id=values["id"], key=values["key"])
 
 
-def capwords_with_divider(title, divider):
-    titles = title.split(divider)
-    titles = [title.replace(title[0], title[0].upper()) for title in titles]
-
-    return divider.join(titles)
-
-
 def format_title(title):
     title = title.upper()
     roman_numeral = findall(ROMAN_NUMERAL_REGEX, title)
@@ -62,6 +55,19 @@ def format_title(title):
         title = sub(ROMAN_NUMERAL_REGEX, "", title)
 
     title = capwords(title)
+
+    def capwords_with_divider(title, divider):
+        titles = title.split(divider)
+
+        def sentence_case_title(title):
+            characters = [character for character in title]
+            characters[0] = characters[0].upper()
+
+            return "".join(characters)
+
+        titles = [sentence_case_title(title) for title in titles]
+
+        return divider.join(titles)
 
     for divider in ["/", "-"]:
         title = capwords_with_divider(title, divider)
