@@ -382,25 +382,28 @@ class Course(models.Model):
         )
 
     def srs_format_primary(self, sis_id=True):
-        term = self.year + self.course_term
         primary_crosslist = self.primary_crosslist
+        year_and_term = f"{self.year}{self.course_term}"
 
         if primary_crosslist:
-            subject = "".join(filter(str.isalpha, primary_crosslist))
+            if year_and_term in primary_crosslist and len(primary_crosslist) > 9:
+                primary_crosslist = primary_crosslist.replace(year_and_term, "")
+
+            subject = "".join(
+                character for character in primary_crosslist if str.isalpha(character)
+            )
             number_section = "".join(
-                filter(lambda character: not character.isalpha(), primary_crosslist)
+                character
+                for character in primary_crosslist
+                if not str.isalpha(character)
             )
             number = number_section[:3]
             section = number_section[3:]
 
             if sis_id:
-                srs_primary_crosslist = f"{subject}-{number}-{section} {term}"
-
-                return srs_primary_crosslist
+                return f"{subject}-{number}-{section} {year_and_term}"
             else:
-                srs_primary_crosslist = f"{subject} {number}-{section} {term}"
-
-                return srs_primary_crosslist
+                return f"{subject} {number}-{section} {year_and_term}"
         else:
             return self.srs_format()
 
