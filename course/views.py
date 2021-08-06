@@ -1160,8 +1160,8 @@ class HomePage(APIView, UserPassesTestMixin):  # ,
                     )
                     on_behalf_of = None
 
-        except KeyError:
-            pass
+        except KeyError as error:
+            print(f"HERE IS THE ERROR: {error}")
         # check if user is in the system
         request.session["on_behalf_of"] = on_behalf_of
         # print("masquerading as:", request.session['on_behalf_of'])
@@ -1173,6 +1173,7 @@ class HomePage(APIView, UserPassesTestMixin):  # ,
         # print("\trequest.get_full_path()",request.get_full_path())
         # print("\trequest.META[''HTTP_REFERER'']",request.META['HTTP_REFERER'])
         HomePage.set_session(request)
+        print("HomePage.set_session!")
         return redirect(request.META["HTTP_REFERER"])
 
 
