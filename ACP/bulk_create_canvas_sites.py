@@ -1,11 +1,12 @@
 from configparser import ConfigParser
-
-from canvasapi.exceptions import CanvasException
-from django.utils import timezone
+from os import mkdir
+from pathlib import Path
 
 from canvas.api import get_canvas
+from canvasapi.exceptions import CanvasException
 from course.models import Course, Request, School, User
 from course.tasks import create_canvas_sites
+from django.utils import timezone
 
 from .logger import canvas_logger, crf_logger
 
@@ -18,7 +19,6 @@ def get_unrequested_courses(year_and_term, school_abbreviation):
     print(") Finding unrequested courses...")
     term = year_and_term[-1]
     year = year_and_term[:-1]
-
     if school_abbreviation:
         school = School.objects.get(abbreviation=school_abbreviation)
         unrequested_courses = Course.objects.filter(
@@ -39,10 +39,8 @@ def get_unrequested_courses(year_and_term, school_abbreviation):
             primary_crosslist="",
             course_schools__visible=True,
         )
-
     total_unrequested = len(unrequested_courses)
     print(f"FOUND {total_unrequested} UNREQUESTED COURSES.")
-
     return list(unrequested_courses)
 
 
@@ -189,3 +187,40 @@ def bulk_create_canvas_sites(
                 request_course(course, reserves, "COMPLETED", False)
 
     print("FINISHED")
+
+
+def get_bulk_create_canvas_sites_codes(year_and_term, school):
+    def find_sections(courses):
+        all_sections = list()
+        SECTIONS = dict()
+
+        for course in courses:
+            if course in all_sections:
+                continue
+
+            course_sections = list(course.sections.all())
+
+            if not course_sections:
+                SECTIONS[course] = [course]
+                all_sections.append(course)
+            else:
+                SECTIONS[course] = course_sections
+                all_sections.extend(course_sections)
+
+        return SECTIONS
+
+    courses = get_unrequested_courses(year_and_term, school)
+    sections = find_sections(courses)
+
+    DATA_DIRECTORY = Path.cwd() / "data"
+
+    if not DATA_DIRECTORY.exists():
+        mkdir(DATA_DIRECTORY)
+
+    with open(
+        DATA_DIRECTORY / f"{school}_sites_to_be_bulk_created_{year_and_term}.txt", "w"
+    ) as writer:
+        for section_list in sections.values():
+            writer.write(
+                f"{' '.join(section.course_code for section in section_list)}\n"
+            )
