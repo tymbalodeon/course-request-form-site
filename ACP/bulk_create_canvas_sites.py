@@ -57,7 +57,7 @@ def should_request(sis_id, test=False):
         return True
 
 
-def request_course(course, status="APPROVED", verbose=True):
+def request_course(course, reserves, status="APPROVED", verbose=True):
     try:
         request = Request.objects.update_or_create(
             course_requested=course,
@@ -68,7 +68,7 @@ def request_course(course, status="APPROVED", verbose=True):
                 ),
                 "owner": OWNER,
                 "created": timezone.now(),
-                "reserves": True,
+                "reserves": reserves,
             },
         )[0]
         request.status = status
@@ -110,7 +110,7 @@ def enable_tools(canvas_id, tools, label, test):
 def bulk_create_canvas_sites(
     year_and_term,
     school="SEAS",
-    enable=True,
+    reserves=True,
     tools={
         "context_external_tool_90311": "Class Recordings",
         "context_external_tool_231623": "Zoom",
@@ -143,7 +143,7 @@ def bulk_create_canvas_sites(
 
         if should_request(sis_id):
             try:
-                course_request = request_course(course)
+                course_request = request_course(course, reserves)
                 sections = list(course.sections.all())
                 creation_error = create_canvas_sites(
                     course_request, sections=sections, test=test, verbose=False
@@ -173,7 +173,7 @@ def bulk_create_canvas_sites(
 
                     continue
 
-                if enable:
+                if tools:
                     canvas_id = request.canvas_instance.canvas_id
                     enable_tools(canvas_id, tools, label, test)
             except Exception as error:
@@ -186,6 +186,6 @@ def bulk_create_canvas_sites(
             canvas_logger.info(f"{sis_id} is already in use.")
 
             if not course.requested:
-                request_course(course, "COMPLETED", False)
+                request_course(course, reserves, "COMPLETED", False)
 
     print("FINISHED")
