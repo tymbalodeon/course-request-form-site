@@ -1142,7 +1142,7 @@ class HomePage(APIView, UserPassesTestMixin):  # ,
     #    def post(self, request,*args, **kwargs):
     #        return redirect(request.path)
 
-    def set_session(self, request):
+    def set_session(request):
         print("set_session request.data", request.data)
         try:
             on_behalf_of = request.data["on_behalf_of"].lower()
