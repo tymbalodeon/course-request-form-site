@@ -266,7 +266,9 @@ class CourseViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
             return response
 
     def retrieve(self, request, *args, **kwargs):
+        print("in CourseViewSet.retrieve()")
         response = super(CourseViewSet, self).retrieve(request, *args, **kwargs)
+        print("response")
 
         if request.accepted_renderer.format == "html":
             course_instance = self.get_object()
