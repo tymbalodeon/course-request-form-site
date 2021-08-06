@@ -1,20 +1,29 @@
 from dal import autocomplete
-from django import forms
 from django.contrib.auth.models import User
+from django.forms import (
+    CharField,
+    EmailField,
+    EmailInput,
+    Form,
+    ModelChoiceField,
+    ModelForm,
+    Textarea,
+    ValidationError,
+)
 
 from course.models import AdditionalEnrollment, CanvasSite, Subject
 
 
 # our new form
-class ContactForm(forms.Form):
-    contact_name = forms.CharField(required=True)
-    contact_email = forms.EmailField(required=True)
-    content = forms.CharField(required=True, widget=forms.Textarea)
+class ContactForm(Form):
+    contact_name = CharField(required=True)
+    contact_email = EmailField(required=True)
+    content = CharField(required=True, widget=Textarea)
 
 
-class UserForm(forms.ModelForm):
+class UserForm(ModelForm):
     # please only use this when you need to auto complete on the name field !
-    username = forms.ModelChoiceField(
+    username = ModelChoiceField(
         label="user",
         queryset=User.objects.all(),
         # required=False,
@@ -26,9 +35,9 @@ class UserForm(forms.ModelForm):
         fields = "__all__"
 
 
-class SubjectForm(forms.ModelForm):
+class SubjectForm(ModelForm):
     # please only use this when you need to auto complete on the name field !
-    abbreviation = forms.ModelChoiceField(
+    abbreviation = ModelChoiceField(
         label="Abbreviation",
         queryset=Subject.objects.all(),
         required=False,
@@ -40,9 +49,9 @@ class SubjectForm(forms.ModelForm):
         fields = "__all__"
 
 
-class CanvasSiteForm(forms.ModelForm):
+class CanvasSiteForm(ModelForm):
     # please only use this when you need to auto complete on the name field !
-    name = forms.ModelChoiceField(
+    name = ModelChoiceField(
         label="content_copy",
         queryset=CanvasSite.objects.all(),
         required=False,
@@ -54,7 +63,7 @@ class CanvasSiteForm(forms.ModelForm):
         fields = "__all__"
 
 
-class EmailChangeForm(forms.Form):
+class EmailChangeForm(Form):
     """
     A form that lets a user change set their email while checking for a change in the
     e-mail.
@@ -65,14 +74,14 @@ class EmailChangeForm(forms.Form):
         "not_changed": "The email address is the same as the one already defined.",
     }
 
-    new_email1 = forms.EmailField(
+    new_email1 = EmailField(
         label="New email address",
-        widget=forms.EmailInput,
+        widget=EmailInput,
     )
 
-    new_email2 = forms.EmailField(
+    new_email2 = EmailField(
         label="New email address confirmation",
-        widget=forms.EmailInput,
+        widget=EmailInput,
     )
 
     def __init__(self, user, *args, **kwargs):
@@ -85,7 +94,7 @@ class EmailChangeForm(forms.Form):
         new_email1 = self.cleaned_data.get("new_email1")
         if new_email1 and old_email:
             if new_email1 == old_email:
-                raise forms.ValidationError(
+                raise ValidationError(
                     self.error_messages["not_changed"],
                     code="not_changed",
                 )
@@ -97,7 +106,7 @@ class EmailChangeForm(forms.Form):
         if new_email1 and new_email2:
             if new_email1 != new_email2:
                 # print("yeahgggggg")
-                raise forms.ValidationError(
+                raise ValidationError(
                     self.error_messages["email_mismatch"],
                     code="email_mismatch",
                 )
