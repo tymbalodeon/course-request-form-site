@@ -1162,6 +1162,7 @@ class HomePage(APIView, UserPassesTestMixin):  # ,
 
         except KeyError as error:
             print(f"HERE IS THE ERROR: {error}")
+            pass
         # check if user is in the system
         request.session["on_behalf_of"] = on_behalf_of
         # print("masquerading as:", request.session['on_behalf_of'])
