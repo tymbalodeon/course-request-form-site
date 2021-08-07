@@ -117,7 +117,7 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 30,
 }
 
-if DEBUG is False:
+if not DEBUG:
     MIDDLEWARE += ["django.contrib.auth.middleware.RemoteUserMiddleware"]
     AUTHENTICATION_BACKENDS = [
         "django.contrib.auth.backends.RemoteUserBackend",
