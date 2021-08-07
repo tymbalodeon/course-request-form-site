@@ -364,101 +364,157 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
     }
 
     def create(self, request, *args, **kwargs):
+        """
+        functions like a signal
+            whenever a request is created this function updates the course instance and updates the crosslisted courses.
+        """
+        # putting this function inside create because it should only be accessible here.
+        # there does not need to be this in the delete of a request...
         def update_course(self, course):
+            # course.requested = True
             course.save()
-
             if course.crosslisted:
                 for crosslisted in course.crosslisted.all():
-                    crosslisted.request = course.request
-                    crosslisted.save()
 
+                    # crosslisted.requested = True
+                    crosslisted.request = course.request
+                    # print("crosslisted.request , course.request",crosslisted.request , course.request)
+                    crosslisted.save()
+            # print("-",course.course_code, course.requested)
+            # get crosslisted courses
             crosslisted = course.crosslisted
+            ##print(crosslisted,"help me!!!")
+
+        """
+        Currently this function creates Request instances made from the UI view and the api view
+        Therefore there needs to be diambiguation that routes to the UI list view or the api list view
+        after creation. Since the POST action is always made to the /api/ endpoint i cannot check what
+        the accepted_renderer.format is b/c it will always be api.
+            To do this I am tryint to pass a query_param with the UI POST action
+            however this may not be the best method perhaps something that has to do with
+            sessions would be a better and safer implementation.
+        """
+
+        print("views.py in create: request.data", request.data)
+        # setting masquerade variable for later use
 
         try:
             masquerade = request.session["on_behalf_of"]
         except KeyError:
             masquerade = ""
+        # print("Request create; masqueraded as:", masquerade)
 
-        course = Course.objects.get(course_code=request.data["course_requested"])
+        course = Course.objects.get(
+            course_code=request.data["course_requested"]
+        )  # get Course instance
         instructors = course.get_instructors()
-
         if instructors == "STAFF":
             instructors = None
+        print("course instructors", instructors)
 
-        self.custom_permissions(None, masquerade, instructors)
+        # CHECK PERMISSIONS custom_permissions(request,request_obj,masquerade,instructors)
+        permission = self.custom_permissions(None, masquerade, instructors)
+        print("permission, ", permission)
+
         additional_enrollments_partial = html.parse_html_list(
             request.data, prefix="additional_enrollments"
         )
         additional_sections_partial = html.parse_html_list(
             request.data, prefix="additional_sections"
         )
-        data_dict = request.data.dict()
 
+        print(
+            "request.data, data to create!",
+            request.data,
+            additional_enrollments_partial,
+        )
+        d = request.data.dict()
+        # check if we are updating
         if additional_enrollments_partial or additional_sections_partial:
             if additional_enrollments_partial:
                 final_add_enroll = clean_custom_input(additional_enrollments_partial)
-                data_dict["additional_enrollments"] = final_add_enroll
+                # print(additional_enrollments_partial.dict())
+                d[
+                    "additional_enrollments"
+                ] = final_add_enroll  # [{'user':'molly','role':'DES'}]})
             else:
-                data_dict["additional_enrollments"] = []
-
+                d["additional_enrollments"] = []
             if additional_sections_partial:
                 final_add_sects = clean_custom_input(additional_sections_partial)
-                data_dict["additional_sections"] = [
-                    data_dict["course_code"] for data_dict in final_add_sects
-                ]
+                print("final_add_sects", final_add_sects)
+                d["additional_sections"] = [d["course_code"] for d in final_add_sects]
             else:
-                data_dict["additional_sections"] = []
-            serializer = self.get_serializer(data=data_dict)
+                d["additional_sections"] = []
+            serializer = self.get_serializer(data=d)
+            print("(create) serializer.initial_data", serializer.initial_data)
+            # request.data['additional_enrollments'] = additional_enrollments_partial
+
         else:
             data = dict(
                 [
                     (x, y)
-                    for x, y in data_dict.items()
+                    for x, y in d.items()
                     if not x.startswith("additional_enrollments")
                     or x.startswith("additional_sections")
                 ]
             )
+            print("data", data)
             data["additional_enrollments"] = []
             data["additional_sections"] = []
-
+            ####### THIS IS THE RESERVES HACK #########
             if "view_type" in request.data:
                 if request.data["view_type"] == "UI-course-list":
-                    data["reserves"] = course.course_schools.abbreviation in [
+                    ##  Here is a hack that will allow SAS, SEAS, Design, BGS, SP2, Nursing & PSOM to have Reserves already toggled
+                    print(
+                        "course_instance.course_schools.abbreviation",
+                        course.course_schools.abbreviation,
+                    )
+                    if course.course_schools.abbreviation in [
                         "SAS",
                         "SEAS",
                         "FA",
                         "PSOM",
                         "SP2",
-                    ]
+                    ]:
+                        print("we would enable here")
+                        data["reserves"] = True
 
+            print("data", data)
             serializer = self.get_serializer(data=data)
 
+        # serializer = self.get_serializer(data=request.data)
         serializer.is_valid()
-
         if not serializer.is_valid():
+            # print(serializer.errors)
+            # potentially uncomment next line...
+            # (serializer.errors)
             messages.add_message(request, messages.ERROR, serializer.errors)
-
             raise serializers.ValidationError(serializer.errors)
 
         serializer.validated_data["masquerade"] = masquerade
+        print("testing !")
+        # serializer.validated_data['additional_enrollments'] = None
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
-        course = Course.objects.get(course_code=request.data["course_requested"])
-        update_course(self, course)
 
+        # updates the course instance #
+        course = Course.objects.get(
+            course_code=request.data["course_requested"]
+        )  # get Course instance
+        update_course(self, course)
+        # this allow for the redirect to the UI and not the API endpoint. 'view_type' should be defined in the form that submits this request
+        # the following should have redirect pages which say something like "you have created X see item, go back to list"
         if "view_type" in request.data:
             if request.data["view_type"] == "UI-course-list":
                 return redirect("UI-course-list")
-
             if request.data["view_type"] == "home":
                 return redirect("home")
-
             if request.data["view_type"] == "UI-request-detail":
+                # return Response({'course':course},template_name='request_success.html')
                 return redirect(
                     "UI-request-detail-success",
                     pk=course.course_code,
                 )
-
         return Response(
             serializer.data, status=status.HTTP_201_CREATED, headers=headers
         )
