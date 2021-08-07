@@ -386,34 +386,34 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
             instructors = None
 
         self.custom_permissions(None, masquerade, instructors)
-
         additional_enrollments_partial = html.parse_html_list(
             request.data, prefix="additional_enrollments"
         )
         additional_sections_partial = html.parse_html_list(
             request.data, prefix="additional_sections"
         )
-        data = request.data.dict()
+        data_dict = request.data.dict()
 
         if additional_enrollments_partial or additional_sections_partial:
             if additional_enrollments_partial:
                 final_add_enroll = clean_custom_input(additional_enrollments_partial)
-                data["additional_enrollments"] = final_add_enroll
+                data_dict["additional_enrollments"] = final_add_enroll
             else:
-                data["additional_enrollments"] = []
+                data_dict["additional_enrollments"] = []
+
             if additional_sections_partial:
                 final_add_sects = clean_custom_input(additional_sections_partial)
-                data["additional_sections"] = [
-                    data["course_code"] for data in final_add_sects
+                data_dict["additional_sections"] = [
+                    data_dict["course_code"] for data_dict in final_add_sects
                 ]
             else:
-                data["additional_sections"] = []
-            serializer = self.get_serializer(data=data)
+                data_dict["additional_sections"] = []
+            serializer = self.get_serializer(data=data_dict)
         else:
             data = dict(
                 [
                     (x, y)
-                    for x, y in data.items()
+                    for x, y in data_dict.items()
                     if not x.startswith("additional_enrollments")
                     or x.startswith("additional_sections")
                 ]
@@ -443,7 +443,6 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         serializer.validated_data["masquerade"] = masquerade
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
-
         course = Course.objects.get(course_code=request.data["course_requested"])
         update_course(self, course)
 
