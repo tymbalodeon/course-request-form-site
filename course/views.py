@@ -713,21 +713,20 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-def clean_custom_input(partial):
-    print(partial)
-    partial_dict = partial[0].dict()
-    partial_dict = {
-        x.replace("[", "").replace("]", ""): v for x, v in partial_dict.items()
+def clean_custom_input(adds):
+    adds_dict = adds[0].dict()
+    adds_dict = {
+        key.replace("[", "").replace("]", ""): value for key, value in adds_dict.items()
     }
     final_add = []
 
-    for add in partial:
+    for add in adds:
         add = add.dict()
-        new_add = {x.replace("[", "").replace("]", ""): v for x, v in add.items()}
+        new_add = {
+            key.replace("[", "").replace("]", ""): value for key, value in add.items()
+        }
 
-        if "" in new_add.values():
-            pass
-        else:
+        if "" not in new_add.values():
             if "user" in new_add.keys():
                 new_add["user"] = new_add["user"].lower()
 
