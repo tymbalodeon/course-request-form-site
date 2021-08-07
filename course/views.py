@@ -714,24 +714,21 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
 
 
 def clean_custom_input(partial):
-    parsed_partial = partial[0].dict()
-    parsed_partial = {
-        key.replace("[", "").replace("]", ""): value
-        for key, value in parsed_partial.items()
-    }
+    ok = partial[0].dict()
+    ok = {x.replace("[", "").replace("]", ""): v for x, v in ok.items()}
     final_add = []
-
     for add in partial:
         add = add.dict()
-        new_add = {
-            key.replace("[", "").replace("]", ""): value for key, value in add.items()
-        }
+        new_add = {x.replace("[", "").replace("]", ""): v for x, v in add.items()}
+        print("newadd", new_add)
+        if "" in new_add.values():
+            pass
+        else:
+            if "user" in new_add.keys():
+                new_add["user"] = new_add["user"].lower()
 
-        if "" not in new_add.values() and "user" in new_add.keys():
-            new_add["user"] = new_add["user"].lower()
             final_add += [new_add]
-            print(f"Adding {new_add['course_code']}...")
-
+    print("(create)final_add", final_add)
     return final_add
 
 
