@@ -189,7 +189,7 @@ def bulk_create_canvas_sites(
     print("FINISHED")
 
 
-def get_bulk_create_canvas_sites_codes(year_and_term, school):
+def get_bulk_create_main_sections(year_and_term, school):
     def find_sections(courses):
         all_sections = set()
         SECTIONS = dict()
