@@ -44,6 +44,43 @@ def get_unrequested_courses(year_and_term, school_abbreviation):
     return list(unrequested_courses)
 
 
+def group_sections(year_and_term, school):
+    courses = get_unrequested_courses(year_and_term, school)
+    all_sections = set()
+    SECTIONS = dict()
+
+    for course in courses:
+        if course in all_sections:
+            continue
+
+        course_sections = list(course.sections.all())
+
+        if not course_sections:
+            SECTIONS[course] = [course]
+            all_sections.add(course)
+        else:
+            SECTIONS[course] = course_sections
+            all_sections.update(course_sections)
+
+    return SECTIONS
+
+
+def write_main_sections(year_and_term, school):
+    sections = group_sections(year_and_term, school)
+    DATA_DIRECTORY = Path.cwd() / "data"
+
+    if not DATA_DIRECTORY.exists():
+        mkdir(DATA_DIRECTORY)
+
+    with open(
+        DATA_DIRECTORY / f"{school}_sites_to_be_bulk_created_{year_and_term}.txt", "w"
+    ) as writer:
+        for section_list in sections.values():
+            writer.write(
+                f"{' '.join(section.course_code for section in section_list)}\n"
+            )
+
+
 def should_request(sis_id, test=False):
     try:
         canvas = get_canvas(test)
@@ -123,13 +160,13 @@ def bulk_create_canvas_sites(
         tools = [tool for tool in tools.keys()]
 
     if not school or (school and type(school) == str):
-        unrequested_courses = get_unrequested_courses(year_and_term, school)
+        unrequested_courses = group_sections(year_and_term, school).keys()
     else:
         unrequested_courses = list()
 
         for abbreviation in school:
             unrequested_courses.extend(
-                get_unrequested_courses(year_and_term, abbreviation)
+                group_sections(year_and_term, abbreviation).keys()
             )
 
     print(") Processing courses...")
@@ -187,40 +224,3 @@ def bulk_create_canvas_sites(
                 request_course(course, reserves, "COMPLETED", False)
 
     print("FINISHED")
-
-
-def get_bulk_create_main_sections(year_and_term, school):
-    def find_sections(courses):
-        all_sections = set()
-        SECTIONS = dict()
-
-        for course in courses:
-            if course in all_sections:
-                continue
-
-            course_sections = list(course.sections.all())
-
-            if not course_sections:
-                SECTIONS[course] = [course]
-                all_sections.add(course)
-            else:
-                SECTIONS[course] = course_sections
-                all_sections.update(course_sections)
-
-        return SECTIONS
-
-    courses = get_unrequested_courses(year_and_term, school)
-    sections = find_sections(courses)
-
-    DATA_DIRECTORY = Path.cwd() / "data"
-
-    if not DATA_DIRECTORY.exists():
-        mkdir(DATA_DIRECTORY)
-
-    with open(
-        DATA_DIRECTORY / f"{school}_sites_to_be_bulk_created_{year_and_term}.txt", "w"
-    ) as writer:
-        for section_list in sections.values():
-            writer.write(
-                f"{' '.join(section.course_code for section in section_list)}\n"
-            )
