@@ -191,7 +191,7 @@ def bulk_create_canvas_sites(
 
 def get_bulk_create_canvas_sites_codes(year_and_term, school):
     def find_sections(courses):
-        all_sections = list()
+        all_sections = set()
         SECTIONS = dict()
 
         for course in courses:
@@ -202,10 +202,10 @@ def get_bulk_create_canvas_sites_codes(year_and_term, school):
 
             if not course_sections:
                 SECTIONS[course] = [course]
-                all_sections.append(course)
+                all_sections.add(course)
             else:
                 SECTIONS[course] = course_sections
-                all_sections.extend(course_sections)
+                all_sections.update(course_sections)
 
         return SECTIONS
 
