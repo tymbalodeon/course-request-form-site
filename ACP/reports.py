@@ -3,7 +3,7 @@ from course.models import Course
 GRADUATE_COURSE_MINIMUM_NUMBER = 500
 
 
-def count_canvas_courses(year_and_term, separate=True):
+def count_canvas_site(year_and_term, separate=True):
     def is_grad_course(course):
         return course.course_number >= GRADUATE_COURSE_MINIMUM_NUMBER
 
@@ -20,9 +20,9 @@ def count_canvas_courses(year_and_term, separate=True):
 
     if separate:
         undergraduate_course = [
-            course for coruse in courses if not is_grad_course(courses)
+            course for coruse in courses if not is_grad_course(course)
         ]
-        gradudate_courses = [course for coruse in courses if is_grad_course(courses)]
+        gradudate_courses = [course for coruse in courses if is_grad_course(course)]
 
         return undergraduate_course, gradudate_courses
     else:
