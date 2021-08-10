@@ -20,9 +20,9 @@ def count_canvas_sites(year_and_term, separate=True):
 
     if separate:
         undergraduate_course = [
-            course for coruse in courses if not is_grad_course(course)
+            course for course in courses if not is_grad_course(course)
         ]
-        gradudate_courses = [course for coruse in courses if is_grad_course(course)]
+        gradudate_courses = [course for course in courses if is_grad_course(course)]
 
         return undergraduate_course, gradudate_courses
     else:
