@@ -17,8 +17,10 @@ OWNER = User.objects.get(username=config.items("users")[0][0])
 
 def get_unrequested_courses(year_and_term, school_abbreviation):
     print(") Finding unrequested courses...")
+
     term = year_and_term[-1]
     year = year_and_term[:-1]
+
     if school_abbreviation:
         school = School.objects.get(abbreviation=school_abbreviation)
         unrequested_courses = Course.objects.filter(
@@ -39,8 +41,10 @@ def get_unrequested_courses(year_and_term, school_abbreviation):
             primary_crosslist="",
             course_schools__visible=True,
         )
+
     total_unrequested = len(unrequested_courses)
     print(f"FOUND {total_unrequested} UNREQUESTED COURSES.")
+
     return list(unrequested_courses)
 
 
