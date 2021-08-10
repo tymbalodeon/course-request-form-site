@@ -9,8 +9,7 @@ def count_canvas_sites(year_and_term, separate=True):
 
     def is_numeric_course_number(course):
         try:
-            if int(course.course_number):
-                return True
+            return bool(int(course.course_number))
         except Exception:
             return False
 
@@ -26,7 +25,7 @@ def count_canvas_sites(year_and_term, separate=True):
             course_numbers.add(course.course_number)
 
     if separate:
-        courses = [course for course in courses if not is_numeric_course_number(course)]
+        courses = [course for course in courses if is_numeric_course_number(course)]
         undergraduate_course = [
             course for course in courses if not is_grad_course(course)
         ]
