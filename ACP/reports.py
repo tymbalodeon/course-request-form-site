@@ -7,6 +7,13 @@ def count_canvas_sites(year_and_term, separate=True):
     def is_grad_course(course):
         return int(course.course_number) >= GRADUATE_COURSE_MINIMUM_NUMBER
 
+    def is_numeric_course_number(course):
+        try:
+            if int(course.course_number):
+                return True
+        except Exception:
+            return False
+
     year = "".join(character for character in year_and_term if not character.isalpha())
     term = "".join(character for character in year_and_term if character.isalpha())
     courses = list(Course.objects.filter(year=year, course_term=term))
@@ -19,6 +26,7 @@ def count_canvas_sites(year_and_term, separate=True):
             course_numbers.add(course.course_number)
 
     if separate:
+        courses = [course for course in courses if not is_numeric_course_number(course)]
         undergraduate_course = [
             course for course in courses if not is_grad_course(course)
         ]
