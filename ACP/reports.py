@@ -3,9 +3,9 @@ from course.models import Course
 GRADUATE_COURSE_MINIMUM_NUMBER = 500
 
 
-def count_canvas_site(year_and_term, separate=True):
+def count_canvas_sites(year_and_term, separate=True):
     def is_grad_course(course):
-        return course.course_number >= GRADUATE_COURSE_MINIMUM_NUMBER
+        return int(course.course_number) >= GRADUATE_COURSE_MINIMUM_NUMBER
 
     year = "".join(character for character in year_and_term if not character.isalpha())
     term = "".join(character for character in year_and_term if character.isalpha())
