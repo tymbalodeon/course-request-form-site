@@ -24,8 +24,9 @@ def count_canvas_sites(year_and_term, separate=True):
         else:
             course_numbers.add(course.course_number)
 
+    courses = [course for course in courses if is_numeric_course_number(course)]
+
     if separate:
-        courses = [course for course in courses if is_numeric_course_number(course)]
         undergraduate_course = [
             course for course in courses if not is_grad_course(course)
         ]
