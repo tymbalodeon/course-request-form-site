@@ -80,9 +80,11 @@ def write_main_sections(year_and_term, school):
         DATA_DIRECTORY / f"{school}_sites_to_be_bulk_created_{year_and_term}.txt", "w"
     ) as writer:
         for section_list in sections.values():
-            writer.write(
-                f"{' '.join(section.course_code for section in section_list)}\n"
-            )
+            writer.write(f"{section_list[0].course_code}\n")
+            tabbed_sections = [
+                f"\t{section.course_code}\n" for section in section_list[1:]
+            ]
+            writer.write(f"{''.join(section for section in tabbed_sections)}")
 
 
 def should_request(sis_id, test=False):
