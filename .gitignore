@@ -8,6 +8,7 @@ venv/
 config/
 
 ACP/data/
+data/
 
 *.pyc
 .python-version
