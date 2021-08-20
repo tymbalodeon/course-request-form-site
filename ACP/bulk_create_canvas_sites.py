@@ -128,6 +128,19 @@ def write_request_statuses(year_and_term, school_abbreviation, verbose=True):
 
         return site
 
+    def make_rows(course):
+        if not isinstance(course, Course):
+            course = course.course_requested
+
+        return [
+            course.course_code,
+            course.course_name,
+            course.course_activity,
+            list_instructors(course),
+            course.requested,
+            has_canvas_site(course),
+        ]
+
     unrequested_courses = get_requested_or_unrequested_courses(
         year_and_term, school_abbreviation, exclude_crosslist=False
     )
@@ -142,17 +155,7 @@ def write_request_statuses(year_and_term, school_abbreviation, verbose=True):
 
     print(") Checking for Canvas sites...")
 
-    courses = [
-        [
-            course.course_code,
-            course.course_name,
-            course.course_activity,
-            list_instructors(course),
-            course.requested,
-            has_canvas_site(course),
-        ]
-        for course in courses
-    ]
+    courses = [make_rows(course) for course in courses]
 
     DATA_DIRECTORY = get_data_directory()
     COLUMNS = (
