@@ -106,7 +106,7 @@ def write_request_statuses(year_and_term, school_abbreviation, verbose=True):
 
     def list_instructors(course):
         try:
-            return ", ".join([user.username for user in list(course.instructors.all())])
+            return f'"{", ".join([user.username for user in list(course.instructors.all())])}"'
         except Exception:
             return "STAFF"
 
@@ -175,7 +175,8 @@ def write_request_statuses(year_and_term, school_abbreviation, verbose=True):
         writer.write(f"{','.join(COLUMNS)}\n")
 
         for course in courses:
-            writer.write(f"{','.join(str(item) for item in course)}\n")
+            course = [f'"{item}""' for item in course]
+            writer.write(f"{','.join(course)}\n")
 
     print("FINISHED")
 
