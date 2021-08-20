@@ -121,7 +121,7 @@ def write_request_statuses(year_and_term, school_abbreviation, verbose=True):
                     .id
                 )
             except Exception:
-                site = False
+                site = None
 
         if verbose:
             print(f"- Canvas site for course {course}: {site}")
@@ -134,7 +134,7 @@ def write_request_statuses(year_and_term, school_abbreviation, verbose=True):
 
         return [
             course.course_code,
-            course.course_name,
+            f'"{course.course_name}"',
             course.course_activity.name,
             list_instructors(course),
             course.requested,
@@ -175,7 +175,6 @@ def write_request_statuses(year_and_term, school_abbreviation, verbose=True):
         writer.write(f"{','.join(COLUMNS)}\n")
 
         for course in courses:
-            course = [f'"{item}""' for item in course]
             writer.write(f"{','.join(course)}\n")
 
     print("FINISHED")
