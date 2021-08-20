@@ -144,9 +144,9 @@ def write_request_statuses(year_and_term, school_abbreviation):
         for course in courses
     ]
 
-    courses = DataFrame(
-        courses,
-        columns=[
+    DATA_DIRECTORY = get_data_directory()
+    COLUMNS = (
+        [
             "Section",
             "Title",
             "Activity",
@@ -156,12 +156,16 @@ def write_request_statuses(year_and_term, school_abbreviation):
         ],
     )
 
-    DATA_DIRECTORY = get_data_directory()
-    courses.to_csv(
+    with open(
         DATA_DIRECTORY
         / f"{school_abbreviation}_courses_request_and_site_statuses_{year_and_term}.csv",
-        index=False,
-    )
+        "w",
+        newline="\n",
+    ) as writer:
+        writer.write(",".join(COLUMNS))
+
+        for course in courses:
+            writer.write(",".join(course))
 
 
 def should_request(sis_id, test=False):
