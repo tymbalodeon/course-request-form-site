@@ -7,7 +7,6 @@ from canvasapi.exceptions import CanvasException
 from course.models import Course, Request, School, User
 from course.tasks import create_canvas_sites
 from django.utils import timezone
-from pandas import DataFrame, to_csv
 
 from .logger import canvas_logger, crf_logger
 
