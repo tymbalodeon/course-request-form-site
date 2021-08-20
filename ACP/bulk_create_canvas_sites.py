@@ -135,7 +135,7 @@ def write_request_statuses(year_and_term, school_abbreviation, verbose=True):
         return [
             course.course_code,
             course.course_name,
-            course.course_activity,
+            course.course_activity.name,
             list_instructors(course),
             course.requested,
             has_canvas_site(course),
@@ -176,7 +176,7 @@ def write_request_statuses(year_and_term, school_abbreviation, verbose=True):
         writer.write(",".join(COLUMNS))
 
         for course in courses:
-            writer.write(",".join(course))
+            writer.write(",".join(str(item) for item in course))
 
 
 def should_request(sis_id, test=False):
