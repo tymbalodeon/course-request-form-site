@@ -171,12 +171,13 @@ def write_request_statuses(year_and_term, school_abbreviation, verbose=True):
         DATA_DIRECTORY
         / f"{school_abbreviation}_courses_request_and_site_statuses_{year_and_term}.csv",
         "w",
-        newline="\n",
     ) as writer:
-        writer.write(",".join(COLUMNS))
+        writer.write(f"{','.join(COLUMNS)}\n")
 
         for course in courses:
-            writer.write(",".join(str(item) for item in course))
+            writer.write(f"{','.join(str(item) for item in course)}\n")
+
+    print("FINISHED")
 
 
 def should_request(sis_id, test=False):
