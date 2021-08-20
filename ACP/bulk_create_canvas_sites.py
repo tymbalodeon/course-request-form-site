@@ -158,16 +158,14 @@ def write_request_statuses(year_and_term, school_abbreviation, verbose=True):
     courses = [make_rows(course) for course in courses]
 
     DATA_DIRECTORY = get_data_directory()
-    COLUMNS = (
-        [
-            "Section",
-            "Title",
-            "Activity",
-            "Instructor(s)",
-            "Requested",
-            "Canvas Site",
-        ],
-    )
+    COLUMNS = [
+        "Section",
+        "Title",
+        "Activity",
+        "Instructor(s)",
+        "Requested",
+        "Canvas Site",
+    ]
 
     with open(
         DATA_DIRECTORY
