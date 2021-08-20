@@ -97,7 +97,7 @@ def write_main_sections(year_and_term, school_abbreviation):
             writer.write(f"{''.join(section for section in tabbed_sections)}")
 
 
-def write_request_statuses(year_and_term, school_abbreviation):
+def write_request_statuses(year_and_term, school_abbreviation, verbose=True):
     def get_request(course):
         try:
             return Request.objects.get(course_requested=course)
@@ -112,16 +112,21 @@ def write_request_statuses(year_and_term, school_abbreviation):
 
     def has_canvas_site(course):
         try:
-            return course.canvas_instance.canvas_id
+            site = course.canvas_instance.canvas_id
         except Exception:
             try:
-                return (
+                site = (
                     get_canvas()
                     .get_course(f"SRS_{course.srs_format_primary()}", True)
                     .id
                 )
             except Exception:
-                return False
+                site = False
+
+        if verbose:
+            print(f"- Canvas site for course {course}: {site}")
+
+        return site
 
     unrequested_courses = get_requested_or_unrequested_courses(
         year_and_term, school_abbreviation, exclude_crosslist=False
@@ -129,8 +134,14 @@ def write_request_statuses(year_and_term, school_abbreviation):
     requested_courses = get_requested_or_unrequested_courses(
         year_and_term, school_abbreviation, requested=True, exclude_crosslist=False
     )
+
+    print(") Finding request objects for requested courses...")
+
     requested_courses = [get_request(course) for course in requested_courses]
     courses = unrequested_courses + requested_courses
+
+    print(") Checking for Canvas sites...")
+
     courses = [
         [
             course.course_code,
