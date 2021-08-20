@@ -121,7 +121,7 @@ def write_request_statuses(year_and_term, school_abbreviation, verbose=True):
                     .id
                 )
             except Exception:
-                site = None
+                site = "None"
 
         if verbose:
             print(f"- Canvas site for course {course}: {site}")
