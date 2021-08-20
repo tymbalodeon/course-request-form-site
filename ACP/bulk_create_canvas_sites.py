@@ -121,7 +121,7 @@ def write_request_statuses(year_and_term, school_abbreviation, verbose=True):
                     .id
                 )
             except Exception:
-                site = "None"
+                site = None
 
         if verbose:
             print(f"- Canvas site for course {course}: {site}")
@@ -132,7 +132,7 @@ def write_request_statuses(year_and_term, school_abbreviation, verbose=True):
         if not isinstance(course, Course):
             course = course.course_requested
 
-        return [
+        row = [
             course.course_code,
             f'"{course.course_name}"',
             course.course_activity.name,
@@ -140,6 +140,8 @@ def write_request_statuses(year_and_term, school_abbreviation, verbose=True):
             course.requested,
             has_canvas_site(course),
         ]
+
+        return [str(item) for item in row]
 
     unrequested_courses = get_requested_or_unrequested_courses(
         year_and_term, school_abbreviation, exclude_crosslist=False
