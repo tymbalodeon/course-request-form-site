@@ -416,8 +416,8 @@ def create_canvas_sites(
                 )
 
                 while (
-                    content_migration.get_progress == "queued"
-                    or content_migration.get_progress == "running"
+                    content_migration.get_progress().workflow_state == "queued"
+                    or content_migration.get_progress().workflow_state == "running"
                 ):
                     if verbose:
                         print("\t* Migration running...")
