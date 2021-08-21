@@ -15,41 +15,43 @@ config.read("config/config.ini")
 OWNER = User.objects.get(username=config.items("users")[0][0])
 
 
-def get_unrequested_courses(year_and_term, school_abbreviation):
-    print(") Finding unrequested courses...")
+def get_requested_or_unrequested_courses(
+    year_and_term, school_abbreviation, requested=False, exclude_crosslist=True
+):
+    requested_display = "requested" if requested else "unrequested"
+
+    print(f") Finding {requested_display} courses...")
 
     term = year_and_term[-1]
     year = year_and_term[:-1]
 
+    filter_dict = {
+        "year": year,
+        "course_term": term,
+        "requested": requested,
+        "course_schools__visible": True,
+    }
+
+    if not requested:
+        filter_dict["requested_override"] = False
+
+    if exclude_crosslist:
+        filter_dict["primary_crosslist"] = ""
+
     if school_abbreviation:
         school = School.objects.get(abbreviation=school_abbreviation)
-        unrequested_courses = Course.objects.filter(
-            course_term=term,
-            year=year,
-            requested=False,
-            requested_override=False,
-            primary_crosslist="",
-            course_schools__visible=True,
-            course_schools=school,
-        )
-    else:
-        unrequested_courses = Course.objects.filter(
-            course_term=term,
-            year=year,
-            requested=False,
-            requested_override=False,
-            primary_crosslist="",
-            course_schools__visible=True,
-        )
+        filter_dict["course_schools"] = school
 
-    total_unrequested = len(unrequested_courses)
-    print(f"FOUND {total_unrequested} UNREQUESTED COURSES.")
+    courses = Course.objects.filter(**filter_dict)
+    total = len(courses)
 
-    return list(unrequested_courses)
+    print(f"FOUND {total} {requested_display.upper()} COURSES.")
+
+    return list(courses)
 
 
 def group_sections(year_and_term, school):
-    courses = get_unrequested_courses(year_and_term, school)
+    courses = get_requested_or_unrequested_courses(year_and_term, school)
     all_sections = set()
     SECTIONS = dict()
 
@@ -69,15 +71,23 @@ def group_sections(year_and_term, school):
     return SECTIONS
 
 
-def write_main_sections(year_and_term, school):
-    sections = group_sections(year_and_term, school)
+def get_data_directory():
     DATA_DIRECTORY = Path.cwd() / "data"
 
     if not DATA_DIRECTORY.exists():
         mkdir(DATA_DIRECTORY)
 
+    return DATA_DIRECTORY
+
+
+def write_main_sections(year_and_term, school_abbreviation):
+    sections = group_sections(year_and_term, school_abbreviation)
+    DATA_DIRECTORY = get_data_directory()
+
     with open(
-        DATA_DIRECTORY / f"{school}_sites_to_be_bulk_created_{year_and_term}.txt", "w"
+        DATA_DIRECTORY
+        / f"{school_abbreviation}_sites_to_be_bulk_created_{year_and_term}.txt",
+        "w",
     ) as writer:
         for section_list in sections.values():
             writer.write(f"{section_list[0].course_code}\n")
@@ -85,6 +95,91 @@ def write_main_sections(year_and_term, school):
                 f"\t{section.course_code}\n" for section in section_list[1:]
             ]
             writer.write(f"{''.join(section for section in tabbed_sections)}")
+
+
+def write_request_statuses(year_and_term, school_abbreviation, verbose=True):
+    def get_request(course):
+        try:
+            return Request.objects.get(course_requested=course)
+        except Exception:
+            return course
+
+    def list_instructors(course):
+        try:
+            return f'"{", ".join([user.username for user in list(course.instructors.all())])}"'
+        except Exception:
+            return "STAFF"
+
+    def has_canvas_site(course):
+        try:
+            site = course.canvas_instance.canvas_id
+        except Exception:
+            try:
+                site = (
+                    get_canvas()
+                    .get_course(f"SRS_{course.srs_format_primary()}", True)
+                    .id
+                )
+            except Exception:
+                site = None
+
+        if verbose:
+            print(f"- Canvas site for course {course}: {site}")
+
+        return site
+
+    def make_rows(course):
+        if not isinstance(course, Course):
+            course = course.course_requested
+
+        row = [
+            course.course_code,
+            f'"{course.course_name}"',
+            course.course_activity.name,
+            list_instructors(course),
+            course.requested,
+            has_canvas_site(course),
+        ]
+
+        return [str(item) for item in row]
+
+    unrequested_courses = get_requested_or_unrequested_courses(
+        year_and_term, school_abbreviation, exclude_crosslist=False
+    )
+    requested_courses = get_requested_or_unrequested_courses(
+        year_and_term, school_abbreviation, requested=True, exclude_crosslist=False
+    )
+
+    print(") Finding request objects for requested courses...")
+
+    requested_courses = [get_request(course) for course in requested_courses]
+    courses = unrequested_courses + requested_courses
+
+    print(") Checking for Canvas sites...")
+
+    courses = [make_rows(course) for course in courses]
+
+    DATA_DIRECTORY = get_data_directory()
+    COLUMNS = [
+        "Section",
+        "Title",
+        "Activity",
+        "Instructor(s)",
+        "Requested",
+        "Canvas Site",
+    ]
+
+    with open(
+        DATA_DIRECTORY
+        / f"{school_abbreviation}_courses_request_and_site_statuses_{year_and_term}.csv",
+        "w",
+    ) as writer:
+        writer.write(f"{','.join(COLUMNS)}\n")
+
+        for course in courses:
+            writer.write(f"{','.join(course)}\n")
+
+    print("FINISHED")
 
 
 def should_request(sis_id, test=False):
