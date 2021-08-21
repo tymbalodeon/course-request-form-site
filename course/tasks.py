@@ -447,7 +447,7 @@ def create_canvas_sites(
                     event = canvas.get_calendar_event(event_id)
                     deleted = event.delete(
                         cancel_reason=(
-                            "Zoom event was copied from a previous term and no longer"
+                            "Zoom event was copied from a previous term and is no longer"
                             " relevant"
                         )
                     )
