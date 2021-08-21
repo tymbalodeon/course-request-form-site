@@ -186,6 +186,29 @@ def inspect_course(section, term=None):
             )
 
 
+def inspect_instructor(pennkey):
+    cursor = get_cursor()
+    cursor.execute(
+        """
+        SELECT
+            e.FIRST_NAME,
+            e.LAST_NAME,
+            e.PENNKEY,
+            e.PENN_ID,
+            e.EMAIL_ADDRESS,
+            cs.Section_Id
+        FROM dwadmin.course_section_instructor cs
+        JOIN dwadmin.employee_general_v e
+        ON cs.Instructor_Penn_Id=e.PENN_ID
+        WHERE e.PENNKEY= :pennkey
+        """,
+        pennkey=pennkey,
+    )
+
+    for first_name, last_name, pennkey, penn_id, email, section_id in cursor:
+        print(first_name, last_name, pennkey, penn_id, email, section_id)
+
+
 def pull_courses(term):
     print(") Pulling courses...")
 
