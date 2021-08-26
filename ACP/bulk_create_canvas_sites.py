@@ -55,6 +55,8 @@ def group_sections(year_and_term, school):
     all_sections = set()
     SECTIONS = dict()
 
+    print(f") Consolidating sections into a single course number...")
+
     for course in courses:
         if course in all_sections:
             continue
@@ -78,6 +80,25 @@ def get_data_directory():
         mkdir(DATA_DIRECTORY)
 
     return DATA_DIRECTORY
+
+
+def remove_courses_with_site(courses):
+    print(f") Removing courses with a pre-existing Canvas site...")
+
+    def should_request_with_remove(sis_id, course):
+        should = should_request(sis_id)
+
+        if not should and not course.requested:
+            request_course(course, False, "COMPLETED", False)
+            courses.remove(course)
+
+        return should
+
+    return [
+        course
+        for course in courses
+        if should_request_with_remove(f"SRS_{course.srs_format_primary()}")
+    ]
 
 
 def write_main_sections(year_and_term, school_abbreviation):
@@ -110,21 +131,28 @@ def write_request_statuses(year_and_term, school_abbreviation, verbose=True):
         except Exception:
             return "STAFF"
 
-    def has_canvas_site(course):
+    def has_canvas_site(request):
         try:
-            site = course.canvas_instance.canvas_id
+            site = request.canvas_instance.canvas_id
         except Exception:
             try:
                 site = (
                     get_canvas()
-                    .get_course(f"SRS_{course.srs_format_primary()}", True)
+                    .get_course(f"SRS_{request.srs_format_primary()}", True)
                     .id
                 )
             except Exception:
-                site = None
+                try:
+                    site = (
+                        get_canvas()
+                        .get_section(f"SRS_{request.srs_format_primary()}", True)
+                        .id
+                    )
+                except Exception:
+                    site = None
 
         if verbose:
-            print(f"- Canvas site for course {course}: {site}")
+            print(f"- Canvas site for course {request}: {site}")
 
         return site
 
@@ -269,58 +297,51 @@ def bulk_create_canvas_sites(
                 group_sections(year_and_term, abbreviation).keys()
             )
 
+    unrequested_courses = remove_courses_with_site(unrequested_courses)
+
     print(") Processing courses...")
 
     for index, course in enumerate(unrequested_courses):
         print(f"- ({index + 1}/{len(unrequested_courses)}): {course}")
 
-        sis_id = f"SRS_{course.srs_format_primary()}"
+        try:
+            course_request = request_course(course, reserves)
+            sections = list(course.sections.all())
+            creation_error = create_canvas_sites(
+                course_request, sections=sections, test=test, verbose=False
+            )
 
-        if should_request(sis_id):
-            try:
-                course_request = request_course(course, reserves)
-                sections = list(course.sections.all())
-                creation_error = create_canvas_sites(
-                    course_request, sections=sections, test=test, verbose=False
+            if creation_error:
+                print("\t> Aborting... (SECTION ALREADY EXISTS)")
+                canvas_logger.info(
+                    f"Failed to create main section for {course} (SECTION"
+                    " ALREADY EXISTS)"
+                )
+                course_request[0].status = "COMPLETED"
+                course_request[0].save = "COMPLETED"
+                course.save()
+
+                continue
+
+            request = Request.objects.get(course_requested=course)
+
+            if request.status == "COMPLETED":
+                print(f"\t* Course created: ({request.canvas_instance.canvas_id})")
+            else:
+                print(f"\t* ERROR: Request incomplete. ({request.process_notes})")
+                canvas_logger.info(
+                    f"Request incomplete for {course} ({request.process_notes})."
                 )
 
-                if creation_error:
-                    print("\t> Aborting... (SECTION ALREADY EXISTS)")
-                    canvas_logger.info(
-                        f"Failed to create main section for {course} (SECTION"
-                        " ALREADY EXISTS)"
-                    )
-                    course_request[0].status = "COMPLETED"
-                    course_request[0].save = "COMPLETED"
-                    course.save()
+                continue
 
-                    continue
+            if tools:
+                canvas_id = request.canvas_instance.canvas_id
+                enable_tools(canvas_id, tools, label, test)
+        except Exception as error:
+            print(f"\t* ERROR: Failed to create site ({error}).")
+            canvas_logger.info(f"Failed to create site for {course} ({error}).")
 
-                request = Request.objects.get(course_requested=course)
-
-                if request.status == "COMPLETED":
-                    print(f"\t* Course created: ({request.canvas_instance.canvas_id})")
-                else:
-                    print(f"\t* ERROR: Request incomplete. ({request.process_notes})")
-                    canvas_logger.info(
-                        f"Request incomplete for {course} ({request.process_notes})."
-                    )
-
-                    continue
-
-                if tools:
-                    canvas_id = request.canvas_instance.canvas_id
-                    enable_tools(canvas_id, tools, label, test)
-            except Exception as error:
-                print(f"\t* ERROR: Failed to create site ({error}).")
-                canvas_logger.info(f"Failed to create site for {course} ({error}).")
-
-            print("\tCOMPLETE")
-        else:
-            print(f"\t* SKIPPING: {sis_id} is already in use.")
-            canvas_logger.info(f"{sis_id} is already in use.")
-
-            if not course.requested:
-                request_course(course, reserves, "COMPLETED", False)
+        print("\tCOMPLETE")
 
     print("FINISHED")
