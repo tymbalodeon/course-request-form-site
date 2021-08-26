@@ -288,13 +288,13 @@ def bulk_create_canvas_sites(
         tools = [tool for tool in tools.keys()]
 
     if not school or (school and type(school) == str):
-        unrequested_courses = group_sections(year_and_term, school).keys()
+        unrequested_courses = list(group_sections(year_and_term, school))
     else:
         unrequested_courses = list()
 
         for abbreviation in school:
             unrequested_courses.extend(
-                group_sections(year_and_term, abbreviation).keys()
+                list(group_sections(year_and_term, abbreviation))
             )
 
     unrequested_courses = remove_courses_with_site(unrequested_courses)
