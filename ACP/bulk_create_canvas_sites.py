@@ -99,7 +99,6 @@ def remove_courses_with_site(courses):
 
             if not course.requested:
                 request_course(course, False, "COMPLETED", False)
-                courses.remove(course)
         else:
             print(
                 f"- ({index + 1}/{TOTAL_START}) Canvas site NOT FOUND for {course.course_code}."
@@ -108,6 +107,7 @@ def remove_courses_with_site(courses):
         return should
 
     TOTAL_START = len(courses)
+
     courses = [
         course
         for index, course in enumerate(courses)
