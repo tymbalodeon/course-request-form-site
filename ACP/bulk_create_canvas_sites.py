@@ -94,7 +94,7 @@ def remove_courses_with_site(courses):
 
         if not should:
             print(
-                f"- ({index + 1}/TOTAL_START) Canvas site ALREADY EXISTS for {course.course_code}. Removing from list..."
+                f"- ({index + 1}/{TOTAL_START}) Canvas site ALREADY EXISTS for {course.course_code}. Removing from list..."
             )
 
             if not course.requested:
@@ -102,7 +102,7 @@ def remove_courses_with_site(courses):
                 courses.remove(course)
         else:
             print(
-                f"- ({index + 1}/TOTAL_START) Canvas site NOT FOUND for {course.course_code}."
+                f"- ({index + 1}/{TOTAL_START}) Canvas site NOT FOUND for {course.course_code}."
             )
 
         return should
