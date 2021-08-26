@@ -70,6 +70,10 @@ def group_sections(year_and_term, school):
             SECTIONS[course] = course_sections
             all_sections.update(course_sections)
 
+    total = len(SECTIONS)
+
+    print(f"FOUND {total} UNIQUE COURSE NUMBERS.")
+
     return SECTIONS
 
 
@@ -85,20 +89,36 @@ def get_data_directory():
 def remove_courses_with_site(courses):
     print(f") Removing courses with a pre-existing Canvas site...")
 
-    def should_request_with_remove(sis_id, course):
+    def should_request_with_remove(sis_id, course, index):
         should = should_request(sis_id)
 
-        if not should and not course.requested:
-            request_course(course, False, "COMPLETED", False)
-            courses.remove(course)
+        if not should:
+            print(
+                f"- ({index + 1}/TOTAL_START) Canvas site ALREADY EXISTS for {course.name}. Removing from list..."
+            )
+
+            if not course.requested:
+                request_course(course, False, "COMPLETED", False)
+                courses.remove(course)
+        else:
+            print(
+                f"- ({index + 1}/TOTAL_START) Canvas site NOT FOUND for {course.name}."
+            )
 
         return should
 
-    return [
+    TOTAL_START = len(courses)
+    courses = [
         course
-        for course in courses
-        if should_request_with_remove(f"SRS_{course.srs_format_primary()}", course)
+        for index, course in enumerate(courses)
+        if should_request_with_remove(
+            f"SRS_{course.srs_format_primary()}", course, index
+        )
     ]
+
+    total_end = len(courses)
+
+    print(f"FOUND {total_end} COURSES WITH NO CANVAS SITE.")
 
 
 def write_main_sections(year_and_term, school_abbreviation):
