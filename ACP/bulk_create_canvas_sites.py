@@ -189,7 +189,6 @@ def should_request(sis_id, test=False):
 
         return False
     except CanvasException:
-
         return True
 
 
