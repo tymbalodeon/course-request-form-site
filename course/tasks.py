@@ -278,8 +278,6 @@ def create_canvas_sites(
                 if verbose:
                     print(message)
 
-                continue
-
         enrollment_types = {
             "INST": "TeacherEnrollment",
             "instructor": "TeacherEnrollment",
