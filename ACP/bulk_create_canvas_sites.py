@@ -97,7 +97,7 @@ def remove_courses_with_site(courses):
     return [
         course
         for course in courses
-        if should_request_with_remove(f"SRS_{course.srs_format_primary()}")
+        if should_request_with_remove(f"SRS_{course.srs_format_primary()}", course)
     ]
 
 
