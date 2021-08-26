@@ -120,6 +120,8 @@ def remove_courses_with_site(courses):
 
     print(f"FOUND {total_end} COURSES WITH NO CANVAS SITE.")
 
+    return courses
+
 
 def write_main_sections(year_and_term, school_abbreviation):
     sections = group_sections(year_and_term, school_abbreviation)
