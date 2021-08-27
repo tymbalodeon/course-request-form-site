@@ -127,17 +127,29 @@ def write_courses(year_and_term, school_abbreviation):
     unrequested_courses = get_requested_or_unrequested_courses(
         year_and_term, school_abbreviation
     )
+
+    print(") Checking unrequested courses for existing sites..")
+
     siteless_unrequested_courses = [
         course
         for course in unrequested_courses
         if should_request(f"SRS_{course.srs_format_primary()}")
     ]
+
+    print("FOUND {len(siteless_unrequested_courses)} SITELESS UNREQUESTED COURSES.")
+
     consolidated_sections = list(group_sections(year_and_term, school_abbreviation))
+
+    print(") Checking consolidated courses for existing sites..")
+
     siteless_consolidated_courses = [
         course
         for course in consolidated_sections
         if should_request(f"SRS_{course.srs_format_primary()}")
     ]
+
+    print("FOUND {len(siteless_consolidated_courses)} SITELESS CONSOLIDATED COURSES.")
+
     DATA_DIRECTORY = get_data_directory()
 
     course_lists = {
