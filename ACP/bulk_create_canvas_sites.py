@@ -156,7 +156,7 @@ def write_courses(year_and_term, school_abbreviation):
         "unrequested_courses": unrequested_courses,
         "siteless_unrequested_courses": siteless_unrequested_courses,
         "consolidated_sections": consolidated_sections,
-        "siteles_consolidated_courses": siteless_consolidated_courses,
+        "siteless_consolidated_courses": siteless_consolidated_courses,
     }
 
     for key, value in course_lists.items():
