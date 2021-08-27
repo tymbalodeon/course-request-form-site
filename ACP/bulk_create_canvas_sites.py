@@ -148,7 +148,7 @@ def write_courses(year_and_term, school_abbreviation):
     }
 
     for key, value in course_lists.items():
-        lines = f"course code\n{'\n'.join([course.course_code for course in value])}"
+        lines = "course code\n" + "\n".join([course.course_code for course in value])
 
         with open(
             DATA_DIRECTORY / f"{school_abbreviation}_{key}_{year_and_term}.csv",
