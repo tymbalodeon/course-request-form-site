@@ -123,21 +123,50 @@ def remove_courses_with_site(courses):
     return courses
 
 
-def write_main_sections(year_and_term, school_abbreviation):
-    sections = group_sections(year_and_term, school_abbreviation)
+def write_courses(year_and_term, school_abbreviation):
+    unrequested_courses = get_requested_or_unrequested_courses(
+        year_and_term, school_abbreviation
+    )
+
+    print(") Checking unrequested courses for existing sites..")
+
+    siteless_unrequested_courses = [
+        course
+        for course in unrequested_courses
+        if should_request(f"SRS_{course.srs_format_primary()}")
+    ]
+
+    print("FOUND {len(siteless_unrequested_courses)} SITELESS UNREQUESTED COURSES.")
+
+    consolidated_sections = list(group_sections(year_and_term, school_abbreviation))
+
+    print(") Checking consolidated courses for existing sites..")
+
+    siteless_consolidated_courses = [
+        course
+        for course in consolidated_sections
+        if should_request(f"SRS_{course.srs_format_primary()}")
+    ]
+
+    print("FOUND {len(siteless_consolidated_courses)} SITELESS CONSOLIDATED COURSES.")
+
     DATA_DIRECTORY = get_data_directory()
 
-    with open(
-        DATA_DIRECTORY
-        / f"{school_abbreviation}_sites_to_be_bulk_created_{year_and_term}.txt",
-        "w",
-    ) as writer:
-        for section_list in sections.values():
-            writer.write(f"{section_list[0].course_code}\n")
-            tabbed_sections = [
-                f"\t{section.course_code}\n" for section in section_list[1:]
-            ]
-            writer.write(f"{''.join(section for section in tabbed_sections)}")
+    course_lists = {
+        "unrequested_courses": unrequested_courses,
+        "siteless_unrequested_courses": siteless_unrequested_courses,
+        "consolidated_sections": consolidated_sections,
+        "siteless_consolidated_courses": siteless_consolidated_courses,
+    }
+
+    for key, value in course_lists.items():
+        lines = "course code\n" + "\n".join([course.course_code for course in value])
+
+        with open(
+            DATA_DIRECTORY / f"{school_abbreviation}_{key}_{year_and_term}.csv",
+            "w",
+        ) as writer:
+            writer.write(lines)
 
 
 def write_request_statuses(year_and_term, school_abbreviation, verbose=True):
