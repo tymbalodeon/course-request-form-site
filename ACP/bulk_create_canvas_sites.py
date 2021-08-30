@@ -74,7 +74,7 @@ def group_sections(year_and_term, school):
 
     print(f"FOUND {total} UNIQUE COURSE NUMBERS.")
 
-    return SECTIONS
+    return list(SECTIONS)
 
 
 def get_data_directory():
@@ -138,7 +138,7 @@ def write_courses(year_and_term, school_abbreviation):
 
     print("FOUND {len(siteless_unrequested_courses)} SITELESS UNREQUESTED COURSES.")
 
-    consolidated_sections = list(group_sections(year_and_term, school_abbreviation))
+    consolidated_sections = group_sections(year_and_term, school_abbreviation)
 
     print(") Checking consolidated courses for existing sites..")
 
@@ -342,12 +342,12 @@ def bulk_create_canvas_sites(
 
     if not courses:
         if not school or (school and type(school) == str):
-            courses = list(group_sections(year_and_term, school))
+            courses = group_sections(year_and_term, school)
         else:
             courses = list()
 
             for abbreviation in school:
-                courses.extend(list(group_sections(year_and_term, abbreviation)))
+                courses.extend(group_sections(year_and_term, abbreviation))
 
         courses = remove_courses_with_site(courses)
 
