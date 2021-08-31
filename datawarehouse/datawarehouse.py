@@ -212,8 +212,9 @@ def inspect_instructor(pennkey, term):
         term=term,
     )
 
-    for first_name, last_name, pennkey, penn_id, email, section_id in cursor:
-        print(first_name, last_name, pennkey, penn_id, email, section_id)
+    for first_name, last_name, pennkey, penn_id, email, section_id, term in cursor:
+        print("first name, last name, pennkey, penn id, email, section, term\n")
+        print(first_name, last_name, pennkey, penn_id, email, section_id, term)
 
 
 def pull_courses(term):
