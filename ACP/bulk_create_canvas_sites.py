@@ -223,10 +223,10 @@ def write_request_statuses(year_and_term, school_abbreviation, verbose=True):
         return [str(item) for item in row]
 
     unrequested_courses = get_requested_or_unrequested_courses(
-        year_and_term, school_abbreviation, exclude_crosslist=False
+        year_and_term, school_abbreviation
     )
     requested_courses = get_requested_or_unrequested_courses(
-        year_and_term, school_abbreviation, requested=True, exclude_crosslist=False
+        year_and_term, school_abbreviation, requested=True
     )
 
     print(") Finding request objects for requested courses...")
