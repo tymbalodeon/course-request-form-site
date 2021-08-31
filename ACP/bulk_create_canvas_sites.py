@@ -136,7 +136,7 @@ def write_courses(year_and_term, school_abbreviation):
         if should_request(f"SRS_{course.srs_format_primary()}")
     ]
 
-    print("FOUND {len(siteless_unrequested_courses)} SITELESS UNREQUESTED COURSES.")
+    print(f"FOUND {len(siteless_unrequested_courses)} SITELESS UNREQUESTED COURSES.")
 
     consolidated_sections = group_sections(year_and_term, school_abbreviation)
 
@@ -148,7 +148,7 @@ def write_courses(year_and_term, school_abbreviation):
         if should_request(f"SRS_{course.srs_format_primary()}")
     ]
 
-    print("FOUND {len(siteless_consolidated_courses)} SITELESS CONSOLIDATED COURSES.")
+    print(f"FOUND {len(siteless_consolidated_courses)} SITELESS CONSOLIDATED COURSES.")
 
     DATA_DIRECTORY = get_data_directory()
 
