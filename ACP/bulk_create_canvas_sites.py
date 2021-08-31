@@ -74,7 +74,7 @@ def group_sections(year_and_term, school):
 
     print(f"FOUND {total} UNIQUE COURSE NUMBERS.")
 
-    return SECTIONS
+    return list(SECTIONS)
 
 
 def get_data_directory():
@@ -138,7 +138,7 @@ def write_courses(year_and_term, school_abbreviation):
 
     print("FOUND {len(siteless_unrequested_courses)} SITELESS UNREQUESTED COURSES.")
 
-    consolidated_sections = list(group_sections(year_and_term, school_abbreviation))
+    consolidated_sections = group_sections(year_and_term, school_abbreviation)
 
     print(") Checking consolidated courses for existing sites..")
 
@@ -323,6 +323,8 @@ def enable_tools(canvas_id, tools, label, test):
 
 def bulk_create_canvas_sites(
     year_and_term,
+    courses=[],
+    include_sections=False,
     school="SEAS",
     reserves=True,
     tools={
@@ -338,34 +340,33 @@ def bulk_create_canvas_sites(
     elif type(tools) == dict:
         tools = [tool for tool in tools.keys()]
 
-    if not school or (school and type(school) == str):
-        unrequested_courses = list(group_sections(year_and_term, school))
-    else:
-        unrequested_courses = list()
+    if not courses:
+        if not school or (school and type(school) == str):
+            courses = group_sections(year_and_term, school)
+        else:
+            courses = list()
 
-        for abbreviation in school:
-            unrequested_courses.extend(
-                list(group_sections(year_and_term, abbreviation))
-            )
+            for abbreviation in school:
+                courses.extend(group_sections(year_and_term, abbreviation))
 
-    unrequested_courses = remove_courses_with_site(unrequested_courses)
+        courses = remove_courses_with_site(courses)
 
     print(") Processing courses...")
 
-    for index, course in enumerate(unrequested_courses):
-        print(f"- ({index + 1}/{len(unrequested_courses)}): {course}")
+    for index, course in enumerate(courses):
+        print(f"- ({index + 1}/{len(courses)}): {course}")
 
         try:
             course_request = request_course(course, reserves)
-            sections = list(course.sections.all())
+            sections = None if not include_sections else list(course.sections.all())
             creation_error = create_canvas_sites(
                 course_request, sections=sections, test=test, verbose=False
             )
 
             if creation_error:
-                print("\t> Aborting... (SECTION ALREADY EXISTS)")
+                print("\t> Aborting... (SITE ALREADY EXISTS)")
                 canvas_logger.info(
-                    f"Failed to create main section for {course} (SECTION"
+                    f"Failed to create main section for {course} (SITE"
                     " ALREADY EXISTS)"
                 )
                 course_request[0].status = "COMPLETED"
