@@ -76,7 +76,7 @@ urlpatterns = [
         name="user_lookup",
     ),
     url("courselookup/", views.openDataProxy),
-    url("courselookup/", views.check_data_warehouse_for_course),
+    url("dwlookup/", views.check_data_warehouse_for_course),
     url(r"^api/", include(router.urls)),
     url(r"^api_doc/", schema_view),
     # --------------- Course list/detail view -------------------
