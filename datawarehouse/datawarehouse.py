@@ -111,7 +111,8 @@ def inspect_course(section, term=None):
             cs.section_division division,
             trim(cs.title) srs_title,
             cs.status srs_status,
-            cs.schedule_revision
+            cs.schedule_revision,
+            cs.timetable_instructor
         FROM dwadmin.course_section cs
         WHERE
             cs.activity IN (
@@ -134,7 +135,7 @@ def inspect_course(section, term=None):
     )
     print(
         "course_code, section_id, course_term, subject_area, school, xc, xc_code,"
-        " activity, section_dept, section_division, title, status, rev\n"
+        " activity, section_dept, section_division, title, status, rev, instructor(s)\n"
     )
 
     for (
@@ -151,6 +152,7 @@ def inspect_course(section, term=None):
         title,
         status,
         rev,
+        instructors,
     ) in cursor:
         if term is None:
             print(
@@ -167,6 +169,7 @@ def inspect_course(section, term=None):
                 title,
                 status,
                 rev,
+                instructors,
             )
         elif course_term == term:
             print(
@@ -183,10 +186,11 @@ def inspect_course(section, term=None):
                 title,
                 status,
                 rev,
+                instructors,
             )
 
 
-def inspect_instructor(pennkey):
+def inspect_instructor(pennkey, term):
     cursor = get_cursor()
     cursor.execute(
         """
@@ -196,17 +200,21 @@ def inspect_instructor(pennkey):
             e.PENNKEY,
             e.PENN_ID,
             e.EMAIL_ADDRESS,
-            cs.Section_Id
+            cs.Section_Id,
+            cs.term
         FROM dwadmin.course_section_instructor cs
         JOIN dwadmin.employee_general_v e
         ON cs.Instructor_Penn_Id=e.PENN_ID
-        WHERE e.PENNKEY= :pennkey
+        WHERE e.PENNKEY = :pennkey
+        AND cs.term = :term
         """,
         pennkey=pennkey,
+        term=term,
     )
 
-    for first_name, last_name, pennkey, penn_id, email, section_id in cursor:
-        print(first_name, last_name, pennkey, penn_id, email, section_id)
+    for first_name, last_name, pennkey, penn_id, email, section_id, term in cursor:
+        print("first name, last name, pennkey, penn id, email, section, term\n")
+        print(first_name, last_name, pennkey, penn_id, email, section_id, term)
 
 
 def pull_courses(term):
