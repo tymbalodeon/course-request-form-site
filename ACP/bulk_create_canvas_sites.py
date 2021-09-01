@@ -305,7 +305,9 @@ def request_course(course, reserves, status="APPROVED", verbose=True):
         )[0]
         request.status = status
         request.save()
-        course.save()
+
+        if isinstance(course, Course):
+            course.save()
 
         if verbose:
             print("\t* Request created.")
@@ -348,7 +350,7 @@ def read_course_list_from_csv(csv_path):
 
 
 def bulk_create_canvas_sites(
-    year_and_term,
+    year_and_term=None,
     courses=[],
     include_sections=False,
     school="SEAS",
