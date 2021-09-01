@@ -103,8 +103,8 @@ def inspect_course(section, term=None, verbose=True):
     )
 
     if len(section) > 10:
-        section = section[:-5]
         term = section[-5:]
+        section = section[:-5]
 
     cursor = get_cursor()
     cursor.execute(
