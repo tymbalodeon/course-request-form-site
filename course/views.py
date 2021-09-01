@@ -1682,7 +1682,15 @@ def check_data_warehouse_for_course(request):
             course_code = request.GET.get("course_code", None)
             results = inspect_course(course_code, verbose=False)
             size = len(results)
-            data["data"] = results
+            data["results"] = results
+
+            for course in data["data"]:
+                course_code = course[0]
+                data["data"][course_code] = dict()
+
+                for item in course:
+                    data["data"][course_code][item] = item
+
         except Exception as error:
             print(f"ERROR (Data Warehouse): {error}")
 
