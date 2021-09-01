@@ -124,6 +124,15 @@ def remove_courses_with_site(courses):
 
 
 def write_courses(year_and_term, school_abbreviation):
+    """
+    Generates 4 csv files with a single column of course codes, for the
+    following parameters:
+
+    1. Unrequested courses
+    2. Unrequested courses with no Canvas site
+    3. Unrequested unique course numbers consolidated
+    4. Unrequested unique course numbers consolidated with no Canvas site
+    """
     unrequested_courses = get_requested_or_unrequested_courses(
         year_and_term, school_abbreviation
     )
@@ -170,6 +179,15 @@ def write_courses(year_and_term, school_abbreviation):
 
 
 def write_request_statuses(year_and_term, school_abbreviation, verbose=True):
+    """
+    Params: year_and_term ('2021C'), school_abbreviaton ('SAS'), verbuse=True
+
+    Generates a csv file listing the request status and Cavnas site for all
+    courses in the given school and term.
+
+    Columns: Section / Title / Activity / Instructor(s) / Requested / Canvas Site
+    """
+
     def get_request(course):
         try:
             return Request.objects.get(course_requested=course)
