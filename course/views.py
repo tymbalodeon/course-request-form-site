@@ -1679,6 +1679,21 @@ def check_data_warehouse_for_course(request):
 
     if request.GET:
         try:
+            headers = [
+                "section id",
+                "term",
+                "subject",
+                "school",
+                "crosslisting",
+                "crosslist code",
+                "activity",
+                "section department",
+                "section division",
+                "title",
+                "status",
+                "revision",
+                "instructors",
+            ]
             course_code = request.GET.get("course_code", None)
             results = inspect_course(course_code, verbose=False)
             size = len(results)
@@ -1688,8 +1703,8 @@ def check_data_warehouse_for_course(request):
                 course_code = course[0]
                 data["data"][course_code] = dict()
 
-                for item in course:
-                    data["data"][course_code][item] = item
+                for index, item in enumerate(course[1:]):
+                    data["data"][course_code][headers[index]] = item
 
             data.pop("results", None)
         except Exception as error:
