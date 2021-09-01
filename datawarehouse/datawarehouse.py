@@ -93,8 +93,19 @@ def get_user(penn_id):
         return [first_name, last_name, email, pennkey]
 
 
-def inspect_course(section, term=None):
-    section = section.replace("-", "").replace(" ", "")
+def inspect_course(section, term=None, verbose=True):
+    section = (
+        section.replace("SRS_", "")
+        .replace("_", "")
+        .replace("-", "")
+        .replace(" ", "")
+        .upper()
+    )
+
+    if len(section) > 10:
+        section = section[:-5]
+        term = section[-5:]
+
     cursor = get_cursor()
     cursor.execute(
         """
@@ -133,10 +144,14 @@ def inspect_course(section, term=None):
         """,
         section=section,
     )
-    print(
-        "course_code, section_id, course_term, subject_area, school, xc, xc_code,"
-        " activity, section_dept, section_division, title, status, rev, instructor(s)\n"
-    )
+
+    if verbose:
+        print(
+            "course_code, section_id, course_term, subject_area, school, xc, xc_code,"
+            " activity, section_dept, section_division, title, status, rev, instructor(s)\n"
+        )
+
+    results = list()
 
     for (
         course_code,
@@ -154,40 +169,83 @@ def inspect_course(section, term=None):
         rev,
         instructors,
     ) in cursor:
-        if term is None:
-            print(
-                course_code,
-                section_id,
-                course_term,
-                subject_area,
-                school,
-                xc,
-                xc_code,
-                activity,
-                section_dept,
-                section_division,
-                title,
-                status,
-                rev,
-                instructors,
-            )
+        if not term:
+            if verbose:
+                print(
+                    course_code,
+                    section_id,
+                    course_term,
+                    subject_area,
+                    school,
+                    xc,
+                    xc_code,
+                    activity,
+                    section_dept,
+                    section_division,
+                    title,
+                    status,
+                    rev,
+                    instructors,
+                )
+            else:
+                results.append(
+                    [
+                        course_code,
+                        section_id,
+                        course_term,
+                        subject_area,
+                        school,
+                        xc,
+                        xc_code,
+                        activity,
+                        section_dept,
+                        section_division,
+                        title,
+                        status,
+                        rev,
+                        instructors,
+                    ]
+                )
         elif course_term == term:
-            print(
-                course_code,
-                section_id,
-                course_term,
-                subject_area,
-                school,
-                xc,
-                xc_code,
-                activity,
-                section_dept,
-                section_division,
-                title,
-                status,
-                rev,
-                instructors,
-            )
+            if verbose:
+                print(
+                    course_code,
+                    section_id,
+                    course_term,
+                    subject_area,
+                    school,
+                    xc,
+                    xc_code,
+                    activity,
+                    section_dept,
+                    section_division,
+                    title,
+                    status,
+                    rev,
+                    instructors,
+                )
+            else:
+                results.append(
+                    [
+                        course_code,
+                        section_id,
+                        course_term,
+                        subject_area,
+                        school,
+                        xc,
+                        xc_code,
+                        activity,
+                        section_dept,
+                        section_division,
+                        title,
+                        status,
+                        rev,
+                        instructors,
+                    ]
+                )
+
+    if not verbose:
+        return results
 
 
 def inspect_instructor(pennkey, term):

@@ -22,6 +22,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.response import Response
+from datawarehouse.datawarehouse import inspect_course
 from rest_framework.reverse import reverse
 from rest_framework.utils import html
 from rest_framework.views import APIView, exception_handler
@@ -1667,9 +1668,25 @@ def openDataProxy(request):
             else:
                 size = 1
         except Exception as error:
-            print(f"ERROR: {error}")
+            print(f"ERROR (OpenData): {error}")
 
     return render(request, "admin/course_lookup.html", {"data": data, "size": size})
+
+
+def check_data_warehouse_for_course(request):
+    data = {"data": "none"}
+    size = 0
+
+    if request.GET:
+        try:
+            course_code = request.GET.get("course_code", None)
+            results = inspect_course(course_code, verbose=False)
+            size = len(results)
+            data["data"] = results
+        except Exception as error:
+            print(f"ERROR (Data Warehouse): {error}")
+
+    return render(request, "admin/dw_lookup.html", {"data": data, "size": size})
 
 
 # ---------------- AUTO COMPLETE -------------------
