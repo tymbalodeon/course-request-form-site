@@ -1674,7 +1674,7 @@ def openDataProxy(request):
 
 
 def check_data_warehouse_for_course(request):
-    data = {"data": "none"}
+    data = {"data": {}}
     size = 0
 
     if request.GET:
