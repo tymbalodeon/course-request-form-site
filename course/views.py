@@ -1684,13 +1684,14 @@ def check_data_warehouse_for_course(request):
             size = len(results)
             data["results"] = results
 
-            for course in data["data"]:
+            for course in data["results"]:
                 course_code = course[0]
                 data["data"][course_code] = dict()
 
                 for item in course:
                     data["data"][course_code][item] = item
 
+            data.pop("results", None)
         except Exception as error:
             print(f"ERROR (Data Warehouse): {error}")
 
