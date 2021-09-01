@@ -339,6 +339,14 @@ def enable_tools(canvas_id, tools, label, test):
             )
 
 
+def read_course_list_from_csv(csv_path):
+    with open(csv_path) as reader:
+        courses = reader.readlines()
+        courses = [course.replace("\n", "").replace('"', "") for course in courses]
+
+        return courses
+
+
 def bulk_create_canvas_sites(
     year_and_term,
     courses=[],
