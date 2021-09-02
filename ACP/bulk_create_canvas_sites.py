@@ -387,6 +387,11 @@ def bulk_create_canvas_sites(
             try:
                 return Course.objects.get(course_code=course)
             except Exception:
+                with open(
+                    "/home/django/crf2/data/bulk_creation_log.csv", "w"
+                ) as output:
+                    output.write(f"{course}\n")
+
                 return None
 
         courses = [get_course_object_or_empty(course) for course in courses]
