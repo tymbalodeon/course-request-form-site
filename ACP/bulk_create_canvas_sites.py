@@ -345,6 +345,7 @@ def read_course_list_from_csv(csv_path):
     with open(csv_path) as reader:
         courses = reader.readlines()
         courses = [course.replace("\n", "").replace('"', "") for course in courses]
+        courses.remove("")
 
         return courses
 
