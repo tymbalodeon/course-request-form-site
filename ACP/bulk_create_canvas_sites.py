@@ -1,5 +1,5 @@
 from configparser import ConfigParser
-from os import mkdir
+from os import mkdir, remove, path
 from pathlib import Path
 
 from canvas.api import get_canvas
@@ -13,6 +13,7 @@ from .logger import canvas_logger, crf_logger
 config = ConfigParser()
 config.read("config/config.ini")
 OWNER = User.objects.get(username=config.items("users")[0][0])
+LOG_PATH = "/home/django/crf2/data/bulk_creation_log.csv"
 
 
 def get_requested_or_unrequested_courses(
@@ -392,14 +393,14 @@ def bulk_create_canvas_sites(
 
         courses = remove_courses_with_site(courses)
     else:
+        if path.exists(LOG_PATH):
+            remove(LOG_PATH)
 
         def get_course_object_or_empty(course):
             try:
                 return Course.objects.get(course_code=course)
             except Exception:
-                with open(
-                    "/home/django/crf2/data/bulk_creation_log.csv", "a"
-                ) as output:
+                with open(LOG_PATH, "a") as output:
                     output.write(f"{course}\n")
 
                 return None
