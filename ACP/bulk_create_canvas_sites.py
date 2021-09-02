@@ -313,30 +313,10 @@ def request_course(course, reserves, status="APPROVED", verbose=True, school=Non
             print("\t* Request created.")
 
         return [request]
-    except Exception:
-        try:
-            numbers = "".join(
-                character for character in course if not character.isalpha()
-            )
-            course = Course.objects.update_or_create(
-                course_code=course,
-                defaults={
-                    "owner": User.objects.get(username="benrosen"),
-                    "course_term": course[-1:],
-                    "course_subject": "".join(
-                        character for character in course[:-1] if character.isalpha()
-                    ),
-                    "course_schools": School.objects.get(abbreviation=school),
-                    "course_number": numbers[:3],
-                    "course_section": numbers[3:6],
-                    "year": course[-5:-1],
-                },
-            )
-            course_request = request_course(course, reserves)
-        except Exception as error:
-            print(f"\t* ERROR: Unable to create request: ({error})")
+    except Exception as error:
+        print(f"\t* ERROR: Unable to request {course}: ({error})")
 
-            return False
+        return False
 
 
 def enable_tools(canvas_id, tools, label, test):
@@ -401,6 +381,16 @@ def bulk_create_canvas_sites(
                 courses.extend(group_sections(year_and_term, abbreviation))
 
         courses = remove_courses_with_site(courses)
+    else:
+
+        def get_course_object_or_empty(course):
+            try:
+                return Course.objects.get(course_code=course)
+            except Exception:
+                return None
+
+        courses = [get_course_object_or_empty(course) for course in courses]
+        courses = [course for course in courses if course]
 
     print(") Processing courses...")
 
@@ -408,13 +398,7 @@ def bulk_create_canvas_sites(
         print(f"- ({index + 1}/{len(courses)}): {course}")
 
         try:
-            course_request = request_course(
-                course, reserves, school=school if courses else None
-            )
-
-            if not course_request:
-                continue
-
+            course_request = request_course(course, reserves)
             sections = None if not include_sections else list(course.sections.all())
             creation_error = create_canvas_sites(
                 course_request, sections=sections, test=test, verbose=False
