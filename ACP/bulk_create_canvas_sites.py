@@ -343,6 +343,15 @@ def enable_tools(canvas_id, tools, label, test):
             )
 
 
+def publish_site(canvas_id, test):
+    try:
+        canvas = get_canvas(test)
+        canvas_site = canvas.get_course(canvas_id)
+        canvas_site.update(course={"event": "offer"})
+    except Exception as error:
+        print(f"\t* ERROR: Failed to publish {canvas_site}: ({error})")
+
+
 def read_course_list_from_csv(csv_path):
     with open(csv_path) as reader:
         courses = reader.readlines()
@@ -364,6 +373,7 @@ def bulk_create_canvas_sites(
         "context_external_tool_132117": "Gradescope",
     },
     label=True,
+    publish=False,
     test=False,
 ):
     if type(tools) == dict and label:
@@ -433,9 +443,14 @@ def bulk_create_canvas_sites(
 
                 continue
 
-            if tools:
+            if tools or publish:
                 canvas_id = request.canvas_instance.canvas_id
-                enable_tools(canvas_id, tools, label, test)
+
+                if tools:
+                    enable_tools(canvas_id, tools, label, test)
+
+                if publish:
+                    publish_site(canvas_id, test)
         except Exception as error:
             print(f"\t* ERROR: Failed to create site ({error}).")
             canvas_logger.info(f"Failed to create site for {course} ({error}).")
