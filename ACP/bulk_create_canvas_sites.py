@@ -349,6 +349,7 @@ def publish_site(canvas_id, test):
         canvas = get_canvas(test)
         canvas_site = canvas.get_course(canvas_id)
         canvas_site.update(course={"event": "offer"})
+        print(f"\t* Published {canvas_site}.")
     except Exception as error:
         print(f"\t* ERROR: Failed to publish {canvas_site}: ({error})")
 
