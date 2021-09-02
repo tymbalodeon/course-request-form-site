@@ -124,6 +124,15 @@ def remove_courses_with_site(courses):
 
 
 def write_courses(year_and_term, school_abbreviation):
+    """
+    Generates 4 csv files with a single column of course codes, for the
+    following parameters:
+
+    1. Unrequested courses
+    2. Unrequested courses with no Canvas site
+    3. Unrequested unique course numbers consolidated
+    4. Unrequested unique course numbers consolidated with no Canvas site
+    """
     unrequested_courses = get_requested_or_unrequested_courses(
         year_and_term, school_abbreviation
     )
@@ -170,6 +179,15 @@ def write_courses(year_and_term, school_abbreviation):
 
 
 def write_request_statuses(year_and_term, school_abbreviation, verbose=True):
+    """
+    Params: year_and_term ('2021C'), school_abbreviaton ('SAS'), verbuse=True
+
+    Generates a csv file listing the request status and Cavnas site for all
+    courses in the given school and term.
+
+    Columns: Section / Title / Activity / Instructor(s) / Requested / Canvas Site
+    """
+
     def get_request(course):
         try:
             return Request.objects.get(course_requested=course)
@@ -287,7 +305,9 @@ def request_course(course, reserves, status="APPROVED", verbose=True):
         )[0]
         request.status = status
         request.save()
-        course.save()
+
+        if isinstance(course, Course):
+            course.save()
 
         if verbose:
             print("\t* Request created.")
@@ -321,8 +341,16 @@ def enable_tools(canvas_id, tools, label, test):
             )
 
 
+def read_course_list_from_csv(csv_path):
+    with open(csv_path) as reader:
+        courses = reader.readlines()
+        courses = [course.replace("\n", "").replace('"', "") for course in courses]
+
+        return courses
+
+
 def bulk_create_canvas_sites(
-    year_and_term,
+    year_and_term=None,
     courses=[],
     include_sections=False,
     school="SEAS",
