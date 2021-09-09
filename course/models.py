@@ -373,8 +373,8 @@ class Course(models.Model):
             & Q(course_number=self.course_number)
             & Q(course_term=self.course_term)
             & Q(year=self.year)
-            & Q(course_section > 300)
-            & Q(course_section < 400)
+            & Q(int(course_section) > 300)
+            & Q(int(course_section) < 400)
         ).exclude(course_code=self.course_code)
 
         print(f"Found sections for {self}: {courses}")
