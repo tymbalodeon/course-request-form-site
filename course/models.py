@@ -6,7 +6,8 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.db import models
-from django.db.models import Q
+from django.db.models import IntegerField, Q
+from django.db.models.functions import Cast
 from django.db.models.signals import pre_delete
 from django.utils.html import mark_safe
 from markdown import markdown
@@ -373,8 +374,8 @@ class Course(models.Model):
             & Q(course_number=self.course_number)
             & Q(course_term=self.course_term)
             & Q(year=self.year)
-            & Q(int(course_section) > 300)
-            & Q(int(course_section) < 400)
+            & Q(Cast(course_section, output_field=IntegerField()) > 300)
+            & Q(Cast(course_section, output_field=IntegerField()) < 400)
         ).exclude(course_code=self.course_code)
 
         print(f"Found sections for {self}: {courses}")
