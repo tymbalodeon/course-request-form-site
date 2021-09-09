@@ -1,5 +1,5 @@
 from configparser import ConfigParser
-from os import mkdir, remove, path
+from os import mkdir
 from pathlib import Path
 
 from canvas.api import get_canvas
@@ -13,7 +13,6 @@ from .logger import canvas_logger, crf_logger
 config = ConfigParser()
 config.read("config/config.ini")
 OWNER = User.objects.get(username=config.items("users")[0][0])
-LOG_PATH = "/home/django/crf2/data/bulk_creation_log.csv"
 
 
 def get_requested_or_unrequested_courses(
@@ -290,7 +289,7 @@ def should_request(sis_id, test=False):
         return True
 
 
-def request_course(course, reserves, status="APPROVED", verbose=True, school=None):
+def request_course(course, reserves, status="APPROVED", verbose=True):
     try:
         request = Request.objects.update_or_create(
             course_requested=course,
@@ -315,9 +314,7 @@ def request_course(course, reserves, status="APPROVED", verbose=True, school=Non
 
         return [request]
     except Exception as error:
-        print(f"\t* ERROR: Unable to request {course}: ({error})")
-
-        return False
+        return error
 
 
 def enable_tools(canvas_id, tools, label, test):
@@ -344,21 +341,10 @@ def enable_tools(canvas_id, tools, label, test):
             )
 
 
-def publish_site(canvas_id, test):
-    try:
-        canvas = get_canvas(test)
-        canvas_site = canvas.get_course(canvas_id)
-        canvas_site.update(course={"event": "offer"})
-        print(f"\t* Published {canvas_site}.")
-    except Exception as error:
-        print(f"\t* ERROR: Failed to publish {canvas_site}: ({error})")
-
-
 def read_course_list_from_csv(csv_path):
     with open(csv_path) as reader:
         courses = reader.readlines()
         courses = [course.replace("\n", "").replace('"', "") for course in courses]
-        courses.remove("")
 
         return courses
 
@@ -375,7 +361,6 @@ def bulk_create_canvas_sites(
         "context_external_tool_132117": "Gradescope",
     },
     label=True,
-    publish=False,
     test=False,
 ):
     if type(tools) == dict and label:
@@ -393,21 +378,6 @@ def bulk_create_canvas_sites(
                 courses.extend(group_sections(year_and_term, abbreviation))
 
         courses = remove_courses_with_site(courses)
-    else:
-        if path.exists(LOG_PATH):
-            remove(LOG_PATH)
-
-        def get_course_object_or_empty(course):
-            try:
-                return Course.objects.get(course_code=course)
-            except Exception:
-                with open(LOG_PATH, "a") as output:
-                    output.write(f"{course}\n")
-
-                return None
-
-        courses = [get_course_object_or_empty(course) for course in courses]
-        courses = [course for course in courses if course]
 
     print(") Processing courses...")
 
@@ -445,14 +415,9 @@ def bulk_create_canvas_sites(
 
                 continue
 
-            if tools or publish:
+            if tools:
                 canvas_id = request.canvas_instance.canvas_id
-
-                if tools:
-                    enable_tools(canvas_id, tools, label, test)
-
-                if publish:
-                    publish_site(canvas_id, test)
+                enable_tools(canvas_id, tools, label, test)
         except Exception as error:
             print(f"\t* ERROR: Failed to create site ({error}).")
             canvas_logger.info(f"Failed to create site for {course} ({error}).")
