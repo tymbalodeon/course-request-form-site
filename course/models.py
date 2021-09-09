@@ -369,14 +369,19 @@ class Course(models.Model):
         return ",\n".join([inst.username for inst in self.instructors.all()])
 
     def find_sections(self):
-        courses = Course.objects.filter(
-            Q(course_subject=self.course_subject)
-            & Q(course_number=self.course_number)
-            & Q(course_term=self.course_term)
-            & Q(year=self.year)
-            & Q(Cast(course_section, output_field=IntegerField()) > 300)
-            & Q(Cast(course_section, output_field=IntegerField()) < 400)
-        ).exclude(course_code=self.course_code)
+        courses = Course.objects.annotate(
+            course_section_int=Cast("course_section", output_field=IntegerField())
+            .get()
+            .filter(
+                Q(course_subject=self.course_subject)
+                & Q(course_number=self.course_number)
+                & Q(course_term=self.course_term)
+                & Q(year=self.year)
+                & Q(course_section_int__gte=300)
+                & Q(course_section_int__lt=400)
+            )
+            .exclude(course_code=self.course_code)
+        )
 
         print(f"Found sections for {self}: {courses}")
 
