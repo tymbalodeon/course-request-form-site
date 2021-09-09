@@ -381,7 +381,7 @@ class Course(models.Model):
             if section >= 300 and section < 400:
                 courses.remove(course)
 
-        print(f"Found sections for {self}: {courses}")
+        print(f"\t* Found sections for {self}: {courses}")
 
         return courses
 
