@@ -377,6 +377,7 @@ class Course(models.Model):
 
         for course in courses:
             section = int(course.course_section)
+            print(f"SECTION: {section}")
 
             if section >= 300 and section < 400:
                 courses.remove(course)
