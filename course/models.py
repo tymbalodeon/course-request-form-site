@@ -327,7 +327,7 @@ class Course(models.Model):
         if self._state.adding == True:
             super().save(*args, **kwargs)
         else:
-            if not (self.course_section >= 300 and self.course_section < 400):
+            if not (int(self.course_section) >= 300 and int(self.course_section) < 400):
                 self.sections.set(self.find_sections())
 
             self.requested = self.find_requested()
@@ -374,6 +374,14 @@ class Course(models.Model):
             & Q(course_term=self.course_term)
             & Q(year=self.year)
         ).exclude(course_code=self.course_code)
+
+        for course in courses:
+            section = int(course.course_section)
+
+            if section >= 300 and section < 400:
+                courses.remove(course)
+
+        print(f"Found sections for {self}: {courses}")
 
         return courses
 
