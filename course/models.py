@@ -375,15 +375,6 @@ class Course(models.Model):
             & Q(year=self.year)
         ).exclude(course_code=self.course_code)
 
-        for course in courses:
-            section = int(course.course_section)
-            print(f"SECTION: {section}")
-
-            if section >= 300 and section < 400:
-                courses.remove(course)
-
-        print(f"Found sections for {self}: {courses}")
-
         return courses
 
     def srs_format(self):
