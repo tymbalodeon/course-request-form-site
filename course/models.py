@@ -6,8 +6,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.db import models
-from django.db.models import IntegerField, Q
-from django.db.models.functions import Cast
+from django.db.models import Q
 from django.db.models.signals import pre_delete
 from django.utils.html import mark_safe
 from markdown import markdown
@@ -369,19 +368,18 @@ class Course(models.Model):
         return ",\n".join([inst.username for inst in self.instructors.all()])
 
     def find_sections(self):
-        courses = Course.objects.annotate(
-            course_section_int=Cast("course_section", output_field=IntegerField())
-            .get()
-            .filter(
-                Q(course_subject=self.course_subject)
-                & Q(course_number=self.course_number)
-                & Q(course_term=self.course_term)
-                & Q(year=self.year)
-                & Q(course_section_int__gte=300)
-                & Q(course_section_int__lt=400)
-            )
-            .exclude(course_code=self.course_code)
-        )
+        courses = Course.objects.filter(
+            Q(course_subject=self.course_subject)
+            & Q(course_number=self.course_number)
+            & Q(course_term=self.course_term)
+            & Q(year=self.year)
+        ).exclude(course_code=self.course_code)
+
+        for course in courses:
+            section = int(course.course_section)
+
+            if section >= 300 and section < 400:
+                courses.remove(course)
 
         print(f"Found sections for {self}: {courses}")
 
