@@ -1699,6 +1699,9 @@ def check_data_warehouse_for_course(request):
             size = len(results)
             data["results"] = results
 
+            if not data["results"]:
+                data["data"] = "COURSE NOT FOUND"
+
             for course in data["results"]:
                 course_code = course[0]
                 data["data"][course_code] = dict()
