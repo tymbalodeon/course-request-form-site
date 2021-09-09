@@ -368,12 +368,14 @@ class Course(models.Model):
         return ",\n".join([inst.username for inst in self.instructors.all()])
 
     def find_sections(self):
-        courses = Course.objects.filter(
-            Q(course_subject=self.course_subject)
-            & Q(course_number=self.course_number)
-            & Q(course_term=self.course_term)
-            & Q(year=self.year)
-        ).exclude(course_code=self.course_code)
+        courses = list(
+            Course.objects.filter(
+                Q(course_subject=self.course_subject)
+                & Q(course_number=self.course_number)
+                & Q(course_term=self.course_term)
+                & Q(year=self.year)
+            ).exclude(course_code=self.course_code)
+        )
 
         for course in courses:
             section = int(course.course_section)
