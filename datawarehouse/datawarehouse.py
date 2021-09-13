@@ -148,7 +148,8 @@ def inspect_course(section, term=None, verbose=True):
     if verbose:
         print(
             "course_code, section_id, course_term, subject_area, school, xc, xc_code,"
-            " activity, section_dept, section_division, title, status, rev, instructor(s)\n"
+            " activity, section_dept, section_division, title, status, rev,"
+            " instructor(s)\n"
         )
 
     results = list()

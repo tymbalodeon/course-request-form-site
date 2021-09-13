@@ -1,16 +1,17 @@
+from csv import writer
 from datetime import datetime
 from pprint import PrettyPrinter
 
 from course.models import Request, School
 from django.db.models import Q
 
-from .helpers import separate_year_and_term, get_data_directory
+from .helpers import get_data_directory, separate_year_and_term
 
 CURRENT_MONTH = datetime.now().month
 SCHOOLS = list(School.objects.all())
 
 
-def make_requests_ojbect(year_and_term, start_month=5, verbose=False):
+def make_requests_object(year_and_term, start_month=5, verbose=False):
     year, term = separate_year_and_term(year_and_term)
     MONTHS = list(range(start_month, CURRENT_MONTH + 1))
     individual_requests = Request.objects.filter(
@@ -32,16 +33,16 @@ def make_requests_ojbect(year_and_term, start_month=5, verbose=False):
     total_requests = individual_requests.count()
     total_bulk_created_requests = bulk_created_requests.count()
     TOTALS = {
-        "total_crf": total_requests + total_bulk_created_requests,
-        "total_individual": total_requests,
-        "total_bulk_created": total_bulk_created_requests,
+        "TOTAL CRF": total_requests + total_bulk_created_requests,
+        "TOTAL NOT PROVISIONED": total_requests,
+        "TOTAL PROVISIONED": total_bulk_created_requests,
     }
     requests_by_month = [
         (month, individual_requests.filter(created__month=month)) for month in MONTHS
     ]
 
     for month, requests in requests_by_month:
-        TOTALS[month] = {"total": len(requests)}
+        TOTALS[month] = {"TOTAL": len(requests)}
 
     requests_by_month = [
         (
@@ -76,7 +77,7 @@ def make_requests_ojbect(year_and_term, start_month=5, verbose=False):
 
         for school, count in requests_by_school:
             TOTALS[
-                f"{school}{'_bulk_created' if request_list is bulk_created_requests else ''}"
+                f"{school}{' PROVISIONED' if request_list is bulk_created_requests else ''}"
             ] = count
 
     if verbose:
@@ -86,5 +87,22 @@ def make_requests_ojbect(year_and_term, start_month=5, verbose=False):
 
 
 def write_requests_summary(year_and_term, start_month=5, verbose=False):
-    TOTALS = make_requests_ojbect(year_and_term, start_month, verbose)
+    TOTALS = make_requests_object(year_and_term, start_month, verbose)
     DATA_DIRECTORY = get_data_directory()
+    file_path = DATA_DIRECTORY / f"{year_and_term}_requests_summary.csv"
+
+    with open(file_path, "w", newline="") as file_path:
+        output_file = writer(file_path)
+        output_file.writerow(["Month", "School", "Requests"])
+        rows = list()
+
+        for key, value in TOTALS.items():
+            if isinstance(value, dict):
+                for school_key, school_value in value.items():
+                    rows.append([key, school_key, school_value])
+            elif "TOTAL" in key:
+                rows.append(["TOTAL", key, value])
+            else:
+                rows.append(["TOTAL", key, value])
+
+        output_file.writerows(rows)
