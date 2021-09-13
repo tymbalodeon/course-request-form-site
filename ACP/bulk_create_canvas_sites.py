@@ -7,6 +7,7 @@ from canvasapi.exceptions import CanvasException
 from course.models import Course, Request, School, User
 from course.tasks import create_canvas_sites
 from django.utils import timezone
+from .helpers import separate_year_and_term
 
 from .logger import canvas_logger, crf_logger
 
@@ -23,8 +24,7 @@ def get_requested_or_unrequested_courses(
 
     print(f") Finding {requested_display} courses...")
 
-    term = year_and_term[-1]
-    year = year_and_term[:-1]
+    year, term = separate_year_and_term(year_and_term)
 
     filter_dict = {
         "year": year,
