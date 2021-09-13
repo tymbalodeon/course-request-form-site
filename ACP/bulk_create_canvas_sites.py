@@ -1,5 +1,5 @@
 from configparser import ConfigParser
-from os import mkdir, remove, path
+from os import path, remove
 from pathlib import Path
 
 from canvas.api import get_canvas
@@ -7,8 +7,8 @@ from canvasapi.exceptions import CanvasException
 from course.models import Course, Request, School, User
 from course.tasks import create_canvas_sites
 from django.utils import timezone
-from .helpers import separate_year_and_term
 
+from .helpers import separate_year_and_term, get_data_directory
 from .logger import canvas_logger, crf_logger
 
 config = ConfigParser()
@@ -76,15 +76,6 @@ def group_sections(year_and_term, school):
     print(f"FOUND {total} UNIQUE COURSE NUMBERS.")
 
     return list(SECTIONS)
-
-
-def get_data_directory():
-    DATA_DIRECTORY = Path.cwd() / "data"
-
-    if not DATA_DIRECTORY.exists():
-        mkdir(DATA_DIRECTORY)
-
-    return DATA_DIRECTORY
 
 
 def remove_courses_with_site(courses):
