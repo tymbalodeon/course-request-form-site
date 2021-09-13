@@ -3,7 +3,6 @@ import sys
 from configparser import ConfigParser
 
 from canvasapi import Canvas
-
 from course.models import Request
 
 config = ConfigParser()
