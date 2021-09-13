@@ -102,7 +102,8 @@ def datawarehouse_lookup(penn_key, penn_id=None):
 
         for first_name, last_name, email, dw_penn_id in cursor:
             print(
-                f'FOUND "{penn_key}": {first_name} {last_name} ({dw_penn_id}) {email.strip()}'
+                f'FOUND "{penn_key}": {first_name} {last_name} ({dw_penn_id})'
+                f" {email.strip()}"
             )
 
             return {
@@ -128,7 +129,8 @@ def datawarehouse_lookup(penn_key, penn_id=None):
 
         for first_name, last_name, email, dw_penn_key in cursor:
             print(
-                f'FOUND "{penn_id}": {first_name} {last_name} ({dw_penn_key}) {email.strip()}'
+                f'FOUND "{penn_id}": {first_name} {last_name} ({dw_penn_key})'
+                f" {email.strip()}"
             )
 
             return {

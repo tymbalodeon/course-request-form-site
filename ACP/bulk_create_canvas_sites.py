@@ -86,14 +86,16 @@ def remove_courses_with_site(courses):
 
         if not should:
             print(
-                f"- ({index + 1}/{TOTAL_START}) Canvas site ALREADY EXISTS for {course.course_code}. Removing from list..."
+                f"- ({index + 1}/{TOTAL_START}) Canvas site ALREADY EXISTS for"
+                f" {course.course_code}. Removing from list..."
             )
 
             if not course.requested:
                 request_course(course, False, "COMPLETED", False)
         else:
             print(
-                f"- ({index + 1}/{TOTAL_START}) Canvas site NOT FOUND for {course.course_code}."
+                f"- ({index + 1}/{TOTAL_START}) Canvas site NOT FOUND for"
+                f" {course.course_code}."
             )
 
         return should
@@ -188,7 +190,9 @@ def write_request_statuses(year_and_term, school_abbreviation, verbose=True):
 
     def list_instructors(course):
         try:
-            return f'"{", ".join([user.username for user in list(course.instructors.all())])}"'
+            return (
+                f'"{", ".join([user.username for user in list(course.instructors.all())])}"'
+            )
         except Exception:
             return "STAFF"
 
@@ -415,8 +419,7 @@ def bulk_create_canvas_sites(
             if creation_error:
                 print("\t> Aborting... (SITE ALREADY EXISTS)")
                 canvas_logger.info(
-                    f"Failed to create main section for {course} (SITE"
-                    " ALREADY EXISTS)"
+                    f"Failed to create main section for {course} (SITE ALREADY EXISTS)"
                 )
                 course_request[0].status = "COMPLETED"
                 course_request[0].save = "COMPLETED"
