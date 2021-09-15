@@ -48,6 +48,7 @@ def get_open_data():
 
 
 def format_title(title):
+    eras = ["Bc", "Bce", "Ce", "Ad"]
     title = title.upper()
     roman_numeral = findall(ROMAN_NUMERAL_REGEX, title)
 
@@ -75,6 +76,11 @@ def format_title(title):
     if roman_numeral:
         roman_numeral_string = "".join([str(value) for value in roman_numeral[0]])
         title = f"{title} {roman_numeral_string}"
+
+    for era in eras:
+        print(era)
+        if title.endswith(era):
+            title = title.replace(era, era.upper())
 
     return title
 
