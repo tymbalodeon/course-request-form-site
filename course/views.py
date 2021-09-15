@@ -214,7 +214,7 @@ class CourseViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         course_subject__visible=True,
         course_schools__visible=True,
         year__gte=CURRENT_YEAR,
-        course_term__get=current_term,
+        course_term__gte=current_term,
     )
     search_fields = (
         "$course_name",
