@@ -82,11 +82,13 @@
 
     <div class="tab-pane fade show active" id="pills-user" role="tabpanel" aria-labelledby="pills-user-tab">
       <p>
-        Add User to Canvas Site or Create Canvas account (leave Course and Role field blank).
-        The greyed-out box below the course site title is the site's Canvas ID (tool could also be used for quick ID look ups).
-        This tool <b> can enroll users in concluded sites</b>!
-        Currently does not work for student pennkeys.
-
+          This tool can be used to:
+          <ul>
+              <li>Create a Canvas account for a user (provide pennkey only, leaving role and course blank)</li>
+              <li>Add a user to a Canvas site (provide all three). <b>NB: This tool can enroll users in concluded sites!</b></li>
+              <li>Find a course's Canvas site id (provide course only--the id will populate in the grayed-out box below the course title)</li>
+          </ul>
+          <em>Currently does not work for student pennkeys.</em>
       </p>
       <form autocomplete="off" method="post">{% csrf_token %}
          <input type="hidden" name="config" value="user">
