@@ -199,11 +199,23 @@ class CourseFilter(filters.FilterSet):
 
 
 class CourseViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
+    CURRENT_DATE = datetime.now()
+    CURRENT_YEAR = CURRENT_DATE.year
+    CURRENT_MONTH = CURRENT_DATE.month
+    current_term = "A"
+
+    if CURRENT_MONTH > 8:
+        current_term = "C"
+    elif CURRENT_MONTH > 5:
+        current_term = "B"
+
     lookup_field = "course_code"
-    queryset = Course.objects.filter(~Q(course_subject__visible=False)).exclude(
-        course_schools__visible=False,
+    queryset = Course.objects.filter(
+        course_subject__visible=True,
+        course_schools__visible=True,
+        year__gte=CURRENT_YEAR,
+        course_term__get=current_term,
     )
-    serializer_class = CourseSerializer
     search_fields = (
         "$course_name",
         "$course_code",
