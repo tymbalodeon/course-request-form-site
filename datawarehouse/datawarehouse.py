@@ -78,7 +78,6 @@ def format_title(title):
         title = f"{title} {roman_numeral_string}"
 
     for era in eras:
-        print(era)
         if title.endswith(era):
             title = title.replace(era, era.upper())
 

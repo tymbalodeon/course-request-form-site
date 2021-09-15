@@ -383,8 +383,6 @@ class Course(models.Model):
             if section >= 300 and section < 400:
                 courses.remove(course)
 
-        print(f"\t* Found sections for {self}: {courses}")
-
         return courses
 
     def srs_format(self):
