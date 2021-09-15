@@ -1462,17 +1462,51 @@ def remove_canceled_requests(request):
 
 # --------- Quick Config of Canvas (enrollment/add tool) ----------
 def quickconfig(request):
+    def handle_error(
+        error, canvas_course, canvas_user, roles, enrollment_term_id, lib=False
+    ):
+        if (
+            error.message == '{"message":"Can\'t add an enrollment to a concluded'
+            ' course."}'
+        ):
+            try:
+                enrollment = (
+                    {
+                        "role_id": "1383",
+                        "enrollment_state": "active",
+                    }
+                    if lib
+                    else {"enrollment_state": "active"}
+                )
+                canvas_course.update(course={"term_id": 4373})
+                canvas_course.enroll_user(
+                    canvas_user.id,
+                    roles[role],
+                    enrollment={
+                        "role_id": "1383",
+                        "enrollment_state": "active",
+                    },
+                )
+                canvas_course.update(course={"term_id": enrollment_term_id})
+            except CanvasException as error:
+                data["Info"]["Errors"] = f"CanvasException: {error}"
+        else:
+            data["Info"]["Errors"] = f"CanvasException: {error}"
 
     data = {"Job": "", "Info": {"Errors": ""}}
-    print("start")
-    if request.method == "POST":
+
+    if not request.method == "POST":
+        return render(request, "admin/quickconfig.html")
+    else:
         canvas = get_canvas()
-        print(request.POST)
         config = request.POST.get("config")
         pennkey = request.POST.get("pennkey")
         role = request.POST.get("role")
         course_id = request.POST.get("course_id")
-        if config == "user":
+
+        if config != "user":
+            data["Info"]["Errors"] = "something went wrong"
+        else:
             roles = {
                 "inst": "TeacherEnrollment",
                 "stud": "StudentEnrollment",
@@ -1481,50 +1515,46 @@ def quickconfig(request):
                 "obs": "ObserverEnrollment",
                 "des": "DesignerEnrollment",
             }
-            # could either be a Account creation or an Enrollment creation
-            if pennkey:
-                user = validate_pennkey(
-                    pennkey
-                )  # looks them up in EMPLOYEE_GENERAL DW table and returns the django CRF user
-                if user is None:  # there was an issue finding them in the DW
-                    data += "failed to find user (%s) in DW," % pennkey
+
+            if not pennkey:
+                data["Info"]["Errors"] = "please set pennkey"
+            else:
+                user = validate_pennkey(pennkey)
+
+                if not user:
+                    data["Info"]["Errors"] = f"failed to find user {pennkey} in DW"
+
                     return render(request, "admin/quickconfig.html", {"data": data})
-                else:
-                    pass  # else found user info in DW
-                # check if user in Canvas
-                user_canvas = get_user_by_sis(pennkey)
-                if user_canvas is None:  # user doesnt exist
+
+                canvas_user = get_user_by_sis(pennkey)
+
+                if not canvas_user:
                     data["Job"] = "AccountCreation"
-                    # get user in DW info:
-                    user_crf = user  # variable already exists from above
-                    # create Canvas account
+
                     try:
-                        user_canvas = create_canvas_user(
+                        canvas_user = create_canvas_user(
                             pennkey,
-                            user_crf.profile.penn_id,
-                            user_crf.email,
-                            user_crf.first_name + user_crf.last_name,
+                            user.profile.penn_id,
+                            user.email,
+                            user.first_name + user.last_name,
                         )
                     except Exception:
-                        data += "failed create user in Canvas,"
-                        return render(request, "admin/quickconfig.html", {"data": data})
-                    data += "created canvas account for user %s," % pennkey
+                        data["Info"]["Errors"] = "failed create user in Canvas"
 
-                # we should have a Canvas account for the user by now or we have terminated the function
-                print("3")
-                if role and course_id:  # enrollement creation
+                        return render(request, "admin/quickconfig.html", {"data": data})
+
+                    data["Info"]["Notes"] = f"created canvas account for user {pennkey}"
+
+                if role and course_id:
                     data["Job"] += "EnrollmentCreation"
                     data["Info"]["Role"] = roles[role]
-
-                    # active_terms = canvas.get_account(96678).get_enrollment_terms(workflow_state='active')
                     canvas_course = canvas.get_course(course_id)
-                    # lets check that the term wont need to be changed.
                     enrollment_term_id = canvas_course.enrollment_term_id
 
                     if role == "lib":
                         try:
                             canvas_course.enroll_user(
-                                user_canvas.id,
+                                canvas_user.id,
                                 roles[role],
                                 enrollment={
                                     "role_id": "1383",
@@ -1532,90 +1562,38 @@ def quickconfig(request):
                                 },
                             )
                             data["Role"] = "LibrarianEnrollment"
-                            # data += 'enrolled %s as %s in %s (https://canvas.upenn.edu/courses/%s)' % (pennkey, roles[role], canvas_course.name, course_id)
-
-                        except CanvasException as e:
-                            print("CanvasException: ", e)
-                            if (
-                                e.message
-                                == '{"message":"Can\'t add an enrollment to a concluded'
-                                ' course."}'
-                            ):
-                                # change term n try again
-                                print("we are adjusting the term")
-                                try:
-                                    canvas_course.update(course={"term_id": 4373})
-                                    canvas_course.enroll_user(
-                                        user_canvas.id,
-                                        roles[role],
-                                        enrollment={
-                                            "role_id": "1383",
-                                            "enrollment_state": "active",
-                                        },
-                                    )
-                                    canvas_course.update(
-                                        course={"term_id": enrollment_term_id}
-                                    )
-                                except CanvasException as e:
-                                    print("CanvasException 2: ", e)
-                                    data["Info"]["Errors"] += "CanvasException: %s" % e
-                            else:
-                                data["Info"]["Errors"] += "CanvasException: %s" % e
+                        except CanvasException as error:
+                            handle_error(
+                                error,
+                                canvas_course,
+                                canvas_user,
+                                roles,
+                                enrollment_term_id,
+                                lib=True,
+                            )
                     else:
                         try:
                             canvas_course.enroll_user(
-                                user_canvas.id,
+                                canvas_user.id,
                                 roles[role],
                                 enrollment={"enrollment_state": "active"},
                             )
-
-                            # data += 'enrolled %s as %s in %s (https://canvas.upenn.edu/courses/%s)' % (pennkey, roles[role], canvas_course.name, course_id)
-                        except CanvasException as e:
-                            print(
-                                "CanvasException 1: ",
-                                e,
-                                e.message[0],
-                                e.message
-                                == '{"message":"Can\'t add an enrollment to a concluded'
-                                ' course."}',
+                        except CanvasException as error:
+                            handle_error(
+                                error,
+                                canvas_course,
+                                canvas_user,
+                                roles,
+                                enrollment_term_id,
                             )
-                            if (
-                                e.message
-                                == '{"message":"Can\'t add an enrollment to a concluded'
-                                ' course."}'
-                            ):
-                                # change term n try again
-                                print("we are adjusting the term")
-                                try:
-                                    canvas_course.update(course={"term_id": 4373})
-                                    canvas_course.enroll_user(
-                                        user_canvas.id,
-                                        roles[role],
-                                        enrollment={"enrollment_state": "active"},
-                                    )
-                                    canvas_course.update(
-                                        course={"term_id": enrollment_term_id}
-                                    )
-                                except CanvasException as e:
-                                    print("CanvasException 2: ", e)
-                                    data["Info"]["Errors"] += "CanvasException: %s" % e
-                            else:
-                                data["Info"]["Errors"] += "CanvasException: %s" % e
 
                     data["Info"]["Course"] = {
                         "title": canvas_course.name,
-                        "link": "https://canvas.upenn.edu/courses/" + course_id,
+                        "link": f"https://canvas.upenn.edu/courses/{course_id}",
                     }
                     data["Info"]["User"] = {"pennkey": pennkey}
-                else:  # we dont have the role and course_id field filled out lets just return what we havet
-                    return render(request, "admin/quickconfig.html", {"data": data})
-            else:  # no pennkey
-                data["Info"]["Errors"] += "please set pennkey."
-        else:  # error
-            data["Info"]["Errors"] += "something went wrong."
 
         return render(request, "admin/quickconfig.html", {"data": data})
-    return render(request, "admin/quickconfig.html")
 
 
 def side_sign_in(request):
