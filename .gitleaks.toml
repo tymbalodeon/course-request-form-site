@@ -170,6 +170,7 @@ title = "gitlab gitleaks config"
             '''(?i)(pennkey\\u003e\/)''',
             '''(?i)(token\s*?=\s*?r.json)'''
         ]
+        paths = ['''create_users.py''']
 
 [[rules]]
     description = "Files with possible keys and credentials"
