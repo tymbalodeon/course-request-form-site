@@ -40,7 +40,7 @@ def find_accounts_subaccounts(account_id):
 
 
 def count_surveys(inputfile="survey_input.csv", outputfile="RESULT_surveys.csv"):
-    # canvas_course_id	course_id	short_name	canvas_account_id	term_id	status
+    # canvas_course_id  course_id   short_name  canvas_account_id   term_id     status
     canvas = Canvas(API_URL, API_KEY)
     my_path = os.path.dirname(os.path.abspath(sys.argv[0]))
     file_path = os.path.join(my_path, "ACP/data", inputfile)
@@ -222,7 +222,7 @@ def add_reserves(inputfile="reserves.csv", outputfile="RESULT_Reserves.csv"):
     # return SUB_SUB_ACCOUNTS
 
     for line in dataFile:
-        # canvas_course_id	course_id	canvas_account_id
+        # canvas_course_id  course_id   canvas_account_id
         canvas_course_id, sis_id, canvas_account_id = line.replace("\n", "").split(",")
         outFile.write("%s, %s, %s" % (canvas_course_id, sis_id, canvas_account_id))
         if int(canvas_account_id) in SUB_SUB_ACCOUNTS:
@@ -1171,7 +1171,7 @@ def disable_course_shopping(inputfile, outputfile):
         if counter % 25 == 0:
             print("%s/%s done" % (counter, total))
 
-        # sis_id	 canvas_id	 visibility_status	 published
+        # sis_id     canvas_id   visibility_status   published
         # print(line)
         canvas_id, sis_id, status = line.replace("\n", "").split(",")
         notes = ""

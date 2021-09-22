@@ -92,7 +92,6 @@ def make_requests_object(requests, months, verbose=False):
 
 def write_requests(requests, individual_path, bulk_created_path):
     individual_requests, bulk_created_requests = requests
-    DATA_DIRECTORY = get_data_directory()
     fields = Request._meta.fields
     fields = [field.name for field in fields]
 
