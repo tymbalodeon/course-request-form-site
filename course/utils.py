@@ -7,7 +7,7 @@ import cx_Oracle
 
 from canvas import api as canvas_api
 from course.models import *
-from datawarehouse.datawarehouse import *
+from data_warehouse.data_warehouse import *
 
 LOG_FILENAME = "users.log"
 logging.basicConfig(
