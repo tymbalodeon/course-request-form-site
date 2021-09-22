@@ -61,7 +61,7 @@ from course.serializers import (
 )
 from course.tasks import create_canvas_sites
 from course.utils import datawarehouse_lookup, update_user_courses, validate_pennkey
-from OpenData import library
+from open_data import open_data
 
 
 def emergency_redirect(request):
@@ -1644,7 +1644,7 @@ def openDataProxy(request):
             domain = config.get("opendata", "domain")
             id = config.get("opendata", "id2")
             key = config.get("opendata", "key2")
-            OD = library.OpenData(domain, id, key)
+            OD = open_data.OpenData(domain, id, key)
             OD.set_uri("course_section_search")
             OD.add_param("course_id", course_id)
 

@@ -1,6 +1,4 @@
-from configparser import ConfigParser
 from os import path, remove
-from pathlib import Path
 
 from canvas.api import get_canvas
 from canvasapi.exceptions import CanvasException
@@ -8,12 +6,14 @@ from course.models import Course, Request, School, User
 from course.tasks import create_canvas_sites
 from django.utils import timezone
 
-from .helpers import separate_year_and_term, get_data_directory
-from .logger import canvas_logger, crf_logger
+from helpers.helpers import (
+    get_username,
+    separate_year_and_term,
+    get_data_directory,
+)
 
-config = ConfigParser()
-config.read("config/config.ini")
-OWNER = User.objects.get(username=config.items("users")[0][0])
+username = get_username()
+OWNER = User.objects.get(username=username)
 LOG_PATH = "/home/django/crf2/data/bulk_creation_log.csv"
 
 
@@ -190,9 +190,7 @@ def write_request_statuses(year_and_term, school_abbreviation, verbose=True):
 
     def list_instructors(course):
         try:
-            return (
-                f'"{", ".join([user.username for user in list(course.instructors.all())])}"'
-            )
+            return f'"{", ".join([user.username for user in list(course.instructors.all())])}"'
         except Exception:
             return "STAFF"
 
@@ -334,9 +332,6 @@ def enable_tools(canvas_id, tools, label, test):
                 print(f"\t* {tool_tab.label} already enabled for course.")
         except Exception as error:
             print(f"\t* ERROR: Failed to enable {tool} ({error}).")
-            canvas_logger.info(
-                f"ERROR: Failed to enable {tool} for {canvas_id} ({error})."
-            )
 
 
 def publish_site(canvas_id, test):
@@ -418,9 +413,6 @@ def bulk_create_canvas_sites(
 
             if creation_error:
                 print("\t> Aborting... (SITE ALREADY EXISTS)")
-                canvas_logger.info(
-                    f"Failed to create main section for {course} (SITE ALREADY EXISTS)"
-                )
                 course_request[0].status = "COMPLETED"
                 course_request[0].save = "COMPLETED"
                 course.save()
@@ -433,9 +425,6 @@ def bulk_create_canvas_sites(
                 print(f"\t* Course created: ({request.canvas_instance.canvas_id})")
             else:
                 print(f"\t* ERROR: Request incomplete. ({request.process_notes})")
-                canvas_logger.info(
-                    f"Request incomplete for {course} ({request.process_notes})."
-                )
 
                 continue
 
@@ -449,7 +438,6 @@ def bulk_create_canvas_sites(
                     publish_site(canvas_id, test)
         except Exception as error:
             print(f"\t* ERROR: Failed to create site ({error}).")
-            canvas_logger.info(f"Failed to create site for {course} ({error}).")
 
         print("\tCOMPLETE")
 

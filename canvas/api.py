@@ -1,18 +1,11 @@
-from configparser import ConfigParser
-
+from helpers.helpers import get_config_value
 from canvasapi import Canvas
 from canvasapi.exceptions import CanvasException
 
-config = ConfigParser()
-config.read("config/config.ini")
-URL_PROD = config.get("canvas", "prod_env")
-URL_TEST = config.get("canvas", "test_env")
-TOKEN_PROD = config.get("canvas", "prod_key")
-TOKEN_TEST = config.get("canvas", "test_key")
-
-
-def gen_header(test=False):
-    return {"Authorization": f"Bearer {TOKEN_TEST if test else TOKEN_PROD}"}
+URL_PROD = get_config_value("canvas", "prod_env")
+URL_TEST = get_config_value("canvas", "test_env")
+TOKEN_PROD = get_config_value("canvas", "prod_key")
+TOKEN_TEST = get_config_value("canvas", "test_key")
 
 
 def get_canvas(test=False):
@@ -28,7 +21,7 @@ def get_user_by_sis(login_id, test=False):
         login_id_user = canvas.get_user(login_id, "sis_login_id")
 
         return login_id_user
-    except CanvasException as error:
+    except CanvasException:
         return None
 
 
@@ -63,7 +56,7 @@ def find_in_canvas(sis_section_id):
 
     try:
         section = canvas.get_section(sis_section_id, use_sis_id=True)
-    except CanvasException as error:
+    except CanvasException:
         return None
 
     return section
@@ -76,7 +69,7 @@ def find_account(account_id, test=False):
         account = canvas.get_account(account_id)
 
         return account
-    except CanvasException as error:
+    except CanvasException:
         return None
 
 
@@ -95,7 +88,3 @@ def find_term_id(account_id, sis_term_id, test=False):
             return None
     else:
         return None
-
-
-def search_course(terms):
-    return None

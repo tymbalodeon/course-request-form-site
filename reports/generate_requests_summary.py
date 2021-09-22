@@ -4,8 +4,7 @@ from pprint import PrettyPrinter
 
 from course.models import Request, School
 from django.db.models import Q
-
-from .helpers import get_data_directory, separate_year_and_term
+from helpers.helpers import get_data_directory, separate_year_and_term
 
 CURRENT_MONTH = datetime.now().month
 SCHOOLS = list(School.objects.all())
@@ -139,3 +138,6 @@ def write_requests_summary(year_and_term, start_month=5, verbose=False):
                 rows.append(["TOTAL", key, value])
 
         output.writerows(rows)
+
+
+test

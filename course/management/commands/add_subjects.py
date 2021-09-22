@@ -2,8 +2,8 @@ import logging
 
 from course.models import School, Subject
 from django.core.management.base import BaseCommand
-from helpers.read_config import get_config_items
-from OpenData.library import OpenData
+from helpers.helpers import get_config_items
+from open_data.open_data import OpenData
 
 
 class Command(BaseCommand):

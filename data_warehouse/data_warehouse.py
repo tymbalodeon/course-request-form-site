@@ -12,7 +12,7 @@ import cx_Oracle
 
 from course import utils
 from course.models import Activity, Course, Profile, School, Subject, User
-from OpenData.library import OpenData
+from open_data.open_data import OpenData
 
 if platform.system() == "Darwin":
     lib_dir = Path.home() / "Downloads/instantclient_19_8"
@@ -290,18 +290,13 @@ def pull_courses(term):
         """
         SELECT
             cs.section_id || cs.term section,
-            cs.section_id,
             cs.term,
             cs.subject_area subject_id,
             cs.tuition_school school_id,
             cs.xlist,
             cs.xlist_primary,
             cs.activity,
-            cs.section_dept department,
-            cs.section_division division,
             trim(cs.title) srs_title,
-            cs.status srs_status,
-            cs.schedule_revision
         FROM
             dwadmin.course_section cs
         WHERE
@@ -326,18 +321,13 @@ def pull_courses(term):
 
     for (
         course_code,
-        section_id,
         term,
         subject_area,
         school,
         xc,
         xc_code,
         activity,
-        section_dept,
-        section_division,
         title,
-        status,
-        rev,
     ) in cursor:
 
         course_code = course_code.replace(" ", "")
@@ -410,7 +400,7 @@ def pull_courses(term):
             title = format_title(title)
             year = term[:4]
 
-            course, created = Course.objects.update_or_create(
+            created = Course.objects.update_or_create(
                 course_code=course_code,
                 defaults={
                     "owner": User.objects.get(username="benrosen"),
@@ -425,7 +415,7 @@ def pull_courses(term):
                     "course_name": title,
                     "year": year,
                 },
-            )
+            )[1]
 
             if created:
                 print(f"- Added course {course_code}")
@@ -602,18 +592,9 @@ def delete_canceled_courses(term):
         """
         SELECT
             cs.section_id || cs.term section,
-            cs.section_id,
             cs.term,
             cs.subject_area subject_id,
-            cs.tuition_school school_id,
-            cs.xlist,
             cs.xlist_primary,
-            cs.activity,
-            cs.section_dept department,
-            cs.section_division division,
-            trim(cs.title) srs_title,
-            cs.status srs_status,
-            cs.schedule_revision
         FROM dwadmin.course_section cs
         WHERE
             cs.activity IN (
@@ -642,18 +623,9 @@ def delete_canceled_courses(term):
 
         for (
             course_code,
-            section_id,
             term,
             subject_area,
-            school,
-            xc,
             xc_code,
-            activity,
-            section_dept,
-            section_division,
-            title,
-            status,
-            rev,
         ) in cursor:
             course_code = course_code.replace(" ", "")
             subject_area = subject_area.replace(" ", "")
