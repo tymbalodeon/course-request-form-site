@@ -1,5 +1,6 @@
-from course.models import School
 from django.core.management.base import BaseCommand
+
+from course.models import School
 
 from .school_data import school_data
 

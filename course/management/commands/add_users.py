@@ -1,8 +1,9 @@
 import cx_Oracle
-from course.models import Profile
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.utils.crypto import get_random_string
+
+from course.models import Profile
 from helpers.helpers import get_config_items, get_username_and_password
 
 
@@ -32,7 +33,7 @@ class Command(BaseCommand):
             "-d",
             "--department",
             type=int,
-            help=("Add all employees with a certian PRIMARY_DEPT_ORG code."),
+            help="Add all employees with a certian PRIMARY_DEPT_ORG code.",
         )
 
     def handle(self, **kwargs):
@@ -101,7 +102,8 @@ class Command(BaseCommand):
                         penn_id=user["penn_id"],
                     )
                     print(
-                        f"- ADDED: {first_name}, {last_name}, {email}, {penn_id}, {pennkey}"
+                        f"- ADDED: {first_name}, {last_name}, {email}, {penn_id},"
+                        f" {pennkey}"
                     )
                 except:
                     print(f"- FAILED to add user: {pennkey}.")

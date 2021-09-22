@@ -1,8 +1,9 @@
 import json
 import logging
 
-from course.models import Activity, Course, School, Subject, User
 from django.core.management.base import BaseCommand
+
+from course.models import Activity, Course, School, Subject, User
 from helpers.helpers import get_config_items
 from open_data.open_data import OpenData
 
@@ -15,7 +16,10 @@ class Command(BaseCommand):
             "-t",
             "--term",
             type=str,
-            help="Limit to a term in the format YYYYT where T is A for Spring, B for Summer, C for Fall.",
+            help=(
+                "Limit to a term in the format YYYYT where T is A for Spring, B for"
+                " Summer, C for Fall."
+            ),
         )
         parser.add_argument(
             "-o", "--open-data", action="store_true", help="Pull from the OpenData API."

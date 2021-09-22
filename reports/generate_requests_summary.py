@@ -2,8 +2,9 @@ from csv import writer
 from datetime import datetime
 from pprint import PrettyPrinter
 
-from course.models import Request, School
 from django.db.models import Q
+
+from course.models import Request, School
 from helpers.helpers import get_data_directory, separate_year_and_term
 
 CURRENT_MONTH = datetime.now().month

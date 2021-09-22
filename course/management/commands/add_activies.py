@@ -1,7 +1,7 @@
-from helpers.helpers import get_config_items
+from django.core.management.base import BaseCommand
 
 from course.models import Activity
-from django.core.management.base import BaseCommand
+from helpers.helpers import get_config_items
 from open_data.open_data import OpenData
 
 ACTIVITY_CHOICES = (

@@ -1,6 +1,7 @@
-from helpers.helpers import get_config_value
 from canvasapi import Canvas
 from canvasapi.exceptions import CanvasException
+
+from helpers.helpers import get_config_value
 
 URL_PROD = get_config_value("canvas", "prod_env")
 URL_TEST = get_config_value("canvas", "test_env")

@@ -22,7 +22,6 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.response import Response
-from data_warehouse.data_warehouse import inspect_course
 from rest_framework.reverse import reverse
 from rest_framework.utils import html
 from rest_framework.views import APIView, exception_handler
@@ -61,6 +60,7 @@ from course.serializers import (
 )
 from course.tasks import create_canvas_sites
 from course.utils import datawarehouse_lookup, update_user_courses, validate_pennkey
+from data_warehouse.data_warehouse import inspect_course
 from open_data import open_data
 
 
@@ -1483,8 +1483,8 @@ def quickconfig(request):
         error, canvas_course, canvas_user, roles, enrollment_term_id, lib=False
     ):
         if (
-            error.message == '{"message":"Can\'t add an enrollment to a concluded'
-            ' course."}'
+            error.message
+            == '{"message":"Can\'t add an enrollment to a concluded course."}'
         ):
             try:
                 enrollment = (

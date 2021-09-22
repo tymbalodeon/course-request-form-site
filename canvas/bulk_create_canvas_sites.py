@@ -1,16 +1,12 @@
 from os import path, remove
 
-from canvas.api import get_canvas
 from canvasapi.exceptions import CanvasException
-from course.models import Course, Request, School, User
-from course.tasks import create_canvas_sites
 from django.utils import timezone
 
-from helpers.helpers import (
-    get_username,
-    separate_year_and_term,
-    get_data_directory,
-)
+from canvas.api import get_canvas
+from course.models import Course, Request, School, User
+from course.tasks import create_canvas_sites
+from helpers.helpers import get_data_directory, get_username, separate_year_and_term
 
 username = get_username()
 OWNER = User.objects.get(username=username)
@@ -190,7 +186,9 @@ def write_request_statuses(year_and_term, school_abbreviation, verbose=True):
 
     def list_instructors(course):
         try:
-            return f'"{", ".join([user.username for user in list(course.instructors.all())])}"'
+            return (
+                f'"{", ".join([user.username for user in list(course.instructors.all())])}"'
+            )
         except Exception:
             return "STAFF"
 
