@@ -22,7 +22,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.response import Response
-from datawarehouse.datawarehouse import inspect_course
+from data_warehouse.data_warehouse import inspect_course
 from rest_framework.reverse import reverse
 from rest_framework.utils import html
 from rest_framework.views import APIView, exception_handler

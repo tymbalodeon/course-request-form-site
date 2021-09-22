@@ -17,7 +17,7 @@ from canvas.api import (
 from course import utils
 from course.models import CanvasSite, Course, Request, User
 from course.serializers import RequestSerializer
-from datawarehouse.datawarehouse import (
+from data_warehouse.data_warehouse import (
     daily_sync,
     delete_canceled_courses,
     pull_instructors,
