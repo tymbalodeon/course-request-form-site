@@ -71,9 +71,10 @@ def check_for_account(penn_key):
     if user is None:
         try:
             crf_account = User.objects.get(username=penn_key)
+            email = crf_account.email
             penn_id = crf_account.profile.pennid
             full_name = crf_account.get_full_name()
-            canvas_account = create_canvas_user(penn_key, penn_id, full_name)
+            canvas_account = create_canvas_user(penn_key, penn_id, email, full_name)
 
             return canvas_account if canvas_account else None
         except Exception as error:
