@@ -1,8 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.utils.crypto import get_random_string
 
-# FINISH THIS
-
 
 class Command(BaseCommand):
     help = "Emergency Start Up"
