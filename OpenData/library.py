@@ -125,8 +125,9 @@ class OpenData(object):
         return response["result_data"][0]["activity_map"]
 
     def get_available_subj(self):
-        url = self.base_url + "course_section_search_parameters/"
+        url = f"{self.base_url}course_section_search_parameters/"
         response = requests.get(url, headers=self.headers).json()
+
         try:
             result = (
                 response["service_meta"]["error_text"]

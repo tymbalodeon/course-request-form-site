@@ -1,70 +1,60 @@
-from configparser import ConfigParser
-
-from django.core.management.base import BaseCommand
+from helpers.read_config import get_config_items
 
 from course.models import Activity
+from django.core.management.base import BaseCommand
 from OpenData.library import OpenData
 
-config = ConfigParser()
-config.read("config/config.ini")
-
-
-"""
 ACTIVITY_CHOICES = (
-    ('LEC', 'Lecture'),
-    ('SEM', 'Seminar'),
-    ('LAB', 'Laboratory'),
-    ('CLN', 'Clinic'),
-    ('IND', 'Independent Study'),
-    ('ONL', 'Online Course'),
-    ('PRC', 'SCUE Preceptorial'),
-    ('PRO', 'NSO Proseminar'),
-    ('REC', 'Recitation'),
-    ('SEM', 'Seminar'),
-    ('SRT', 'Senior Thesis'),
-    ('STU', 'Studio'),
-    ('MST', 'Masters Thesis'),
-    ('UNK','Unknown')
+    ("LEC", "Lecture"),
+    ("SEM", "Seminar"),
+    ("LAB", "Laboratory"),
+    ("CLN", "Clinic"),
+    ("IND", "Independent Study"),
+    ("ONL", "Online Course"),
+    ("PRC", "SCUE Preceptorial"),
+    ("PRO", "NSO Proseminar"),
+    ("REC", "Recitation"),
+    ("SEM", "Seminar"),
+    ("SRT", "Senior Thesis"),
+    ("STU", "Studio"),
+    ("MST", "Masters Thesis"),
+    ("UNK", "Unknown"),
 )
 
 
-Activity MODEL
-name = models.CharField(max_length=40)
-abbr = models.CharField(max_length=3, unique=True)
-"""
-
-# https://esb.isc-seo.upenn.edu/8091/open_data/course_section_search_parameters/
-
-
 class Command(BaseCommand):
-    help = "Create random users"
+    help = "Add activities."
 
     def add_arguments(self, parser):
-
         parser.add_argument(
-            "-d", "--opendata", action="store_true", help="pull from OpenData API"
+            "-o", "--open-data", action="store_true", help="Pull from the OpenData API."
         )
         parser.add_argument(
-            "-l", "--localstore", action="store_true", help="pull from Local Store"
+            "-l",
+            "--local-store",
+            action="store_true",
+            help="Pull from the local store.",
         )
 
-    def handle(self, *args, **kwargs):
+    def handle(self, **kwargs):
         opendata = kwargs["opendata"]
 
         if opendata:
-            domain = config.get("opendata", "domain")
-            id = config.get("opendata", "id")
-            key = config.get("opendata", "key")
-            print(domain, id, key)
-            OData = OpenData(base_url=domain, id=id, key=key)
-            activities = OData.get_available_activity()
-            print(activities)
-            for abbr, name in activities.items():
-                try:
-                    print("name,abbr", name, abbr)
-                    Activity.objects.create(name=name, abbr=abbr)
-                except:
-                    print("didnt make activity")
+            open_data_id, key, domain = get_config_items("opendata")[:3]
+            Open_Data = OpenData(base_url=domain, id=open_data_id, key=key)
+            activities = Open_Data.get_available_activity().items()
+        else:
+            activities = ACTIVITY_CHOICES
 
-            # if no results
-            return False
+            if not activities:
+                return "NO ACTIVITIES FOUND"
+
+            for abbreviation, name in activities:
+                try:
+                    Activity.objects.create(name=name, abbr=abbreviation)
+
+                    print(f"- ADDED activity: {name} ({abbreviation})")
+                except Exception:
+                    print(f"- FAILED to add activity: {name} ({abbreviation})")
+
+            print("FINISHED")

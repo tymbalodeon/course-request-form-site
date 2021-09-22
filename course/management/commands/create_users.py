@@ -1,55 +1,49 @@
-from configparser import ConfigParser
-
 import cx_Oracle
+from course.models import Profile
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.utils.crypto import get_random_string
-
-from course.models import Profile
-
-config = ConfigParser()
-config.read("config/config.ini")
+from helpers.read_config import get_config_items, get_username_and_password
 
 
 class Command(BaseCommand):
-    help = "Create random users"
+    help = "Create dummy users."
 
     def add_arguments(self, parser):
         parser.add_argument(
             "-t",
             "--total",
             type=int,
-            help="Indicates the number of users to be created",
+            help="Indicates the number of users to be created.",
         )
-        parser.add_argument("-p", "--prefix", type=str, help="Define a username prefix")
         parser.add_argument(
-            "-a", "--admin", action="store_true", help="Create an admin account"
+            "-p", "--prefix", type=str, help="Define a username prefix."
+        )
+        parser.add_argument(
+            "-a", "--admin", action="store_true", help="Create an admin account."
         )
         parser.add_argument(
             "-c",
             "--courseware",
             action="store_true",
-            help="Quick add Courseware Support team as Admins",
+            help="Add Courseware Support team as admins.",
         )
         parser.add_argument(
             "-d",
             "--department",
             type=int,
-            help=(
-                "add all employees with a certian PRIMARY_DEPT_ORG code (5032 &"
-                "5009 is TRL)"
-            ),
+            help=("Add all employees with a certian PRIMARY_DEPT_ORG code."),
         )
 
-    def handle(self, *args, **kwargs):
+    def handle(self, **kwargs):
         total = kwargs["total"]
         prefix = kwargs["prefix"]
         admin = kwargs["admin"]
         courseware = kwargs["courseware"]
-        dept = kwargs["department"]
+        department = kwargs["department"]
 
         if total:
-            for i in range(total):
+            for user in range(total):
                 if prefix:
                     username = "{prefix}_{random_string}".format(
                         prefix=prefix, random_string=get_random_string()
@@ -65,43 +59,38 @@ class Command(BaseCommand):
                         username=username, email="", password="123"
                     )
         if courseware:
-            config = ConfigParser()
-            config.read("config/config.ini")
-            for (key, value) in config.items("users"):
-                try:
-                    User.objects.create_superuser(
-                        username=key, email="", password=value
-                    )
-                except:
-                    print("didnt add user " + key)
-        if dept:
-            config = ConfigParser()
-            config.read("config/config.ini")  # this works
-            info = dict(config.items("datawarehouse"))
-            # print(info)
-            connection = cx_Oracle.connect(
-                info["user"], info["password"], info["service"]
-            )
+            username, password = get_username_and_password()
+
+            try:
+                user = User.objects.create_superuser(
+                    username=username, email="", password=password
+                )
+                print(f"- ADDED user: {user}")
+            except:
+                print(f"- FAILED to add user: {username}")
+        if department:
+            user, password, service = get_config_items("datawarehouse")
+            connection = cx_Oracle.connect(user, password, service)
             cursor = connection.cursor()
             cursor.execute(
                 """
-                SELECT FIRST_NAME, LAST_NAME, EMAIL_ADDRESS, PENN_ID, PENNKEY
-                FROM EMPLOYEE_GENERAL
-                WHERE PRIMARY_DEPT_ORG= :dept_code""",
-                dept_code=dept,
+                SELECT first_name, last_name, email_address, penn_id, pennkey
+                FROM employee_general
+                WHERE primary_dept_org = :department
+                """,
+                department=department,
             )
-            for fname, lname, email, penn_id, pennkey in cursor:
 
+            for first_name, last_name, email, penn_id, pennkey in cursor:
                 try:
-                    print("added:", [fname, lname, email, penn_id, pennkey])
                     user = {
-                        "firstname": fname,
-                        "lastname": lname,
+                        "first_name": first_name,
+                        "last_name": last_name,
                         "email": email,
                         "penn_id": penn_id,
                     }
-                    first_name = user["firstname"].title()
-                    last_name = user["lastname"].title()
+                    first_name = user["first_name"].title()
+                    last_name = user["last_name"].title()
                     Profile.objects.create(
                         user=User.objects.create_user(
                             username=pennkey,
@@ -111,8 +100,8 @@ class Command(BaseCommand):
                         ),
                         penn_id=user["penn_id"],
                     )
+                    print(
+                        f"- ADDED: {first_name}, {last_name}, {email}, {penn_id}, {pennkey}"
+                    )
                 except:
-                    print("didnt add user: ", pennkey)
-
-            # if no results
-            return False
+                    print(f"- FAILED to add user: {pennkey}.")
