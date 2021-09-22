@@ -3,7 +3,7 @@ from course.models import Profile
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.utils.crypto import get_random_string
-from helpers.read_config import get_config_items, get_username_and_password
+from helpers.helpers import get_config_items, get_username_and_password
 
 
 class Command(BaseCommand):

@@ -2,8 +2,8 @@ import csv
 import sys
 
 from course.models import Course
-from helpers.read_config import get_config_items
-from OpenData.library import OpenData
+from helpers.helpers import get_config_items
+from open_data.open_data import OpenData
 
 
 def find_crosslistings(year_term):

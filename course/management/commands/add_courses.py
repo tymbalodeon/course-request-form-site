@@ -3,8 +3,8 @@ import logging
 
 from course.models import Activity, Course, School, Subject, User
 from django.core.management.base import BaseCommand
-from helpers.read_config import get_config_items
-from OpenData.library import OpenData
+from helpers.helpers import get_config_items
+from open_data.open_data import OpenData
 
 
 class Command(BaseCommand):
@@ -161,7 +161,7 @@ class Command(BaseCommand):
 
             print("FINISHED")
         else:
-            with open("OpenData/OpenData.json") as json_file:
+            with open("open_data/open_data.json") as json_file:
                 courses = json.load(json_file)
 
                 for school, subjects in courses["school_subj_map"].items():

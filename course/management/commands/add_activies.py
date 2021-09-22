@@ -1,8 +1,8 @@
-from helpers.read_config import get_config_items
+from helpers.helpers import get_config_items
 
 from course.models import Activity
 from django.core.management.base import BaseCommand
-from OpenData.library import OpenData
+from open_data.open_data import OpenData
 
 ACTIVITY_CHOICES = (
     ("LEC", "Lecture"),
