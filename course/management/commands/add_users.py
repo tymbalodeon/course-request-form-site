@@ -45,11 +45,10 @@ class Command(BaseCommand):
         if total:
             for user in range(total):
                 if prefix:
-                    username = "{prefix}_{random_string}".format(
-                        prefix=prefix, random_string=get_random_string()
-                    )
+                    username = f"{prefix}_{get_random_string()}"
                 else:
                     username = get_random_string()
+
                 if admin:
                     User.objects.create_superuser(
                         username=username, email="", password="123"
@@ -68,6 +67,7 @@ class Command(BaseCommand):
                 print(f"- ADDED user: {user}")
             except:
                 print(f"- FAILED to add user: {username}")
+
         if department:
             user, password, service = get_config_items("datawarehouse")
             connection = cx_Oracle.connect(user, password, service)
