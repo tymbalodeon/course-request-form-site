@@ -31,14 +31,14 @@ class Command(BaseCommand):
         print(") Adding courses...")
 
         opendata = kwargs["opendata"]
-        year_term = kwargs["term"]
-        year = year_term[:-1]
-        term = year_term[-1]
+        year_and_term = kwargs["term"]
+        year = year_and_term[:-1]
+        term = year_and_term[-1]
 
         if opendata:
             open_data_id, key, domain = get_config_items("opendata")[:3]
             Open_Data = OpenData(base_url=domain, id=open_data_id, key=key)
-            courses = Open_Data.get_courses_by_term(year_term)
+            courses = Open_Data.get_courses_by_term(year_and_term)
             page = 1
 
             while courses is not None:
@@ -127,7 +127,7 @@ class Command(BaseCommand):
 
                     try:
                         course_created = Course.objects.update_or_create(
-                            course_code=f"{course['section_id']}{year_term}",
+                            course_code=f"{course['section_id']}{year_and_term}",
                             defaults={
                                 "owner": User.objects.get(username="benrosen"),
                                 "course_term": term,
