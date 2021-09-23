@@ -39,7 +39,7 @@ def course_created_canvas(context):
         + context["course_code"]
         + ")",
         body=content,
-        to=list(map(lambda x: get_email(x), listcontext["instructors"]))
+        to=list(map(lambda x: get_email(x), context["instructors"]))
         + get_email(context["requestor"]),
     )
     email.send()
