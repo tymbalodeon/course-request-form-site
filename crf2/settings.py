@@ -1,6 +1,7 @@
 import os
 
 from celery.schedules import crontab
+
 from helpers.helpers import get_config_value
 
 LOGGING = {
