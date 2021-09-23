@@ -1,42 +1,14 @@
-import copy
-import datetime
-
-import django.core.exceptions
-from django.conf import settings
 from django.contrib.auth.models import User
-from django.core.mail import send_mail
 from django.db import models
 from django.db.models import Q
-from django.db.models.signals import pre_delete
 from django.utils.html import mark_safe
 from markdown import markdown
-
-# This model is to represent a Course object in the CRF
-# the meta-data that is important with this is information that will help the course be
-# discoverable in the CRF2. all of these objects with be populated from the data
-# provided by the Registrar.
-
-# https://docs.djangoproject.com/en/2.1/ref/models/fields/#choices
-
-# add help text: https://docs.djangoproject.com/en/2.1/ref/models/fields/#help-text
-
-
-"""
-profile was created out of a need to store the users penn_id
-https://github.com/jlooney/extended-user-example
-"""
 
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     penn_id = models.CharField(max_length=10, unique=True)
     canvas_id = models.CharField(max_length=10, unique=True, null=True)
-
-
-# class Instructor(models.auth.User):
-"""
-        this class expands on the User model
-"""
 
 
 class Activity(models.Model):
