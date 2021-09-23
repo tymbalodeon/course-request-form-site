@@ -64,9 +64,8 @@ from course.tasks import create_canvas_sites
 from course.utils import datawarehouse_lookup, update_user_courses, validate_pennkey
 
 
-def emergency_redirect(request):
-    response = redirect("/")
-    return response
+def emergency_redirect():
+    return redirect("/")
 
 
 def custom_exception_handler(exc, context):
