@@ -194,7 +194,7 @@ urlpatterns = [
     # --------------- CONTACT view -------------------
     path("contact/", views.contact, name="contact"),
     # --------------- USERINFO view -------------------
-    path("accounts/userinfo/", views.userinfo, name="userinfo"),
+    path("accounts/userinfo/", views.user_info, name="userinfo"),
     # --------------- UPDATE LOG view -------------------
     path(
         "logs/",
