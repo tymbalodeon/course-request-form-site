@@ -1,13 +1,12 @@
 from __future__ import print_function
 
 import logging
-from configparser import ConfigParser
 
 import cx_Oracle
+from canvas.api import get_canvas
+from helpers.helpers import get_config_items
 
-from canvas import api as canvas_api
-from course.models import *
-from data_warehouse.data_warehouse import *
+from course.models import CanvasSite, Profile, Request, User
 
 LOG_FILENAME = "users.log"
 logging.basicConfig(
@@ -18,71 +17,9 @@ logging.basicConfig(
 )
 
 
-def validate_pennkey(pennkey):
-    if isinstance(pennkey, str):
-        pennkey = pennkey.lower()
-
-    try:
-        user = User.objects.get(username=pennkey)
-    except User.DoesNotExist:
-        userdata = data_warehouse_lookup(penn_key=pennkey)
-        logging.warning(userdata)
-
-        if userdata:
-            first_name = userdata["first_name"].title()
-            last_name = userdata["last_name"].title()
-            user = User.objects.create_user(
-                username=pennkey,
-                first_name=first_name,
-                last_name=last_name,
-                email=userdata["email"],
-            )
-            Profile.objects.create(user=user, penn_id=userdata["penn_id"])
-            print(f'CREATED Profile for "{pennkey}".')
-        else:
-            user = None
-            print(f'FAILED to create Profile for "{pennkey}".')
-
-    return user
-
-
-def check_by_penn_id(PENN_ID):
-    print("in check_by_penn_id ", PENN_ID)
-    try:
-        user = Profile.objects.get(penn_id=PENN_ID).user
-        print("already exists,", user)
-        return user
-    except:  # User.DoesNotExist or Profile.DoesNotExist:
-        # check if in penn db
-        print("checking datawarehouse for: ", PENN_ID)
-        lookupuser = data_warehouse_lookup(penn_id=PENN_ID)
-        print("we looked up user", lookupuser)
-        if lookupuser:
-            print("we are now creating the user", lookupuser["penn_key"])
-            # clean up first and last names
-            first_name = lookupuser["first_name"].title()
-            last_name = lookupuser["last_name"].title()
-            user = User.objects.create_user(
-                username=lookupuser["penn_key"],
-                first_name=first_name,
-                last_name=last_name,
-                email=lookupuser["email"],
-            )
-            Profile.objects.create(user=user, penn_id=PENN_ID)
-
-        else:
-            print("WE HAVE A BIG PROBLEM")
-            user = None
-        return user
-
-
-def data_warehouse_lookup(penn_key, penn_id=None):
-    config = ConfigParser()
-    config.read("config/config.ini")
-    credentials = dict(config.items("datawarehouse"))
-    connection = cx_Oracle.connect(
-        credentials["user"], credentials["password"], credentials["service"]
-    )
+def data_warehouse_lookup(penn_key=None, penn_id=None):
+    user, password, service = get_config_items("datawarehouse")
+    connection = cx_Oracle.connect(user, password, service)
     cursor = connection.cursor()
 
     if penn_key:
@@ -145,61 +82,53 @@ def data_warehouse_lookup(penn_key, penn_id=None):
     return False
 
 
-def find_or_create_user(pennid):
+def validate_pennkey(pennkey):
+    if isinstance(pennkey, str):
+        pennkey = pennkey.lower()
 
-    user = check_by_penn_id(pennid)
-    if user:  # the user exists
-        print("user", user)
-        return user
-    else:
-        return None
+    try:
+        user = User.objects.get(username=pennkey)
+    except User.DoesNotExist:
+        userdata = data_warehouse_lookup(penn_key=pennkey)
+        logging.warning(userdata)
 
-
-def check_site(sis_id, canvas_course_id):
-    """
-    with this function it can be verified if the course
-    use the function get_course in canvas/api.py and if u get a result then you know it exists?
-    """
-
-    return None
-
-
-def update_request_status():
-    request_set = Request.objects.all()  # should be filtered to status = approved
-    print("r", request_set)
-    string = ""
-    if request_set:
-        print("\t some requests - lets process them ")
-        string = "\t some requests - dw I processed them "
-        for request_obj in request_set:
-            st = (
-                "\t"
-                + request_obj.course_requested.course_code
-                + " "
-                + request_obj.status
+        if userdata:
+            first_name = userdata["first_name"].title()
+            last_name = userdata["last_name"].title()
+            user = User.objects.create_user(
+                username=pennkey,
+                first_name=first_name,
+                last_name=last_name,
+                email=userdata["email"],
             )
-            print("ok ", st)
-            # process request ( create course)
-    else:
-        string = "\t no requests"
-        print("\t no requests")
-    # print("how-do!")
-    return "how-dy!"
+            Profile.objects.create(user=user, penn_id=userdata["penn_id"])
+            print(f'CREATED Profile for "{pennkey}".')
+        else:
+            user = None
+            print(f'FAILED to create Profile for "{pennkey}".')
+
+    return user
 
 
-def get_template_sites(user):
-    """
-    Function that determines which of a user's known course sites can
-    be sourced for a Canvas content migration.
-    """
-    courses = data.get_courses(enrollment_type="teacher")
-    items = ["id", "name", "account_id", "sis_course_id", "start_at", "workflow_state"]
-    for course in courses:
-        # TO DO !
-        # CHECK THAT COURSES ARE SYNCED
-        print("course", course)
-        other += [{k: course.attributes.get(k, "NONE") for k in items}]
-    print(other)
+def check_by_penn_id(PENN_ID):
+    try:
+        return Profile.objects.get(penn_id=PENN_ID).user
+    except:
+        user_data = data_warehouse_lookup(penn_id=PENN_ID)
+
+        if user_data:
+            first_name = user_data["first_name"].title()
+            last_name = user_data["last_name"].title()
+            user = User.objects.create_user(
+                username=user_data["penn_key"],
+                first_name=first_name,
+                last_name=last_name,
+                email=user_data["email"],
+            )
+            Profile.objects.create(user=user, penn_id=PENN_ID)
+        else:
+            user = None
+        return user
 
 
 def update_user_courses(penn_key):
@@ -229,7 +158,6 @@ def find_no_canvas_account():
             print(user.username)
 
             try:
-                profile = user.profile
                 canvas_api.create_canvas_user(
                     user.username,
                     user.profile.penn_id,
@@ -249,78 +177,33 @@ def find_no_canvas_account():
                     )
 
 
-def fix_titles(roman_numeral):
-    courses = Course.objects.filter(course_term="A")
-    for c in courses:
-        title = c.course_name
-        words = title.split(" ")
-        last_word = words[-1]
-        if last_word == roman_numeral:
-            new = last_word.upper()
-            title = title.replace(last_word, new)
-            c.course_name = title
-            c.save()
-
-
-def my_test():
-    courses = Course.objects.all()
-    for c in courses:
-        if c.course_primary_subject != c.course_subject:
-            print(c)
-
-
-def crosslisting_cleanup():  # this needs to be fixed!!
-    courses = (
-        Course.objects.filter(requested=False)
-        .exclude(primary_crosslist__isnull=True)
-        .exclude(primary_crosslist__exact="")
-    )
-    for course in courses:
-        try:
-            cx = Course.objects.get(course_code=course.primary_crosslist)
-            course.crosslisted.add(cx)
-            course.save()
-        except:
-            # see if course exists if not there seeems to be an error!
-            print("couldn't find course", course.primary_crosslist)
-
-
-def update_sites_info(term):
-    # look through all requests in a term and check the canvas sites info
-    year = term[:4]
-    term = term[-1]
+def update_sites_info(year_and_term):
+    year = year_and_term[:4]
+    year_and_term = year_and_term[-1]
     canvas_sites = Request.objects.filter(~Q(canvas_instance__isnull=True)).filter(
         status="COMPLETED",
         course_requested__year=year,
-        course_requested__course_term=term,
+        course_requested__course_term=year_and_term,
     )
+
     for _canvas_site in canvas_sites:
         crf_canvas_site = _canvas_site.canvas_instance
-        canvas = canvas_api.Canvas(canvas_api.API_URL, canvas_api.API_KEY)
+        canvas = get_canvas()
+
         try:
             site = canvas.get_course(crf_canvas_site.canvas_id)
-            # check name
+
             if site.name != crf_canvas_site.name:
-                print((site.name, crf_canvas_site.name))
                 crf_canvas_site.name = site.name
                 crf_canvas_site.save()
 
-            # check sis_course_id
-            # if
-
-            # check workflow_state
             if site.workflow_state != crf_canvas_site.workflow_state:
-                print((site.workflow_state, crf_canvas_site.workflow_state))
                 crf_canvas_site.workflow_state = site.workflow_state
                 crf_canvas_site.save()
-
-            # check owners
-
         except:
-            print("couldnt find Canvas site: ", crf_canvas_site.sis_course_id)
+            print("ERROR: Failed to find Canvas site: {crf_canvas_site.sis_course_id}")
             crf_canvas_site.workflow_state = "deleted"
             crf_canvas_site.save()
-            pass  # couldnt find canvas site -- weird!!!
 
 
 def process_canvas():
