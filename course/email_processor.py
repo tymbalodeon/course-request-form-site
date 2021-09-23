@@ -1,10 +1,10 @@
-from helpers.helpers import get_config_value
 import logging
 
 from django.core.mail import EmailMessage
 from django.template.loader import get_template
 
 from course.models import User
+from helpers.helpers import get_config_value
 
 
 def get_email(pennkey):

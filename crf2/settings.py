@@ -11,7 +11,6 @@ except Exception as error:
 config = ConfigParser()
 config.read("config/config.ini")
 
-
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = config.get("django", "secret_key", raw=True)
 DEBUG = False

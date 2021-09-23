@@ -4,6 +4,9 @@ import time
 from datetime import datetime
 from logging import getLogger
 
+from canvasapi.tab import Tab
+from celery import task
+
 from canvas.api import (
     create_canvas_user,
     find_account,
@@ -11,17 +14,14 @@ from canvas.api import (
     get_canvas,
     get_user_by_sis,
 )
-from canvasapi.tab import Tab
+from course import utils
+from course.models import CanvasSite, Course, Request, User
+from course.serializers import RequestSerializer
 from data_warehouse.data_warehouse import (
     daily_sync,
     delete_canceled_courses,
     pull_instructors,
 )
-
-from celery import task
-from course import utils
-from course.models import CanvasSite, Course, Request, User
-from course.serializers import RequestSerializer
 
 
 @task()
