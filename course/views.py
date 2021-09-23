@@ -27,7 +27,7 @@ from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.utils import html
-from rest_framework.views import APIView, exception_handler
+from rest_framework.views import APIView
 
 from course import email_processor
 from course.forms import (
@@ -61,31 +61,11 @@ from course.serializers import (
     UserSerializer,
 )
 from course.tasks import create_canvas_sites
-from course.utils import datawarehouse_lookup, update_user_courses, validate_pennkey
+from course.utils import data_warehouse_lookup, update_user_courses, validate_pennkey
 
 
 def emergency_redirect(request):
     return redirect("/")
-
-
-def custom_exception_handler(exc, context):
-    # Call REST framework's default exception handler first,
-    # to get the standard error response.
-    # prsnt("helloooo","\n",exc,"\n",context)
-    response = exception_handler(exc, context)
-    # response = render({},'errors/403.html')
-
-    # we need to be able to parse if they are doing a html request or not
-    # Now add the HTTP status code to the response.
-    if response is not None:
-        response.data["status_code"] = response.status_code
-        response.data["error"] = response.data["detail"]
-        del response.data["detail"]
-
-    # response.template_name = 'base_blank.html'#'errors/'+str(response.status_code)+'.html'
-    # print("we r barely ali", response.data['status_code'])
-    return response
-    # return render(response, 'errors/'+str(response.status_code) +'.html')
 
 
 class TestUserProfileCreated(UserPassesTestMixin):
@@ -96,40 +76,22 @@ class TestUserProfileCreated(UserPassesTestMixin):
             if user.profile:
                 return True
         except Exception:
-            userdata = datawarehouse_lookup(penn_key=user.username)
+            user_data = data_warehouse_lookup(penn_key=user.username)
 
-            if userdata:
-                first_name = userdata["firstname"].title()
-                last_name = userdata["lastname"].title()
+            if user_data:
+                first_name = user_data["first_name"].title()
+                last_name = user_data["last_name"].title()
                 user.update(
-                    first_name=first_name, last_name=last_name, email=userdata["email"]
+                    first_name=first_name, last_name=last_name, email=user_data["email"]
                 )
-                Profile.objects.create(user=user, penn_id=userdata["penn_id"])
+                Profile.objects.create(user=user, penn_id=user_data["penn_id"])
 
                 return True
             else:
                 return False
 
-        return False
-
 
 class MixedPermissionModelViewSet(viewsets.ModelViewSet):
-    """
-    Mixed permission base model allowing for action level
-    permission control. Subclasses may define their permissions
-    by creating a 'permission_classes_by_action' variable.
-
-    Example:
-    permission_classes_by_action = {'list': [AllowAny],
-                                   'create': [IsAdminUser]}
-
-    Since each viewset extends the modelviewset there are default actions that are included...
-        for each action there should be a defined permission.
-    see more here: http://www.cdrf.co/3.9/rest_framework.viewsets/ModelViewSet.html
-
-    THIS MODEL IS INHERITED BY EVERY VIEWSET ( except homepage... ) !!
-    """
-
     permission_classes_by_action = {}
     login_url = "/accounts/login/"
 
@@ -1082,11 +1044,11 @@ class HomePage(APIView, UserPassesTestMixin):  # ,
 
                 return True
         except Exception:
-            user_data = datawarehouse_lookup(penn_key=user.username)
+            user_data = data_warehouse_lookup(penn_key=user.username)
 
             if user_data:
-                user.first_name = user_data["firstname"].title()
-                user.last_name = user_data["lastname"].title()
+                user.first_name = user_data["first_name"].title()
+                user.last_name = user_data["last_name"].title()
                 user.email = user_data["email"]
                 Profile.objects.create(user=user, penn_id=user_data["penn_id"])
                 update_user_courses(user.username)
@@ -1341,8 +1303,8 @@ def userinfo(request):
 def DWHSE_Proxy(request):
     # if request.method == "GET":
     #     pennkey = request.GET.get("pennkey", "")
-    #     firstName = request.GET.get("firstName", "")
-    #     lastName = request.GET.get("lastName", "")
+    #     first_name = request.GET.get("first_name", "")
+    #     last_name = request.GET.get("last_name", "")
     #     email = request.GET.get("email", "")
     #     print(pennkey)
     #     staffResults = None
