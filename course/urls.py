@@ -57,7 +57,7 @@ This is fine because I want the API to be very generic
 urlpatterns = [
     url("admin/test_login/", views.side_sign_in),
     path("siterequest/", views.emergency_redirect),
-    path("contact/googleform/", views.googleform),
+    path("contact/googleform/", views.google_form),
     # --------------- Helpers ------------------
     url("admin/process_requests/", views.process_requests, name="process_requests"),
     url("admin/view_requests/", views.view_requests, name="view_requests"),
@@ -226,10 +226,9 @@ urlpatterns = [
         name="logout",
     ),
     # --------------- Canvas Proxies -------------------
-    url(r"^canvasuser/(?P<username>\w+)/$", views.myproxy),
+    url(r"^canvasuser/(?P<username>\w+)/$", views.my_proxy),
     path("searchcanvas/<search>/", views.autocompleteCanvasCourse),
     # --------------- autocomplete -------------------
-    # views are defined in autocomplete.py
     url(
         r"^user-autocomplete/$",
         UserAutocomplete.as_view(),
