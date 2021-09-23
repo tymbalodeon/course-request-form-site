@@ -74,7 +74,7 @@ urlpatterns = [
         TemplateView.as_view(template_name="admin/user_lookup.html"),
         name="user_lookup",
     ),
-    url("courselookup/", views.openDataProxy),
+    url("courselookup/", views.open_data_proxy),
     url("dwlookup/", views.check_data_warehouse_for_course),
     url(r"^api/", include(router.urls)),
     url(r"^api_doc/", schema_view),
