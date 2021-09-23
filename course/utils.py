@@ -3,11 +3,11 @@ from __future__ import print_function
 import logging
 
 import cx_Oracle
-from canvas.api import create_canvas_user, get_canvas, get_user_by_sis, get_user_courses
 from django.db.models import Q
-from helpers.helpers import get_config_items
 
+from canvas.api import create_canvas_user, get_canvas, get_user_by_sis, get_user_courses
 from course.models import CanvasSite, Profile, Request, User
+from helpers.helpers import get_config_items
 
 LOG_FILENAME = "users.log"
 logging.basicConfig(

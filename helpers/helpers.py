@@ -6,8 +6,8 @@ config = ConfigParser()
 config.read("config/config.ini")
 
 
-def get_config_value(key, value):
-    return config.get(key, value)
+def get_config_value(key, value, raw=False):
+    return config.get(key, value, raw=raw)
 
 
 def get_config_items(key):

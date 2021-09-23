@@ -1,18 +1,53 @@
 import os
-from configparser import ConfigParser
 
 from celery.schedules import crontab
+from helpers.helpers import get_config_value
 
-try:
-    from .logger_settings import LOGGING
-except Exception as error:
-    print(f"- Failed to load logger settings ({error}).")
-
-config = ConfigParser()
-config.read("config/config.ini")
-
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "large": {
+            "format": (
+                "%(asctime)s  %(levelname)s  %(process)d  %(pathname)s  %(funcName)s "
+                " %(lineno)d  %(message)s  "
+            )
+        },
+        "tiny": {"format": "%(asctime)s  %(message)s  "},
+    },
+    "handlers": {
+        "errors_file": {
+            "level": "ERROR",
+            "class": "logging.handlers.TimedRotatingFileHandler",
+            "when": "midnight",
+            "interval": 1,
+            "filename": "logs/ErrorLoggers.log",
+            "formatter": "large",
+        },
+        "info_file": {
+            "level": "INFO",
+            "class": "logging.handlers.TimedRotatingFileHandler",
+            "when": "midnight",
+            "interval": 1,
+            "filename": "logs/InfoLoggers.log",
+            "formatter": "large",
+        },
+    },
+    "loggers": {
+        "error_logger": {
+            "handlers": ["errors_file"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        "info_logger": {
+            "handlers": ["info_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+}
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SECRET_KEY = config.get("django", "secret_key", raw=True)
+SECRET_KEY = get_config_value("django", "secret_key", raw=True)
 DEBUG = False
 CANVAS_ENVIRONMENT = "PRODUCTION"
 ALLOWED_HOSTS = ["*", "localhost"]
