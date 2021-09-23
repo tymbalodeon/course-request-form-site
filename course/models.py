@@ -180,7 +180,7 @@ class Course(models.Model):
         )
 
     def find_requested(self):
-        if self.requested_override == True:
+        if self.requested_override is True:
             return True
         else:
             try:
@@ -234,9 +234,15 @@ class Course(models.Model):
             print(error)
 
     def save(self, *args, **kwargs):
-        self.course_code = f"{self.course_subject.abbreviation}{self.course_number}{self.course_section}{self.year}{self.course_term}"
+        self.course_code = (
+            f"{self.course_subject.abbreviation}"
+            f"{self.course_number}"
+            f"{self.course_section}"
+            f"{self.year}"
+            f"{self.course_term}"
+        )
 
-        if self._state.adding == True:
+        if self._state.adding is True:
             super().save(*args, **kwargs)
         else:
             if not (int(self.course_section) >= 300 and int(self.course_section) < 400):
@@ -266,7 +272,7 @@ class Course(models.Model):
         return (
             self.course_subject.abbreviation
             if self.crosslisted is None
-            else ",\n".join([sub.abbreviation for sub in cross_listed])
+            else ",\n".join([sub.abbreviation for sub in self.crosslisted])
         )
 
     def get_schools(self):
@@ -299,7 +305,9 @@ class Course(models.Model):
 
     def srs_format(self):
         return (
-            f"{self.course_subject.abbreviation}-{self.course_number}-{self.course_section}"
+            f"{self.course_subject.abbreviation}-"
+            f"{self.course_number}-"
+            f"{self.course_section}"
             f" {self.year}{self.course_term}"
         )
 
