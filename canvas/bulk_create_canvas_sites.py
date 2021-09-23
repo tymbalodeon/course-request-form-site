@@ -52,7 +52,7 @@ def group_sections(year_and_term, school):
     all_sections = set()
     SECTIONS = dict()
 
-    print(f") Consolidating sections into a single course number...")
+    print(") Consolidating sections into a single course number...")
 
     for course in courses:
         if course in all_sections:
@@ -75,7 +75,7 @@ def group_sections(year_and_term, school):
 
 
 def remove_courses_with_site(courses):
-    print(f") Removing courses with a pre-existing Canvas site...")
+    print(") Removing courses with a pre-existing Canvas site...")
 
     def should_request_with_remove(sis_id, course, index):
         should = should_request(sis_id)
@@ -185,10 +185,12 @@ def write_request_statuses(year_and_term, school_abbreviation, verbose=True):
             return course
 
     def list_instructors(course):
+        instructors_string = ", ".join(
+            [user.username for user in list(course.instructors.all())]
+        )
+
         try:
-            return (
-                f'"{", ".join([user.username for user in list(course.instructors.all())])}"'
-            )
+            return f'"{instructors_string}"'
         except Exception:
             return "STAFF"
 
@@ -258,9 +260,11 @@ def write_request_statuses(year_and_term, school_abbreviation, verbose=True):
         "Canvas Site",
     ]
 
+    path_string = (
+        f"{school_abbreviation}_courses_request_and_site_statuses_{year_and_term}.csv"
+    )
     with open(
-        DATA_DIRECTORY
-        / f"{school_abbreviation}_courses_request_and_site_statuses_{year_and_term}.csv",
+        DATA_DIRECTORY / path_string,
         "w",
     ) as writer:
         writer.write(f"{','.join(COLUMNS)}\n")

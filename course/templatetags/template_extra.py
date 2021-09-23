@@ -1,10 +1,9 @@
+from course.models import PageContent
 from django import template
 from django.contrib.auth.models import User
 from django.utils.encoding import iri_to_uri
 from django.utils.html import escape
 from rest_framework.utils.urls import remove_query_param
-
-from course.models import *
 
 register = template.Library()
 
@@ -46,7 +45,9 @@ def course_to_course_code(course):
     term = f'{course["year"]}{course["course_term"]}'
 
     return (
-        f'{course["course_subject"]}-{course["course_number"]}-{course["course_section"]} {term}'
+        f'{course["course_subject"]}-'
+        f'{course["course_number"]}-'
+        f'{course["course_section"]} {term}'
     )
 
 
