@@ -7,7 +7,7 @@
 
 <!-- course info -->
 <fieldset>
-<legend>Course Info: {{ course|asrepr }}</legend>
+<legend>Course Info: {{ course|course_to_course_code }}</legend>
 <dl class="row" style="line-height:1.1;">
       <dt class="col-4 col-md-3 text-right" style="padding-right: 0px;">SRS Title</dt>
       <dd class="col-8 col-md-9"> {{ course.course_name }}</dd>
