@@ -1103,15 +1103,15 @@ def my_proxy(request, username):
     user = get_user_by_sis(login_id)
     courses = user.get_courses(enrollment_type="teacher")
     properties = ["id", "name", "sis_course_id", "workflow_state"]
-    courses = user.get_courses(enrollment_type="teacher")
-    items = ["id", "name", "sis_course_id", "workflow_state"]
-    course_attributes = list()
-
-    for course in courses:
-        course_attributes += [{k: course.attributes.get(k, "NONE") for k in items}]
-
+    courses = [
+        [{key: course.attributes.get(key, "NONE") for key in properties}]
+        for course in courses
+    ]
+    courses = [
+        course_attributes for attributes in courses for course_attributes in attributes
+    ]
     response = user.attributes
-    response["courses"] = course_attributes
+    response["courses"] = courses
 
     return JsonResponse(response)
 
