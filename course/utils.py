@@ -25,12 +25,12 @@ def validate_pennkey(pennkey):
     try:
         user = User.objects.get(username=pennkey)
     except User.DoesNotExist:
-        userdata = datawarehouse_lookup(penn_key=pennkey)
+        userdata = data_warehouse_lookup(penn_key=pennkey)
         logging.warning(userdata)
 
         if userdata:
-            first_name = userdata["firstname"].title()
-            last_name = userdata["lastname"].title()
+            first_name = userdata["first_name"].title()
+            last_name = userdata["last_name"].title()
             user = User.objects.create_user(
                 username=pennkey,
                 first_name=first_name,
@@ -55,13 +55,13 @@ def check_by_penn_id(PENN_ID):
     except:  # User.DoesNotExist or Profile.DoesNotExist:
         # check if in penn db
         print("checking datawarehouse for: ", PENN_ID)
-        lookupuser = datawarehouse_lookup(penn_id=PENN_ID)
+        lookupuser = data_warehouse_lookup(penn_id=PENN_ID)
         print("we looked up user", lookupuser)
         if lookupuser:
             print("we are now creating the user", lookupuser["penn_key"])
             # clean up first and last names
-            first_name = lookupuser["firstname"].title()
-            last_name = lookupuser["lastname"].title()
+            first_name = lookupuser["first_name"].title()
+            last_name = lookupuser["last_name"].title()
             user = User.objects.create_user(
                 username=lookupuser["penn_key"],
                 first_name=first_name,
@@ -76,7 +76,7 @@ def check_by_penn_id(PENN_ID):
         return user
 
 
-def datawarehouse_lookup(penn_key, penn_id=None):
+def data_warehouse_lookup(penn_key, penn_id=None):
     config = ConfigParser()
     config.read("config/config.ini")
     credentials = dict(config.items("datawarehouse"))
@@ -107,8 +107,8 @@ def datawarehouse_lookup(penn_key, penn_id=None):
             )
 
             return {
-                "firstname": first_name,
-                "lastname": last_name,
+                "firs_tname": first_name,
+                "last_name": last_name,
                 "email": email,
                 "penn_id": dw_penn_id,
             }
@@ -134,8 +134,8 @@ def datawarehouse_lookup(penn_key, penn_id=None):
             )
 
             return {
-                "firstname": first_name,
-                "lastname": last_name,
+                "first_name": first_name,
+                "last_name": last_name,
                 "email": email,
                 "penn_key": penn_key,
             }
@@ -237,7 +237,7 @@ def find_no_canvas_account():
                     user.first_name + " " + user.last_name,
                 )
             except:
-                userdata = datawarehouse_lookup(penn_key=user.username)
+                userdata = data_warehouse_lookup(penn_key=user.username)
 
                 if userdata:
                     Profile.objects.create(user=user, penn_id=userdata["penn_id"])
