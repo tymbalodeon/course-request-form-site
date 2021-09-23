@@ -1103,17 +1103,17 @@ def my_proxy(request, username):
     user = get_user_by_sis(login_id)
     courses = user.get_courses(enrollment_type="teacher")
     properties = ["id", "name", "sis_course_id", "workflow_state"]
-    courses = [
-        [{key: course.attributes.get(key, "NONE") for key in properties}]
-        for course in courses
-    ]
-    courses = [
-        course_attributes for attributes in courses for course_attributes in attributes
-    ]
-    final = user.attributes
-    final["courses"] = courses
+    courses = user.get_courses(enrollment_type="teacher")
+    items = ["id", "name", "sis_course_id", "workflow_state"]
+    course_attributes = list()
 
-    return JsonResponse(final)
+    for course in courses:
+        course_attributes += [{k: course.attributes.get(k, "NONE") for k in items}]
+
+    response = user.attributes
+    response["courses"] = course_attributes
+
+    return JsonResponse(response)
 
 
 def autocompleteCanvasCourse(request, search):
