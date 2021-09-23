@@ -80,17 +80,17 @@
         {% if section_code in request_instance.additional_sections %}
         <tr style="background:#B7CEC3;">
 
-            <td > {{section_code|coursecodetoString}}</td> <td> {{section_activity}} </td> <td> In Request </td>
+            <td > {{section_code|course_code_to_string}}</td> <td> {{section_activity}} </td> <td> In Request </td>
 
         </tr>
         {% elif section_requested %}
         <tr style="background:#e9ecef;">
-          <td> {{section_code|coursecodetoString}}</td> <td> {{section_activity}} </td> <td> Already Requested </td>
+          <td> {{section_code|course_code_to_string}}</td> <td> {{section_activity}} </td> <td> Already Requested </td>
         </tr>
 
         {% else %}
         <tr>
-          <td> {{section_code|coursecodetoString}}</td> <td> {{section_activity}} </td> <td> None </td>
+          <td> {{section_code|course_code_to_string}}</td> <td> {{section_activity}} </td> <td> None </td>
         </tr>
         {% endif %}
 

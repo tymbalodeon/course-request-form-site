@@ -1,5 +1,4 @@
 @import url("https://fonts.googleapis.com/css?family=Open+Sans");
-/* font-family: 'Open Sans',serif; */
 @import url("https://fonts.googleapis.com/css?family=Ubuntu:400,700");
 
 :root {
@@ -7,27 +6,8 @@
   --theme-textfont: "Open Sans", serif;
   --theme-blue: #2965de;
   --theme-lightblue: #ebf2fe;
-  --theme-lightgray: #f6f8f9; /* use for background */
-  --theme-darkgray: #e8e8e8; /* use for textera fields*/
-
-  /* BLUE: #2965DE
- on HOVER: #0246a2  or maybe it should be #1946a2 ...
-ORANGE: #DE9C29
-on HOVER: #CE8E20
-
-#2059ce
-
- green #00635D
- dark liver #4E4B5C ,, on hover: #353243
-
- dark raspnerry #8F2D56
- */
-
-  /* i like this color 136F63
-https://www.colorbook.io/hexcolors/view/296bde
-*/
-
-  /*  :#e9e9e9; is used for piping on divs */
+  --theme-lightgray: #f6f8f9;
+  --theme-darkgray: #e8e8e8;
 }
 
 /* Variables
@@ -68,9 +48,7 @@ html {
   /* 2 */
 }
 
-/**
- * Remove default margin.
- */
+/* Remove default margin. */
 body {
   height: 100%;
   margin: 0;
@@ -107,10 +85,10 @@ audio,
 canvas,
 progress,
 video {
-  display: inline-block;
   /* 1 */
-  vertical-align: baseline;
+  display: inline-block;
   /* 2 */
+  vertical-align: baseline;
 }
 
 /**
@@ -318,18 +296,23 @@ h5 {
   h3:not(:first-child) {
     margin-top: 2.5rem;
   }
+
   h1 {
     font-size: 2.25rem;
   }
+
   h2 {
     font-size: 2rem;
   }
+
   h3 {
     font-size: 1.75rem;
   }
+
   h4 {
     font-size: 1.5rem;
   }
+
   h5 {
     font-size: 1.25rem;
   }
@@ -339,6 +322,7 @@ a {
   color: #2965de;
   text-decoration: none;
 }
+
 a:hover,
 a:active,
 a:focus {
@@ -386,6 +370,7 @@ blockquote pre {
   font-family: Menlo, monospace;
   font-size: 14px;
 }
+
 blockquote.show {
   display: flex !important;
   font-family: Menlo, monospace;
@@ -420,6 +405,7 @@ pre {
   font-size: 14px;
   margin: 0 0 1.5rem 0;
 }
+
 pre code {
   font-family: Menlo, monospace;
   line-height: 1.2;
@@ -1380,7 +1366,6 @@ div.alert-dismissible > p {
 }
 
 /* Desktop Styles */
-
 @media screen and (min-width: 800px) {
   .fixed {
     box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.05) !important;
@@ -1404,14 +1389,11 @@ div.alert-dismissible > p {
   }
 
   aside {
-    display: block;
     flex: 0 0 220px;
     width: 220px;
     border-bottom: 0;
     height: 100%;
-  }
-  aside {
-    padding-top: 1rem; /*switched from margin */
+    padding-top: 1rem;
     position: static;
     display: flex;
     flex-direction: column;
@@ -1422,7 +1404,6 @@ div.alert-dismissible > p {
   }
   aside nav {
     display: flex !important;
-    /*display: block !important;*/
   }
   #references {
     display: flow-root;
@@ -1456,14 +1437,12 @@ div.alert-dismissible > p {
 }
 
 /* PAGINATION */
-
 .page-item.active .page-link {
   background-color: #2965de;
   border-color: #2965de;
 }
 
 /* LOADER SPINNER */
-
 #loader {
   z-index: 1;
   width: 150px;
@@ -1528,7 +1507,6 @@ div.alert-dismissible > p {
 }
 
 /* Bootstrap 4 Callouts - https://gist.github.com/mikeblum/aaffe654fc4f5a74c3b8b313fb43b2eb */
-
 .bd-callout {
   padding: 1.25rem;
   margin-top: 1.25rem;
@@ -1580,13 +1558,13 @@ div.alert-dismissible > p {
 }
 
 /* Bootstrap pills/tabs */
-
 .nav.mb-3 {
   border-bottom: 0.5px solid #cdcdcd;
 }
 .nav-link {
   padding: 0.5rem 1rem 0.2rem;
 }
+
 .nav-pills .nav-link {
   border-radius: 0rem;
   font-weight: 500;
