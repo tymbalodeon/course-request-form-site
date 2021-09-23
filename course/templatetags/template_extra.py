@@ -1,9 +1,10 @@
-from course.models import PageContent
 from django import template
 from django.contrib.auth.models import User
 from django.utils.encoding import iri_to_uri
 from django.utils.html import escape
 from rest_framework.utils.urls import remove_query_param
+
+from course.models import PageContent
 
 register = template.Library()
 
