@@ -120,25 +120,18 @@ class MixedPermissionModelViewSet(viewsets.ModelViewSet):
 
 
 class CourseFilter(filters.FilterSet):
-    # activity =
-    # filter_fields = ('course_activity','instructors__username','course_schools__abbreviation','course_subjects__abbreviation',) #automatically create a FilterSet class
-    # https://github.com/philipn/django-rest-framework-filters/issues/102
-    # pls see: https://django-filter.readthedocs.io/en/master/ref/filters.html
-    # https://django-filter.readthedocs.io/en/master/ref/filters.html#modelchoicefilter
     activity = filters.ModelChoiceFilter(
         queryset=Activity.objects.all(), field_name="course_activity", label="Activity"
     )
     instructor = filters.CharFilter(
         field_name="instructors__username", label="Instructor"
     )
-    # school = filters.CharFilter(field_name='course_schools__abbreviation',label='School (abbreviation)')
     school = filters.ModelChoiceFilter(
         queryset=School.objects.all(),
         field_name="course_schools",
         to_field_name="abbreviation",
         label="School (abbreviation)",
     )
-
     subject = filters.CharFilter(
         field_name="course_subject__abbreviation", label="Subject (abbreviation)"
     )
@@ -148,7 +141,6 @@ class CourseFilter(filters.FilterSet):
 
     class Meta:
         model = Course
-        # fields using custom autocomplete = ['instructor', 'subject']
 
         fields = [
             "term",
@@ -156,7 +148,7 @@ class CourseFilter(filters.FilterSet):
             "school",
             "instructor",
             "subject",
-        ]  # ,'activity', school
+        ]
 
 
 class CourseViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
@@ -200,7 +192,7 @@ class CourseViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
-    def list(self, request, *args, **kwargs):
+    def list(self, request):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
 
@@ -295,16 +287,10 @@ class CourseViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
 
 
 class RequestFilter(filters.FilterSet):
-    # activity =
-    # filter_fields = ('course_activity','instructors__username','course_schools__abbreviation','course_subjects__abbreviation',) #automatically create a FilterSet class
-    # https://github.com/philipn/django-rest-framework-filters/issues/102
-    # pls see: https://django-filter.readthedocs.io/en/master/ref/filters.html
     status = filters.ChoiceFilter(
         choices=Request.REQUEST_PROCESS_CHOICES, field_name="status", label="Status"
     )
-    requestor = filters.CharFilter(
-        field_name="owner__username", label="Requestor"
-    )  # does not include masquerade! and needs validator on input!
+    requestor = filters.CharFilter(field_name="owner__username", label="Requestor")
     date = filters.DateTimeFilter(field_name="created", label="Created")
     school = filters.ModelChoiceFilter(
         queryset=School.objects.all(),
@@ -321,7 +307,6 @@ class RequestFilter(filters.FilterSet):
     class Meta:
         model = Request
         fields = ["status", "requestor", "date", "school", "term"]
-        # fields = ['activity','instructor','school','subject','term']
 
 
 class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
@@ -342,16 +327,14 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         "delete": [IsAdminUser],
     }
 
-    def create(self, request, *args, **kwargs):
-        def update_course(self, course):
+    def create(self, request):
+        def update_course(course):
             course.save()
 
             if course.crosslisted:
                 for crosslisted in course.crosslisted.all():
                     crosslisted.request = course.request
                     crosslisted.save()
-
-            crosslisted = course.crosslisted
 
         try:
             masquerade = request.session["on_behalf_of"]
@@ -423,7 +406,7 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         course = Course.objects.get(course_code=request.data["course_requested"])
-        update_course(self, course)
+        update_course(course)
 
         if "view_type" in request.data:
             if request.data["view_type"] == "UI-course-list":
@@ -445,7 +428,7 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
-    def list(self, request, *args, **kwargs):
+    def list(self, request):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
 
@@ -490,9 +473,6 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
                     raise PermissionDenied(
                         {"message": "You don't have permission to access"}
                     )
-
-                    return False
-
             elif (
                 masquerade == request_obj["owner"]
                 or masquerade == request_obj["masquerade"]
@@ -502,8 +482,6 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
                 raise PermissionDenied(
                     {"message": "You don't have permission to access"}
                 )
-
-                return False
 
         if self.request.method == "POST":
             if instructors:
@@ -515,8 +493,6 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
                     raise PermissionDenied(
                         {"message": "You don't have permission to access"}
                     )
-
-                    return False
             else:
                 return True
         else:
@@ -715,16 +691,10 @@ def clean_custom_input(adds):
 
 
 class UserViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
-    """
-    This viewset automatically provides `list` and `detail` actions. (READONLY)
-    """
-
-    # only admins ( user.is_staff ) can do anything with this data
     permission_classes = (permissions.IsAdminUser,)
     queryset = User.objects.all()
     serializer_class = UserSerializer
     lookup_field = "username"
-    # filter_backends = (DjangoFilterBackend,)
     filterset_fields = ("profile__penn_id",)
     permission_classes_by_action = {
         "create": [],
@@ -735,28 +705,8 @@ class UserViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         "delete": [],
     }
 
-    """
-    # this is just to havet the pk be username and not id
-    def retrieve(self, request, pk=None):
-        #print("IM DOING MY BEST")
-        instance = User.objects.filter(username=pk)
-        #print(instance)
-
-
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
-
-        return Response(serializer.data)
-    """
-
 
 class SchoolViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
-    """
-    This viewset only provides custom `list` actions
-    """
-
-    # # TODO:
-    # [ ] ensure POST is only setting masquerade
     queryset = School.objects.all()
     serializer_class = SchoolSerializer
     permission_classes_by_action = {
@@ -768,46 +718,19 @@ class SchoolViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         "delete": [],
     }
 
-    #    def perform_create(self, serializer):
-    #        serializer.save(owner=self.request.user)
-    def list(self, request, *args, **kwargs):
+    def list(self, request):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
-        # print("1")
-        if page is not None:
 
+        if page is not None:
             serializer = self.get_serializer(page, many=True)
-            response = self.get_paginated_response(
-                serializer.data
-            )  # http://www.cdrf.co/3.9/rest_framework.viewsets/ModelViewSet.html#paginate_queryset
-            # print("template_name",response.template_name)
+            response = self.get_paginated_response(serializer.data)
+
             if request.accepted_renderer.format == "html":
                 response.template_name = "schools_list.html"
-                # print("template_name",response.template_name)
                 response.data = {"results": response.data, "paginator": self.paginator}
-            # print("request.accepted_renderer.format",request.accepted_renderer.format)
+
             return response
-        """
-        serializer = self.get_serializer(queryset, many=True)
-        response = Response(serializer.data)
-        if request.accepted_renderer.format == 'html':
-            #print("template_name",response.template_name)
-            response.template_name = 'schools_list.html'
-            #print("template_name",response.template_name)
-            response.data = {'results': response.data}
-        return response
-        """
-
-    def post(self, request, *args, **kwargs):
-        # print("posting")
-        # if request.user.is_authenticated():
-
-        """
-        #need to check if the post is for masquerade
-        #print(request.get_full_path())
-        set_session(request)
-        return(redirect(request.get_full_path()))
-        """
 
     def update(self, request, *args, **kwargs):
         # print("update?")
