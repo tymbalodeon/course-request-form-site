@@ -1,42 +1,14 @@
-import copy
-import datetime
-
-import django.core.exceptions
-from django.conf import settings
 from django.contrib.auth.models import User
-from django.core.mail import send_mail
 from django.db import models
 from django.db.models import Q
-from django.db.models.signals import pre_delete
 from django.utils.html import mark_safe
 from markdown import markdown
-
-# This model is to represent a Course object in the CRF
-# the meta-data that is important with this is information that will help the course be
-# discoverable in the CRF2. all of these objects with be populated from the data
-# provided by the Registrar.
-
-# https://docs.djangoproject.com/en/2.1/ref/models/fields/#choices
-
-# add help text: https://docs.djangoproject.com/en/2.1/ref/models/fields/#help-text
-
-
-"""
-profile was created out of a need to store the users penn_id
-https://github.com/jlooney/extended-user-example
-"""
 
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     penn_id = models.CharField(max_length=10, unique=True)
     canvas_id = models.CharField(max_length=10, unique=True, null=True)
-
-
-# class Instructor(models.auth.User):
-"""
-        this class expands on the User model
-"""
 
 
 class Activity(models.Model):
@@ -58,16 +30,7 @@ class Activity(models.Model):
         ordering = ("abbr",)
 
 
-#    def __str__(self):
-#        return self.username
-
-
 class School(models.Model):
-    """
-    mapping of School (i.e. 'Arts & Sciences') to SubjectArea objects
-    and their associated subjects
-    """
-
     name = models.CharField(max_length=50, unique=True)
     abbreviation = models.CharField(max_length=10, unique=True, primary_key=True)
     visible = models.BooleanField(default=True)
@@ -80,27 +43,17 @@ class School(models.Model):
     def get_subjects(self):
         return self.subjects
 
-    # def set_subjects(self,visibility):
-
     def save(self, *args, **kwargs):
-        """
-        some text
-        """
-        # print("saving school instance")
-        # print(self.subjects)
-        # print(self.get_subjects())
-        # print("args,kwargs", args, kwargs)
         subjects = Subject.objects.filter(schools=self.abbreviation)
-        # print("subjects", subjects)
 
         for subject in subjects:
             subject.visible = self.visible
             subject.save()
-        # print("self.pk", self.pk)
-        super().save(*args, **kwargs)  # super(Course, self)
+
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        return "%s (%s)" % (self.name, self.abbreviation)
+        return f"{self.name} ({self.abbreviation})"
 
     class Meta:
         ordering = ("name",)
@@ -109,11 +62,6 @@ class School(models.Model):
 
 
 class Subject(models.Model):
-    """
-    mapping of Subject (i.e. 'ANAT' -> Anatomy ) to SubjectArea objects
-    requires list_asView but not individual object view
-    """
-
     name = models.CharField(max_length=50)
     abbreviation = models.CharField(max_length=10, unique=True, primary_key=True)
     visible = models.BooleanField(default=True)
@@ -122,7 +70,7 @@ class Subject(models.Model):
     )
 
     def __str__(self):
-        return "%s (%s)" % (self.name, self.abbreviation)
+        return f"{self.name} ({self.abbreviation})"
 
     class Meta:
         ordering = ("name",)
@@ -131,48 +79,19 @@ class Subject(models.Model):
 
 
 class CanvasSite(models.Model):
-    """
-    this contains all the relevant info about the canvas site once it has been created
-    """
-
-    # url = models.URLField()
     canvas_id = models.CharField(
         max_length=10, blank=False, default=None, primary_key=True
     )
     request_instance = models.ForeignKey(
         "Request", on_delete=models.SET_NULL, null=True, default=None, blank=True
-    )  # there doesnt have to be one!
-    owners = models.ManyToManyField(
-        User, related_name="canvas_sites", blank=True
-    )  # should be allowed to be null --> "STAFF"
+    )
+    owners = models.ManyToManyField(User, related_name="canvas_sites", blank=True)
     added_permissions = models.ManyToManyField(
         User, related_name="added_permissions", blank=True, default=None
     )
-    name = models.CharField(
-        max_length=50, blank=False, default=None
-    )  # CHEM 101 2019C General Chemistry I
-    sis_course_id = models.CharField(
-        max_length=50, blank=True, default=None, null=True
-    )  # SRS_CHEM-101-003 2019C
+    name = models.CharField(max_length=50, blank=False, default=None)
+    sis_course_id = models.CharField(max_length=50, blank=True, default=None, null=True)
     workflow_state = models.CharField(max_length=15, blank=False, default=None)
-    # sis_section_id = models.CharField(max_length=50,blank=False,default=None)#SRS_CHEM-101-003 2019C
-    # section_name = models.CharField(max_length=50,blank=False,default=None)#CHEM 101-003 2019C General Chemistry I
-
-    # i think this should be a school object ...
-    # subaccount = models.CharField(max_length=50,blank=False,default=None)
-    # term = models.CharField(max_length=5,blank=False,default=None)#2019C
-    # name = models.CharField(max_length=50,unique=True)#BMIN 521 2019C AI II: Machine Learning
-    """
-    sis_course_id = #SRS_BMIN-521-401 2019C
-    sis_section_id = #SRS_BMIN-521-401 2019C
-    section_name = #BMIN 521-401 2019C AI II: Machine Learning
-    subaccount = #Perelman School of Medicine
-    term = #2019C
-    additional_enrollments = models.  #https://stackoverflow.com/questions/1110153/what-is-the-most-efficient-way-to-store-a-list-in-the-django-models
-    """
-
-    #
-    # def get_additional_enrollements(self):
 
     def get_owners(self):
         return "\n".join([p.username for p in self.owners.all()])
@@ -192,8 +111,6 @@ class CanvasSite(models.Model):
 class CourseManager(models.Manager):
     def has_request(self):
         return super().get_queryset().filter(requested=True)
-
-    # def submitted(self)
 
 
 class Course(models.Model):
@@ -268,16 +185,16 @@ class Course(models.Model):
         else:
             try:
                 exists = self.request
-                return True
-            except:
 
+                return True
+            except Exception:
                 exists = self.multisection_request
                 exists_cross = self.crosslisted_request
+
                 if exists or exists_cross:
                     return True
                 else:
                     return False
-                return False
 
     def set_requested(self, requested):
         self.requested = requested
@@ -291,6 +208,7 @@ class Course(models.Model):
             & Q(course_term=self.course_term)
             & Q(year=self.year)
         )
+
         for course in cross_courses:
             self.crosslisted.add(course)
             self.save()
@@ -303,6 +221,7 @@ class Course(models.Model):
             & Q(course_term=self.course_term)
             & Q(year=self.year)
         )
+
         for course in cross_courses:
             course.requested_override = self.requested_override
 
@@ -311,18 +230,11 @@ class Course(models.Model):
 
             for course in cross_courses:
                 course.crosslisted_request = request
-
         except Exception as error:
             print(error)
 
     def save(self, *args, **kwargs):
-        self.course_code = (
-            self.course_subject.abbreviation
-            + self.course_number
-            + self.course_section
-            + self.year
-            + self.course_term
-        )
+        self.course_code = f"{self.course_subject.abbreviation}{self.course_number}{self.course_section}{self.year}{self.course_term}"
 
         if self._state.adding == True:
             super().save(*args, **kwargs)
@@ -351,21 +263,21 @@ class Course(models.Model):
             return request
 
     def get_subjects(self):
-        return self.course_subject.abbreviation
-        cross_listed = self.crosslisted
-        print(cross_listed)
-        if cross_listed == None:
-            return self.course_subject.abbreviation
-        return ",\n".join([sub.abbreviation for sub in cross_listed])
+        return (
+            self.course_subject.abbreviation
+            if self.crosslisted is None
+            else ",\n".join([sub.abbreviation for sub in cross_listed])
+        )
 
     def get_schools(self):
         return self.course_schools
 
     def get_instructors(self):
-        if not self.instructors.all().exists():
-            return "STAFF"
-
-        return ",\n".join([inst.username for inst in self.instructors.all()])
+        return (
+            "STAFF"
+            if not self.instructors.all().exists()
+            else ",\n".join([inst.username for inst in self.instructors.all()])
+        )
 
     def find_sections(self):
         courses = list(
@@ -443,25 +355,16 @@ class Course(models.Model):
 
 
 class Notice(models.Model):
-    """
-    this is a class that handles system wide notifications
-    for earilest and latest methods see: https://simpleisbetterthancomplex.com/tips/2016/10/06/django-tip-17-earliest-and-latest.html
-    """
-
-    # TODO
-    # [ ] fix __str__ and add better admin table view instead
-    # [ ] put on request form not just home page
-
     creation_date = models.DateTimeField(auto_now_add=True)
     notice_heading = models.CharField(max_length=100)
-    notice_text = models.TextField(max_length=1000)  # this should be some html ?
+    notice_text = models.TextField(max_length=1000)
     owner = models.ForeignKey(
         "auth.User", related_name="notices", on_delete=models.CASCADE
-    )  # this is who edited it
+    )
     updated_date = models.DateTimeField(auto_now=True)
 
     class Meta:
-        get_latest_by = "updated_date"  # allows .latest()
+        get_latest_by = "updated_date"
 
     def get_notice_as_markdown(self):
         return mark_safe(markdown(self.notice_text, safe_mode="escape"))
@@ -480,10 +383,6 @@ class Notice(models.Model):
         )
 
 
-# class RequestManager(models.Manager):
-#    def submitted(self):
-
-
 class Request(models.Model):
     REQUEST_PROCESS_CHOICES = (
         ("COMPLETED", "Completed"),
@@ -493,12 +392,9 @@ class Request(models.Model):
         ("SUBMITTED", "Submitted"),
         ("LOCKED", "Locked"),
     )
-
     course_requested = models.OneToOneField(
         Course, on_delete=models.CASCADE, primary_key=True
     )
-
-    # additional_sections = models.ForeignKey(Course,null=True,default=None,blank=True,related_name='sections')
     copy_from_course = models.CharField(
         max_length=100, null=True, default=None, blank=True
     )
@@ -510,7 +406,6 @@ class Request(models.Model):
         blank=True, default=None, null=True
     )
     reserves = models.BooleanField(default=False)
-    # libguide = models.BooleanField(default=False)
     process_notes = models.TextField(blank=True, default="")
     canvas_instance = models.ForeignKey(
         CanvasSite,
@@ -519,7 +414,6 @@ class Request(models.Model):
         null=True,
         blank=True,
     )
-
     status = models.CharField(
         max_length=20, choices=REQUEST_PROCESS_CHOICES, default="SUBMITTED"
     )
@@ -529,7 +423,6 @@ class Request(models.Model):
         "auth.User", related_name="requests", on_delete=models.CASCADE
     )
     masquerade = models.CharField(max_length=20, null=True)
-    # additional_enrollments = models.ManyToManyField(AdditionalEnrollment,related_name='additional_enrollments',blank=True)
 
     class Meta:
         ordering = ["-status", "-created"]
@@ -537,7 +430,7 @@ class Request(models.Model):
     def save(self, *args, **kwargs):
         super(Request, self).save(*args, **kwargs)
 
-    def delete(self, *args, **kwargs):
+    def delete(self):
         course = Course.objects.get(course_code=self.course_requested.course_code)
         multi_section_courses = Course.objects.filter(
             multisection_request=course.course_code
@@ -592,15 +485,6 @@ class AdditionalEnrollment(models.Model):
     )
 
 
-# class SubjectArea(models.Model):
-"""
- mapping of Subject area code and name. boolean value of displayed in CRF2 or not
- requires list_asView but not individual object view
-"""
-
-
-# https://simpleisbetterthancomplex.com/tutorial/2016/07/22/how-to-extend-django-user-model.html
-# see section on Extending User Model Using a One-To-One Link
 class AutoAdd(models.Model):
     ROLE_CHOICES = (
         ("TA", "TA"),
@@ -617,37 +501,22 @@ class AutoAdd(models.Model):
         choices=ROLE_CHOICES,
     )
 
-    # def __str__(self):
-    #    return self.
-
     class Meta:
         ordering = ("user__username",)
 
 
 class UpdateLog(models.Model):
-    """
-    this is how to store Task Process history and status
-    """
-
     MANAGER_CHOICES = (
         ("a", "A"),
         ("b", "B"),
         ("c", "C"),
     )
-
-    # consult this: https://medium.freecodecamp.org/how-to-build-a-progress-bar-for-the-web-with-django-and-celery-12a405637440
-
     created = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     finished = models.DateTimeField(null=True, blank=True)
     process = models.CharField(max_length=10, choices=MANAGER_CHOICES)
-    # log = this should be a link to the log file associated with the task
-
-
-# This class is to allow any Courseware Support people to edit some of the pages content without halting the appilication
 
 
 class PageContent(models.Model):
-
     location = models.CharField(max_length=100)
     markdown_text = models.TextField(max_length=4000)
     updated_date = models.DateTimeField(auto_now=True)
@@ -664,18 +533,3 @@ class RequestSummary(Request):
         proxy = True
         verbose_name = "Request Summary"
         verbose_name_plural = "Requests Summary"
-
-
-## this is currently not in use!
-class Tools(models.Model):
-    """
-    this is a table of all tools that we can configure in Canvas
-    this should only include tools that can be used in any course at penn
-    these are tools that would show up in the side navigation menu
-    """
-
-    name = models.CharField(max_length=25, blank=False)
-
-    visibility = models.BooleanField(default=True)
-
-    # schools
