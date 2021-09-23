@@ -1,5 +1,8 @@
-define(["jquery", "./utils"], function ($, Utils) {
-  function Results($element, options, dataAdapter) {
+define([
+  'jquery',
+  './utils'
+], function ($, Utils) {
+  function Results ($element, options, dataAdapter) {
     this.$element = $element;
     this.data = dataAdapter;
     this.options = options;
@@ -10,10 +13,12 @@ define(["jquery", "./utils"], function ($, Utils) {
   Utils.Extend(Results, Utils.Observable);
 
   Results.prototype.render = function () {
-    var $results = $('<ul class="select2-results__options" role="tree"></ul>');
+    var $results = $(
+      '<ul class="select2-results__options" role="tree"></ul>'
+    );
 
-    if (this.options.get("multiple")) {
-      $results.attr("aria-multiselectable", "true");
+    if (this.options.get('multiple')) {
+      $results.attr('aria-multiselectable', 'true');
     }
 
     this.$results = $results;
@@ -26,27 +31,31 @@ define(["jquery", "./utils"], function ($, Utils) {
   };
 
   Results.prototype.displayMessage = function (params) {
-    var escapeMarkup = this.options.get("escapeMarkup");
+    var escapeMarkup = this.options.get('escapeMarkup');
 
     this.clear();
     this.hideLoading();
 
     var $message = $(
       '<li role="treeitem" aria-live="assertive"' +
-        ' class="select2-results__option"></li>'
+      ' class="select2-results__option"></li>'
     );
 
-    var message = this.options.get("translations").get(params.message);
+    var message = this.options.get('translations').get(params.message);
 
-    $message.append(escapeMarkup(message(params.args)));
+    $message.append(
+      escapeMarkup(
+        message(params.args)
+      )
+    );
 
-    $message[0].className += " select2-results__message";
+    $message[0].className += ' select2-results__message';
 
     this.$results.append($message);
   };
 
   Results.prototype.hideMessages = function () {
-    this.$results.find(".select2-results__message").remove();
+    this.$results.find('.select2-results__message').remove();
   };
 
   Results.prototype.append = function (data) {
@@ -56,8 +65,8 @@ define(["jquery", "./utils"], function ($, Utils) {
 
     if (data.results == null || data.results.length === 0) {
       if (this.$results.children().length === 0) {
-        this.trigger("results:message", {
-          message: "noResults",
+        this.trigger('results:message', {
+          message: 'noResults'
         });
       }
 
@@ -78,31 +87,30 @@ define(["jquery", "./utils"], function ($, Utils) {
   };
 
   Results.prototype.position = function ($results, $dropdown) {
-    var $resultsContainer = $dropdown.find(".select2-results");
+    var $resultsContainer = $dropdown.find('.select2-results');
     $resultsContainer.append($results);
   };
 
   Results.prototype.sort = function (data) {
-    var sorter = this.options.get("sorter");
+    var sorter = this.options.get('sorter');
 
     return sorter(data);
   };
 
   Results.prototype.highlightFirstItem = function () {
-    var $options = this.$results.find(
-      ".select2-results__option[aria-selected]"
-    );
+    var $options = this.$results
+      .find('.select2-results__option[aria-selected]');
 
-    var $selected = $options.filter("[aria-selected=true]");
+    var $selected = $options.filter('[aria-selected=true]');
 
     // Check if there are any selected options
     if ($selected.length > 0) {
       // If there are selected options, highlight the first
-      $selected.first().trigger("mouseenter");
+      $selected.first().trigger('mouseenter');
     } else {
       // If there are no selected options, highlight the first option
       // in the dropdown
-      $options.first().trigger("mouseenter");
+      $options.first().trigger('mouseenter');
     }
 
     this.ensureHighlightVisible();
@@ -116,66 +124,64 @@ define(["jquery", "./utils"], function ($, Utils) {
         return s.id.toString();
       });
 
-      var $options = self.$results.find(
-        ".select2-results__option[aria-selected]"
-      );
+      var $options = self.$results
+        .find('.select2-results__option[aria-selected]');
 
       $options.each(function () {
         var $option = $(this);
 
-        var item = Utils.GetData(this, "data");
+        var item = Utils.GetData(this, 'data');
 
         // id needs to be converted to a string when comparing
-        var id = "" + item.id;
+        var id = '' + item.id;
 
-        if (
-          (item.element != null && item.element.selected) ||
-          (item.element == null && $.inArray(id, selectedIds) > -1)
-        ) {
-          $option.attr("aria-selected", "true");
+        if ((item.element != null && item.element.selected) ||
+            (item.element == null && $.inArray(id, selectedIds) > -1)) {
+          $option.attr('aria-selected', 'true');
         } else {
-          $option.attr("aria-selected", "false");
+          $option.attr('aria-selected', 'false');
         }
       });
+
     });
   };
 
   Results.prototype.showLoading = function (params) {
     this.hideLoading();
 
-    var loadingMore = this.options.get("translations").get("searching");
+    var loadingMore = this.options.get('translations').get('searching');
 
     var loading = {
       disabled: true,
       loading: true,
-      text: loadingMore(params),
+      text: loadingMore(params)
     };
     var $loading = this.option(loading);
-    $loading.className += " loading-results";
+    $loading.className += ' loading-results';
 
     this.$results.prepend($loading);
   };
 
   Results.prototype.hideLoading = function () {
-    this.$results.find(".loading-results").remove();
+    this.$results.find('.loading-results').remove();
   };
 
   Results.prototype.option = function (data) {
-    var option = document.createElement("li");
-    option.className = "select2-results__option";
+    var option = document.createElement('li');
+    option.className = 'select2-results__option';
 
     var attrs = {
-      role: "treeitem",
-      "aria-selected": "false",
+      'role': 'treeitem',
+      'aria-selected': 'false'
     };
 
     if (data.disabled) {
-      delete attrs["aria-selected"];
-      attrs["aria-disabled"] = "true";
+      delete attrs['aria-selected'];
+      attrs['aria-disabled'] = 'true';
     }
 
     if (data.id == null) {
-      delete attrs["aria-selected"];
+      delete attrs['aria-selected'];
     }
 
     if (data._resultId != null) {
@@ -187,9 +193,9 @@ define(["jquery", "./utils"], function ($, Utils) {
     }
 
     if (data.children) {
-      attrs.role = "group";
-      attrs["aria-label"] = data.text;
-      delete attrs["aria-selected"];
+      attrs.role = 'group';
+      attrs['aria-label'] = data.text;
+      delete attrs['aria-selected'];
     }
 
     for (var attr in attrs) {
@@ -201,8 +207,8 @@ define(["jquery", "./utils"], function ($, Utils) {
     if (data.children) {
       var $option = $(option);
 
-      var label = document.createElement("strong");
-      label.className = "select2-results__group";
+      var label = document.createElement('strong');
+      label.className = 'select2-results__group';
 
       var $label = $(label);
       this.template(data, label);
@@ -217,8 +223,8 @@ define(["jquery", "./utils"], function ($, Utils) {
         $children.push($child);
       }
 
-      var $childrenContainer = $("<ul></ul>", {
-        class: "select2-results__options select2-results__options--nested",
+      var $childrenContainer = $('<ul></ul>', {
+        'class': 'select2-results__options select2-results__options--nested'
       });
 
       $childrenContainer.append($children);
@@ -229,7 +235,7 @@ define(["jquery", "./utils"], function ($, Utils) {
       this.template(data, option);
     }
 
-    Utils.StoreData(option, "data", data);
+    Utils.StoreData(option, 'data', data);
 
     return option;
   };
@@ -237,11 +243,11 @@ define(["jquery", "./utils"], function ($, Utils) {
   Results.prototype.bind = function (container, $container) {
     var self = this;
 
-    var id = container.id + "-results";
+    var id = container.id + '-results';
 
-    this.$results.attr("id", id);
+    this.$results.attr('id', id);
 
-    container.on("results:all", function (params) {
+    container.on('results:all', function (params) {
       self.clear();
       self.append(params.data);
 
@@ -251,7 +257,7 @@ define(["jquery", "./utils"], function ($, Utils) {
       }
     });
 
-    container.on("results:append", function (params) {
+    container.on('results:append', function (params) {
       self.append(params.data);
 
       if (container.isOpen()) {
@@ -259,12 +265,12 @@ define(["jquery", "./utils"], function ($, Utils) {
       }
     });
 
-    container.on("query", function (params) {
+    container.on('query', function (params) {
       self.hideMessages();
       self.showLoading(params);
     });
 
-    container.on("select", function () {
+    container.on('select', function () {
       if (!container.isOpen()) {
         return;
       }
@@ -273,7 +279,7 @@ define(["jquery", "./utils"], function ($, Utils) {
       self.highlightFirstItem();
     });
 
-    container.on("unselect", function () {
+    container.on('unselect', function () {
       if (!container.isOpen()) {
         return;
       }
@@ -282,54 +288,54 @@ define(["jquery", "./utils"], function ($, Utils) {
       self.highlightFirstItem();
     });
 
-    container.on("open", function () {
+    container.on('open', function () {
       // When the dropdown is open, aria-expended="true"
-      self.$results.attr("aria-expanded", "true");
-      self.$results.attr("aria-hidden", "false");
+      self.$results.attr('aria-expanded', 'true');
+      self.$results.attr('aria-hidden', 'false');
 
       self.setClasses();
       self.ensureHighlightVisible();
     });
 
-    container.on("close", function () {
+    container.on('close', function () {
       // When the dropdown is closed, aria-expended="false"
-      self.$results.attr("aria-expanded", "false");
-      self.$results.attr("aria-hidden", "true");
-      self.$results.removeAttr("aria-activedescendant");
+      self.$results.attr('aria-expanded', 'false');
+      self.$results.attr('aria-hidden', 'true');
+      self.$results.removeAttr('aria-activedescendant');
     });
 
-    container.on("results:toggle", function () {
+    container.on('results:toggle', function () {
       var $highlighted = self.getHighlightedResults();
 
       if ($highlighted.length === 0) {
         return;
       }
 
-      $highlighted.trigger("mouseup");
+      $highlighted.trigger('mouseup');
     });
 
-    container.on("results:select", function () {
+    container.on('results:select', function () {
       var $highlighted = self.getHighlightedResults();
 
       if ($highlighted.length === 0) {
         return;
       }
 
-      var data = Utils.GetData($highlighted[0], "data");
+      var data = Utils.GetData($highlighted[0], 'data');
 
-      if ($highlighted.attr("aria-selected") == "true") {
-        self.trigger("close", {});
+      if ($highlighted.attr('aria-selected') == 'true') {
+        self.trigger('close', {});
       } else {
-        self.trigger("select", {
-          data: data,
+        self.trigger('select', {
+          data: data
         });
       }
     });
 
-    container.on("results:previous", function () {
+    container.on('results:previous', function () {
       var $highlighted = self.getHighlightedResults();
 
-      var $options = self.$results.find("[aria-selected]");
+      var $options = self.$results.find('[aria-selected]');
 
       var currentIndex = $options.index($highlighted);
 
@@ -348,7 +354,7 @@ define(["jquery", "./utils"], function ($, Utils) {
 
       var $next = $options.eq(nextIndex);
 
-      $next.trigger("mouseenter");
+      $next.trigger('mouseenter');
 
       var currentOffset = self.$results.offset().top;
       var nextTop = $next.offset().top;
@@ -361,10 +367,10 @@ define(["jquery", "./utils"], function ($, Utils) {
       }
     });
 
-    container.on("results:next", function () {
+    container.on('results:next', function () {
       var $highlighted = self.getHighlightedResults();
 
-      var $options = self.$results.find("[aria-selected]");
+      var $options = self.$results.find('[aria-selected]');
 
       var currentIndex = $options.index($highlighted);
 
@@ -377,10 +383,10 @@ define(["jquery", "./utils"], function ($, Utils) {
 
       var $next = $options.eq(nextIndex);
 
-      $next.trigger("mouseenter");
+      $next.trigger('mouseenter');
 
-      var currentOffset =
-        self.$results.offset().top + self.$results.outerHeight(false);
+      var currentOffset = self.$results.offset().top +
+        self.$results.outerHeight(false);
       var nextBottom = $next.offset().top + $next.outerHeight(false);
       var nextOffset = self.$results.scrollTop() + nextBottom - currentOffset;
 
@@ -391,16 +397,16 @@ define(["jquery", "./utils"], function ($, Utils) {
       }
     });
 
-    container.on("results:focus", function (params) {
-      params.element.addClass("select2-results__option--highlighted");
+    container.on('results:focus', function (params) {
+      params.element.addClass('select2-results__option--highlighted');
     });
 
-    container.on("results:message", function (params) {
+    container.on('results:message', function (params) {
       self.displayMessage(params);
     });
 
     if ($.fn.mousewheel) {
-      this.$results.on("mousewheel", function (e) {
+      this.$results.on('mousewheel', function (e) {
         var top = self.$results.scrollTop();
 
         var bottom = self.$results.get(0).scrollHeight - top + e.deltaY;
@@ -424,56 +430,48 @@ define(["jquery", "./utils"], function ($, Utils) {
       });
     }
 
-    this.$results.on(
-      "mouseup",
-      ".select2-results__option[aria-selected]",
+    this.$results.on('mouseup', '.select2-results__option[aria-selected]',
       function (evt) {
-        var $this = $(this);
+      var $this = $(this);
 
-        var data = Utils.GetData(this, "data");
+      var data = Utils.GetData(this, 'data');
 
-        if ($this.attr("aria-selected") === "true") {
-          if (self.options.get("multiple")) {
-            self.trigger("unselect", {
-              originalEvent: evt,
-              data: data,
-            });
-          } else {
-            self.trigger("close", {});
-          }
-
-          return;
+      if ($this.attr('aria-selected') === 'true') {
+        if (self.options.get('multiple')) {
+          self.trigger('unselect', {
+            originalEvent: evt,
+            data: data
+          });
+        } else {
+          self.trigger('close', {});
         }
 
-        self.trigger("select", {
-          originalEvent: evt,
-          data: data,
-        });
+        return;
       }
-    );
 
-    this.$results.on(
-      "mouseenter",
-      ".select2-results__option[aria-selected]",
+      self.trigger('select', {
+        originalEvent: evt,
+        data: data
+      });
+    });
+
+    this.$results.on('mouseenter', '.select2-results__option[aria-selected]',
       function (evt) {
-        var data = Utils.GetData(this, "data");
+      var data = Utils.GetData(this, 'data');
 
-        self
-          .getHighlightedResults()
-          .removeClass("select2-results__option--highlighted");
+      self.getHighlightedResults()
+          .removeClass('select2-results__option--highlighted');
 
-        self.trigger("results:focus", {
-          data: data,
-          element: $(this),
-        });
-      }
-    );
+      self.trigger('results:focus', {
+        data: data,
+        element: $(this)
+      });
+    });
   };
 
   Results.prototype.getHighlightedResults = function () {
-    var $highlighted = this.$results.find(
-      ".select2-results__option--highlighted"
-    );
+    var $highlighted = this.$results
+    .find('.select2-results__option--highlighted');
 
     return $highlighted;
   };
@@ -489,7 +487,7 @@ define(["jquery", "./utils"], function ($, Utils) {
       return;
     }
 
-    var $options = this.$results.find("[aria-selected]");
+    var $options = this.$results.find('[aria-selected]');
 
     var currentIndex = $options.index($highlighted);
 
@@ -508,14 +506,14 @@ define(["jquery", "./utils"], function ($, Utils) {
   };
 
   Results.prototype.template = function (result, container) {
-    var template = this.options.get("templateResult");
-    var escapeMarkup = this.options.get("escapeMarkup");
+    var template = this.options.get('templateResult');
+    var escapeMarkup = this.options.get('escapeMarkup');
 
     var content = template(result, container);
 
     if (content == null) {
-      container.style.display = "none";
-    } else if (typeof content === "string") {
+      container.style.display = 'none';
+    } else if (typeof content === 'string') {
       container.innerHTML = escapeMarkup(content);
     } else {
       $(container).append(content);
