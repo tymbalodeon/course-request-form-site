@@ -41,7 +41,7 @@
       <tr>
 
         <td>
-          <a href='{% url "UI-course-detail" course_code=course.course_code %}'>{{ course|asrepr }} </a>
+          <a href='{% url "UI-course-detail" course_code=course.course_code %}'>{{ course|course_to_course_code }} </a>
         </td>
         <td>{{ course.course_name }}</td>
         <td>{{ course.course_activity }}</td>

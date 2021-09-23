@@ -9,9 +9,9 @@
 
   <!--<a data-toggle="popover" tabindex="0" data-trigger="focus" data-content="The primary full course code is required. We recommend keeping the full title under 50 characters." data-original-title="" title="">-->
     <i style="text-decoration: underline;">
-    {% if course.primary_crosslist %} {{course.primary_crosslist|coursecodetoString}}
-    {% else %}{{course.course_code|coursecodetoString}}
-    {% endif %} {{ course.course_name|mytruncate_chars:30 }}</i> <!--</a>-->
+    {% if course.primary_crosslist %} {{course.primary_crosslist|course_code_to_string}}
+    {% else %}{{course.course_code|course_code_to_string}}
+    {% endif %} {{ course.course_name|crf_truncate_chars:30 }}</i> <!--</a>-->
     . You may modify it in the box provided below. The primary course code will always prepend the title.</p>
 {% render_field request_form.title_override style=style %}
 
@@ -82,7 +82,7 @@
                 <!-- check if already requested -> cannot be requested -->
                 <input  name="additional_sections[{{ forloop.counter0 }}][course_code]" value="{{section_code}}" class="form-control" type="checkbox" checked>
               </td>
-              <td> {{section_code|coursecodetoString}}</td> <td> {{section_activity}} </td> <td> In Request</td>
+              <td> {{section_code|course_code_to_string}}</td> <td> {{section_activity}} </td> <td> In Request</td>
             </tr>
           {# must be in some other request! #}
           {% elif section_requested %}
@@ -93,7 +93,7 @@
                 <input  name="additional_sections[{{ forloop.counter0 }}][course_code]" value="{{section_code}}" class="form-control" type="checkbox" disabled>
               </span>
               </td>
-              <td> {{section_code|coursecodetoString}}</td> <td> {{section_activity}} </td> <td> Already Requested</td>
+              <td> {{section_code|course_code_to_string}}</td> <td> {{section_activity}} </td> <td> Already Requested</td>
             </tr>
 
           {% else %}
@@ -102,7 +102,7 @@
               <!-- check if already requested -> cannot be requested -->
               <input  name="additional_sections[{{ forloop.counter0 }}][course_code]" value="{{section_code}}" class="form-control" type="checkbox">
             </td>
-            <td> {{section_code|coursecodetoString}}</td> <td> {{section_activity}} </td> <td> None</td>
+            <td> {{section_code|course_code_to_string}}</td> <td> {{section_activity}} </td> <td> None</td>
           </tr>
           {% endif %}
 
