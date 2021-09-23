@@ -3,10 +3,10 @@ from __future__ import print_function
 import logging
 
 import cx_Oracle
-from canvas.api import get_canvas
-from helpers.helpers import get_config_items
 
+from canvas.api import get_canvas
 from course.models import CanvasSite, Profile, Request, User
+from helpers.helpers import get_config_items
 
 LOG_FILENAME = "users.log"
 logging.basicConfig(

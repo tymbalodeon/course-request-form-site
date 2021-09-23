@@ -66,7 +66,7 @@ class Command(BaseCommand):
                     username=username, email="", password=password
                 )
                 print(f"- ADDED user: {user}")
-            except:
+            except Exception:
                 print(f"- FAILED to add user: {username}")
 
         if department:
@@ -105,5 +105,5 @@ class Command(BaseCommand):
                         f"- ADDED: {first_name}, {last_name}, {email}, {penn_id},"
                         f" {pennkey}"
                     )
-                except:
+                except Exception:
                     print(f"- FAILED to add user: {pennkey}.")

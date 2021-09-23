@@ -80,9 +80,11 @@ def make_requests_object(requests, months, verbose=False):
         ]
 
         for school, count in requests_by_school:
-            TOTALS[
-                f"{school}{' PROVISIONED' if request_list is bulk_created_requests else ''}"
-            ] = count
+            school_string = (
+                f"{school}"
+                f"{' PROVISIONED' if request_list is bulk_created_requests else ''}"
+            )
+            TOTALS[school_string] = count
 
     if verbose:
         PrettyPrinter().pprint(TOTALS)
@@ -139,6 +141,3 @@ def write_requests_summary(year_and_term, start_month=5, verbose=False):
                 rows.append(["TOTAL", key, value])
 
         output.writerows(rows)
-
-
-test
