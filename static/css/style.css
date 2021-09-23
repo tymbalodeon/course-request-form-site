@@ -47,6 +47,19 @@ https://www.colorbook.io/hexcolors/view/296bde
 /* Mixins
   =============== */
 
+/* ======= Remove Arrows/Spinners ======= */
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
 html {
   height: 100%;
   -ms-text-size-adjust: 100%;
@@ -1163,6 +1176,10 @@ caption {
   }
 }
 
+.requestTable {
+  padding: 0.3rem 0.3rem;
+}
+
 /* Navigation
   =============== */
 /* Navigation */
@@ -1349,7 +1366,7 @@ article {
   padding: 1rem;
   margin: 2.3rem 0;
   max-width: 950px;
-  border-radius: 0.25rem;
+  border-radius: 4px;
 }
 
 div.alert-dismissible > p {
@@ -1579,4 +1596,21 @@ div.alert-dismissible > p {
   color: #404040;
   background-color: #f0f0f0;
   border-bottom: 5.5px solid var(--theme-blue);
+}
+
+/*  UI WIDGET AUTOCOMPLETE */
+.ui-widget {
+  font-family: unset !important;
+  font-size: unset !important;
+}
+
+.ui-state-hover,
+.ui-state-active {
+  color: #ffffff;
+  text-decoration: none;
+  background-color: #0088cc;
+  border-radius: 0px;
+  -webkit-border-radius: 0px;
+  -moz-border-radius: 0px;
+  background-image: none;
 }

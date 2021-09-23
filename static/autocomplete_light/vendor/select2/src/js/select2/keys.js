@@ -1,4 +1,6 @@
-define([], function () {
+define([
+
+], function () {
   var KEYS = {
     BACKSPACE: 8,
     TAB: 9,
@@ -16,7 +18,7 @@ define([], function () {
     UP: 38,
     RIGHT: 39,
     DOWN: 40,
-    DELETE: 46,
+    DELETE: 46
   };
 
   return KEYS;
