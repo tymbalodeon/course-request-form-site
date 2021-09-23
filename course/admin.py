@@ -1,3 +1,5 @@
+from csv import writer
+
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
@@ -9,11 +11,27 @@ from django.db.models import (
     Max,
     Min,
     OuterRef,
+    Q,
     Sum,
 )
 from django.db.models.functions import Trunc
+from django.http import HttpResponse
 
-from .models import *
+from .models import (
+    Activity,
+    AdditionalEnrollment,
+    AutoAdd,
+    CanvasSite,
+    Course,
+    Notice,
+    PageContent,
+    Profile,
+    Request,
+    RequestSummary,
+    School,
+    Subject,
+    UpdateLog,
+)
 
 
 class ExportCsvMixin:
@@ -22,11 +40,11 @@ class ExportCsvMixin:
         field_names = [field.name for field in meta.fields]
         response = HttpResponse(content_type="text/csv")
         response["Content-Disposition"] = "attachment; filename={}.csv".format(meta)
-        writer = csv.writer(response)
-        writer.writerow(field_names)
+        csv_writer = writer(response)
+        csv_writer.writerow(field_names)
 
         for query_object in queryset:
-            writer.writerow([getattr(query_object, field) for field in field_names])
+            csv_writer.writerow([getattr(query_object, field) for field in field_names])
 
         return response
 

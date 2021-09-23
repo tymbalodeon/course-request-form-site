@@ -3,10 +3,11 @@ from __future__ import print_function
 import logging
 
 import cx_Oracle
-
-from canvas.api import get_canvas
-from course.models import CanvasSite, Profile, Request, User
+from canvas.api import create_canvas_user, get_canvas, get_user_by_sis, get_user_courses
+from django.db.models import Q
 from helpers.helpers import get_config_items
+
+from course.models import CanvasSite, Profile, Request, User
 
 LOG_FILENAME = "users.log"
 logging.basicConfig(
@@ -113,7 +114,7 @@ def validate_pennkey(pennkey):
 def check_by_penn_id(PENN_ID):
     try:
         return Profile.objects.get(penn_id=PENN_ID).user
-    except:
+    except Exception:
         user_data = data_warehouse_lookup(penn_id=PENN_ID)
 
         if user_data:
@@ -132,7 +133,7 @@ def check_by_penn_id(PENN_ID):
 
 
 def update_user_courses(penn_key):
-    canvas_courses = canvas_api.get_user_courses(penn_key)
+    canvas_courses = get_user_courses(penn_key)
 
     if canvas_courses:
         for canvas_course in canvas_courses:
@@ -152,24 +153,24 @@ def find_no_canvas_account():
     users = User.objects.all()
 
     for user in users:
-        this_user = canvas_api.get_user_by_sis(user.username)
+        this_user = get_user_by_sis(user.username)
 
-        if this_user == None:
+        if this_user is None:
             print(user.username)
 
             try:
-                canvas_api.create_canvas_user(
+                create_canvas_user(
                     user.username,
                     user.profile.penn_id,
                     user.email,
                     user.first_name + " " + user.last_name,
                 )
-            except:
+            except Exception:
                 userdata = data_warehouse_lookup(penn_key=user.username)
 
                 if userdata:
                     Profile.objects.create(user=user, penn_id=userdata["penn_id"])
-                    canvas_api.create_canvas_user(
+                    create_canvas_user(
                         user.username,
                         user.profile.penn_id,
                         user.email,
@@ -200,7 +201,7 @@ def update_sites_info(year_and_term):
             if site.workflow_state != crf_canvas_site.workflow_state:
                 crf_canvas_site.workflow_state = site.workflow_state
                 crf_canvas_site.save()
-        except:
+        except Exception:
             print("ERROR: Failed to find Canvas site: {crf_canvas_site.sis_course_id}")
             crf_canvas_site.workflow_state = "deleted"
             crf_canvas_site.save()
