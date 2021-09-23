@@ -8,7 +8,7 @@ from rest_framework.routers import DefaultRouter
 from rest_framework_swagger.views import get_swagger_view
 
 from course import views
-from course.autocomplete import (
+from course.auto_complete import (
     CanvasSiteAutocomplete,
     SubjectAutocomplete,
     UserAutocomplete,
