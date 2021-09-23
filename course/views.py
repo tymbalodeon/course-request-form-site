@@ -1,6 +1,5 @@
 import json
 import urllib.parse
-from configparser import ConfigParser
 from datetime import datetime
 from logging import getLogger
 from os import listdir, mkdir
@@ -10,7 +9,6 @@ from canvas.api import CanvasException, create_canvas_user, get_canvas, get_user
 from data_warehouse.data_warehouse import inspect_course
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
-from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.auth.models import User
 from django.contrib.auth.views import redirect_to_login
@@ -19,7 +17,8 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django_celery_beat.models import PeriodicTask
 from django_filters import rest_framework as filters
-from open_data import open_data
+from helpers.helpers import get_config_items
+from open_data.open_data import OpenData
 from rest_framework import permissions, serializers, status, viewsets
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -1116,48 +1115,39 @@ def my_proxy(request, username):
     return JsonResponse(response)
 
 
-def autocompleteCanvasCourse(request, search):
-    if True:  # request.is_ajax():
-        q = urllib.parse.unquote(search)
-        print("q", q)  #
+def auto_complete_canvas_course(request, search_results):
+    if request.is_ajax():
+        query = urllib.parse.unquote(search_results)
         canvas = get_canvas()
         account = canvas.get_account(96678)
-        search_qs = account.get_courses(
-            search_term=q, search_by="course", sort="course_name", per_page=10
+        search_results = account.get_courses(
+            search_term=query, search_by="course", sort="course_name", per_page=10
         )[:10]
-        results = []
-        for r in search_qs:
-            print(r)
-            print({"label": r.name, "value": r.id})
-            # print(r['course']['name'])
-            # results.append(r['course']['name'])
-            results.append({"label": r.name, "value": r.id})
-        # data = json.dumps(search_qs)
+        results = [
+            {"label": result.name, "value": result.id} for result in search_results
+        ]
         data = json.dumps(results)
     else:
         data = "fail"
     mimetype = "application/json"
+
     return HttpResponse(data, mimetype)
-
-
-# ------------- TEMPORARY PROCESS REQUESTS --------
 
 
 @staff_member_required
 def process_requests(request):
-
     response = {"response": "response", "processed": []}
     approved_requests = Request.objects.filter(status="APPROVED")
 
     if approved_requests.exists():
-        for approved_request in approved_requests:
-            response["processed"] += [
-                {
-                    "course_code": approved_request.course_requested.course_code,
-                    "status": "",
-                    "notes": "",
-                }
-            ]
+        response["processed"] = [
+            {
+                "course_code": approved_request.course_requested.course_code,
+                "status": "",
+                "notes": "",
+            }
+            for approved_request in approved_requests
+        ]
 
         try:
             create_canvas_sites()
@@ -1174,7 +1164,6 @@ def process_requests(request):
             processed_request["notes"] = request_object.process_notes
 
         response["response"] = datetime.now().strftime("%m/%d/%y %I:%M%p")
-
         log_path = Path("course/static/log")
 
         if not log_path.exists():
@@ -1202,27 +1191,23 @@ def view_requests(request):
 @staff_member_required
 def view_canceled_SRS(request):
     with open("course/static/log/deleted_courses_issues.log") as content:
-        # data = json.load(json_file)
+
         return HttpResponse(content, content_type="text/plain; charset=utf8")
-        # return django.http.JsonResponse(json_file)
 
 
 @staff_member_required
 def remove_canceled_requests(request):
-
     done = {"response": "", "processed": []}
     canceled_requests = Request.objects.filter(status="CANCELED")
-
-    for request in canceled_requests:
-        done["processed"] += [request.course_requested.course_code]
-
+    done["processed"] = [
+        request.course_requested.course_code for request in canceled_requests
+    ]
     done["response"] = datetime.now().strftime("%m/%d/%y %I:%M%p")
 
     return JsonResponse(done)
 
 
-# --------- Quick Config of Canvas (enrollment/add tool) ----------
-def quickconfig(request):
+def quick_config(request):
     def handle_error(
         error, canvas_course, canvas_user, roles, enrollment_term_id, lib=False
     ):
@@ -1241,12 +1226,7 @@ def quickconfig(request):
                 )
                 canvas_course.update(course={"term_id": 4373})
                 canvas_course.enroll_user(
-                    canvas_user.id,
-                    roles[role],
-                    enrollment={
-                        "role_id": "1383",
-                        "enrollment_state": "active",
-                    },
+                    canvas_user.id, roles[role], enrollment=enrollment
                 )
                 canvas_course.update(course={"term_id": enrollment_term_id})
             except CanvasException as error:
@@ -1357,50 +1337,30 @@ def quickconfig(request):
         return render(request, "admin/quickconfig.html", {"data": data})
 
 
-def side_sign_in(request):
-
-    config = ConfigParser()
-    config.read("config/config.ini")
-    name = request.user.username + "_test"
-    passwrd = config.get("users_test", "pass")
-    user = authenticate(username=name, password=passwrd)
-    login(request, user)
-    return redirect("/")
-
-
-# -------------- OpenData Proxy ----------------
-def openDataProxy(request):
-    """
-    Access the parameters passed by POST, you need to access this way:
-    request.data.get('role', None)
-    """
+def open_data_proxy(request):
     data = {"data": "none"}
     size = 0
-    print("Course lookup failed.")
+    print("Course lookup failed: {request}")
 
     if request.GET:
         try:
             course_id = request.GET.get("course_id", None)
             term = request.GET.get("term", None)
             instructor = request.GET.get("instructor", None)
-            config = ConfigParser()
-            config.read("config/config.ini")
-            domain = config.get("opendata", "domain")
-            id = config.get("opendata", "id2")
-            key = config.get("opendata", "key2")
-            OD = open_data.OpenData(domain, id, key)
-            OD.set_uri("course_section_search")
-            OD.add_param("course_id", course_id)
+            open_data_id, key, domain = get_config_items("opendata")[:3]
+            open_data = OpenData(domain, open_data_id, key)
+            open_data.set_uri("course_section_search")
+            open_data.add_param("course_id", course_id)
 
             if term:
-                OD.add_param("term", term)
+                open_data.add_param("term", term)
 
-            OD.add_param("number_of_results_per_page", 5)
+            open_data.add_param("number_of_results_per_page", 5)
 
             if instructor:
-                OD.add_param("instructor", instructor)
+                open_data.add_param("instructor", instructor)
 
-            data["data"] = OD.call_api()
+            data["data"] = open_data.call_api()
 
             if isinstance(data["data"], list):
                 size = len(data["data"])
@@ -1455,73 +1415,66 @@ def check_data_warehouse_for_course(request):
     return render(request, "admin/dw_lookup.html", {"data": data, "size": size})
 
 
-# ---------------- AUTO COMPLETE -------------------
-
-
-def autocompleteModel(request):
+def auto_complete(request):
     if request.is_ajax():
-        q = request.GET.get("term", "").capitalize()
-        print("q", q)
-        search_qs = User.objects.filter(username__startswith=q)
-        results = []
-        for r in search_qs:
-            results.append(r.username)
+        query = request.GET.get("term", "").capitalize()
+        search_results = User.objects.filter(username__startswith=query)
+        results = [user.username for user in search_results]
         data = json.dumps(results)
     else:
         data = "fail"
     mimetype = "application/json"
+
     return HttpResponse(data, mimetype)
 
 
-def autocompleteSubjectModel(request):
+def auto_complete_subject(request):
     if request.is_ajax():
-        q = request.GET.get("term", "").capitalize()
-        print("q", q)
-        search_qs = Subject.objects.filter(abbreviation__startswith=q)
-        results = []
-        for r in search_qs:
-            results.append(r.abbreviation)
+        query = request.GET.get("term", "").capitalize()
+        search_results = Subject.objects.filter(abbreviation__startswith=query)
+        results = [abbreviation for abbreviation in search_results]
         data = json.dumps(results)
     else:
         data = "fail"
     mimetype = "application/json"
+
     return HttpResponse(data, mimetype)
 
 
-def autocompleteCanvasSiteModel(request):
+def auto_complete_canvas_site(request):
     if request.is_ajax():
-        q = request.GET.get("term", "").capitalize()
-        search_qs = CanvasSite.objects.filter(Q(owners=q) | Q(added_permissions=q))
-        results = []
-        for r in search_qs:
-            results.append(r.name)
+        query = request.GET.get("term", "").capitalize()
+        search_results = CanvasSite.objects.filter(
+            Q(owners=query) | Q(added_permissions=query)
+        )
+        results = [site.name for site in search_results]
         data = json.dumps(results)
     else:
         data = "fail"
     mimetype = "application/json"
+
     return HttpResponse(data, mimetype)
 
 
-# --------------- CONTACT view -------------------
-# add to your views
 def contact(request):
     form_class = ContactForm
+
     if request.method == "POST":
         form = form_class(data=request.POST)
+
         if form.is_valid():
             contact_name = request.POST.get("contact_name", "")
             contact_email = request.POST.get("contact_email", "")
             form_content = request.POST.get("content", "")
-
-            # Email the profile with the
-            # contact information
             context = {
                 "contact_name": contact_name,
                 "contact_email": contact_email,
                 "form_content": form_content,
             }
             email_processor.feedback(context)
+
             return redirect("contact")
+
     return render(
         request,
         "contact.html",
@@ -1531,20 +1484,13 @@ def contact(request):
     )
 
 
-# --------------- Temporary Email view -------------------
-"""
-This view is only for beta testing of the app
-"""
-
-
 def temporary_email_list(request):
     filelist = listdir("course/static/emails/")
+
     return render(request, "email/email_log.html", {"filelist": filelist})
 
 
 def my_email(request, value):
     email = open("course/static/emails/" + value, "rb").read()
+
     return render(request, "email/email_detail.html", {"email": email.decode("utf-8")})
-
-
-# SEE MORE: https://docs.djangoproject.com/en/2.1/topics/email/

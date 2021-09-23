@@ -55,7 +55,6 @@ This is fine because I want the API to be very generic
 # Additionally, we include the login URLs for the browsable API.
 # NOTE : pk = course_SRS_Title
 urlpatterns = [
-    url("admin/test_login/", views.side_sign_in),
     path("siterequest/", views.emergency_redirect),
     path("contact/googleform/", views.google_form),
     # --------------- Helpers ------------------
@@ -63,7 +62,7 @@ urlpatterns = [
     url("admin/view_requests/", views.view_requests, name="view_requests"),
     url("admin/view_canceled_SRS/", views.view_canceled_SRS),
     url("admin/delete_canceled_requests/", views.remove_canceled_requests),
-    url("quickconfig/", views.quickconfig),
+    url("quickconfig/", views.quick_config),
     # --------------- Documentation url/view -------------------
     path(
         "documentation/",
@@ -227,7 +226,7 @@ urlpatterns = [
     ),
     # --------------- Canvas Proxies -------------------
     url(r"^canvasuser/(?P<username>\w+)/$", views.my_proxy),
-    path("searchcanvas/<search>/", views.autocompleteCanvasCourse),
+    path("searchcanvas/<search>/", views.auto_complete_canvas_course),
     # --------------- autocomplete -------------------
     url(
         r"^user-autocomplete/$",
