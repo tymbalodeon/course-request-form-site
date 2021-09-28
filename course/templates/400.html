@@ -1,11 +1,12 @@
-<!-- templates/400.html -->
 {% extends "base_generic.html" %}
 
-{% block pennkey %} {% endblock %}
-{% block pennkey_error %} {% endblock %}
+{% block pennkey %}
+{% endblock %}
+
+{% block pennkey_error %}
+{% endblock %}
 
 {% block content %}
-
 <h1>400 - Bad Request </h1>
 <p> The request you sent to the website server was somehow incorrect or corrupted.
 Please check that you submitted valild inputs.
@@ -14,17 +15,16 @@ Please check that you submitted valild inputs.
   If this error seems like a mistake please contact Penn Canvas Support at canvas@pobox.upenn.edu.
 </p>
 
-
 {% if messages %}
 <div class="bd-callout bd-callout-warning">
-<ul class="messages">
-    <h5 style="margin-bottom:0px;margin-top:0.5rem;"> Messages </h5>
-    {% for message in messages %}
-    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-    {% endfor %}
-</ul>
+    <ul class="messages">
+        <h5 style="margin-bottom:0px;margin-top:0.5rem;">Messages</h5>
+        {% for message in messages %}
+            <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
 </div>
 {% endif %}
 
-<a href='{{request.META.HTTP_REFERER}}'> <i class="fas fa-arrow-left"></i> Go Back </a>
+<a href='{{request.META.HTTP_REFERER}}'><i class="fas fa-arrow-left"></i>Go Back</a>
 {% endblock %}
