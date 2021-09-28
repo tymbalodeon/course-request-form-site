@@ -1,107 +1,84 @@
 {% extends "base_generic.html" %}
 {% load rest_framework %}
 
-
 {% block content %}
-
-
-
-
-<!-- course info -->
-
- {% include "bits/course_info.html" %}
-
-<!-- end course info -->
-
-
-<!-- Request Form -->
-
-
-<!-- THE COURSE IS TIED TO ANOTHER REQUEST -->
+{% include "bits/course_info.html" %}
 {% if course.associated_request != course.course_code and course.requested != False %}
   {% if course.multisection_request %}
-  <fieldset >
+  <fieldset>
     <legend>Submitted Request</legend>
-    <p> This course has been added as a section of another request for {{course.multisection_request}}.</p>
-
-    <a href="{% url 'UI-request-detail' pk=course.multisection_request %}"> See {{course.multisection_request}} Request</a>
+    <p>
+      This course has been added as a section of another request for
+      {{course.multisection_request}}.
+    </p>
+    <a href="{% url 'UI-request-detail' pk=course.multisection_request %}">
+        See {{course.multisection_request}} Request
+    </a>
   </fieldset>
-
-
   {% elif course.crosslisted_request %}
-  <fieldset >
+  <fieldset>
     <legend>Submitted Request</legend>
-    <p> This course has been requested as its crosslisting  for {{course.crosslisted_request}}.</p>
-
-    <a href="{% url 'UI-request-detail' pk=course.associated_request %}"> See {{course.crosslisted_request}} Request</a>
+    <p>
+      This course has been requested as its crosslisting for
+      {{course.crosslisted_request}}.
+    </p>
+    <a href="{% url 'UI-request-detail' pk=course.associated_request %}">
+        See {{course.crosslisted_request}} Request
+    </a>
   </fieldset>
   {% elif course.requested_override %}
-  <fieldset >
+  <fieldset>
     <legend>Submitted Request</legend>
     <center><i>*** REQUEST NOT IN CRF ***</i></center>
   </fieldset>
-  {% endif %}
-{% elif course.requested_override %}
-  <fieldset >
+  {% endif %} {% elif course.requested_override %}
+  <fieldset>
     <legend>Submitted Request</legend>
     <center><i>*** REQUEST NOT IN CRF ***</i></center>
   </fieldset>
-{% elif course.requested == False %}
-
-  <fieldset >
-  <legend>Canvas Site Options</legend>
-  <form action="{% url 'UI-request-list' %}" method="post" id="RequestForm">
-  {% csrf_token %}
-  <input name="view_type" class="form-control" type="hidden" value="UI-request-detail">
-  <input name='course_requested' value='{{course.course_code}}' type='hidden'>
-
-   {% include "bits/request_form.html" with enrollments=request_instance.additional_enrollments.all %}
-
-
-
-  <input type="submit" value="Submit Request" />
-  </form>
+  {% elif course.requested == False %}
+  <fieldset>
+    <legend>Canvas Site Options</legend>
+    <form action="{% url 'UI-request-list' %}" method="post" id="RequestForm">
+      {% csrf_token %}
+      <input
+        name="view_type"
+        class="form-control"
+        type="hidden"
+        value="UI-request-detail"
+      />
+      <input
+        name="course_requested"
+        value="{{course.course_code}}"
+        type="hidden"
+      />
+      {% include "bits/request_form.html" with enrollments=request_instance.additional_enrollments.all %}
+      <input type="submit" value="Submit Request" />
+    </form>
   </fieldset>
-
-
-
   {% else %}
-  <!-- course request history -->
-  <fieldset >
+  <fieldset>
     <legend>Submitted Request</legend>
-
     {% include "bits/request_form_disabled.html" %}
     {% if course.requested_override %}
     <center><i>*** REQUEST NOT IN CRF ***</i></center>
     {% else %}
-    <a href="{% url 'UI-request-detail' pk=course.course_code %}"> See Full Request</a>
+    <a href="{% url 'UI-request-detail' pk=course.course_code %}">
+        See Full Request
+    </a>
     {% endif %}
   </fieldset>
-  {% endif %}
-<!-- end request form -->
-
-  <!-- Canvas Site info -->
-   {% include "bits/canvas_site_info.html" %}
-  <!-- END Canvas Site info -->
-
+{% endif %}
+{% include "bits/canvas_site_info.html" %}
 {% endblock %}
-
-
-
 
 {% block template_page_js %}
 <script>
-
-
-function formUpdateContentCopy() {
-  // #id_name > option:nth-child(2)
-  var hi = document.querySelector("#id_name > option:nth-child(2)").value;
-  //input name=copy_from_course
-  $('input[name="copy_from_course"]').val(hi);
-  console.log(hi);
-  $('#ContentCopy').modal('hide');
-  //document.getElementById("demo").innerHTML = "YOU CLICKED ME!";
-}
-
+  function formUpdateContentCopy() {
+    var hi = document.querySelector("#id_name > option:nth-child(2)").value;
+    $('input[name="copy_from_course"]').val(hi);
+    console.log(hi);
+    $("#ContentCopy").modal("hide");
+  }
 </script>
 {% endblock %}

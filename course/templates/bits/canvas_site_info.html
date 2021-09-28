@@ -25,7 +25,7 @@
   <center><p> No Canvas Site on File.</p></center>
   {% if staff %}
     {% if course.primary_crosslist %}
-      <a target="_blank" href="https://canvas.upenn.edu/api/v1/sections/sis_section_id:SRS_{{course.primary_crosslist|coursecodetoString}}"> CHECK FOR CANVAS SITE ({{course.primary_crosslist|coursecodetoString}}) </a>
+      <a target="_blank" href="https://canvas.upenn.edu/api/v1/sections/sis_section_id:SRS_{{course.primary_crosslist|course_code_to_string}}"> CHECK FOR CANVAS SITE ({{course.primary_crosslist|course_code_to_string}}) </a>
     {% else %}
       <a target="_blank" href="https://canvas.upenn.edu/api/v1/sections/sis_section_id:SRS_{{course|course_to_course_code}}"> CHECK FOR CANVAS SITE ({{course|course_to_course_code}})</a>
     {% endif %}
