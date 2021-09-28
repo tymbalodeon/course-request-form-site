@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 
 from course.models import Activity
-from helpers.helpers import get_config_items
+from helpers.helpers import get_config_values
 from open_data.open_data import OpenData
 
 ACTIVITY_CHOICES = (
@@ -40,7 +40,7 @@ class Command(BaseCommand):
         opendata = kwargs["opendata"]
 
         if opendata:
-            open_data_id, key, domain = get_config_items("opendata")[:3]
+            open_data_id, key, domain = get_config_values("opendata")[:3]
             Open_Data = OpenData(base_url=domain, id=open_data_id, key=key)
             activities = Open_Data.get_available_activity().items()
         else:

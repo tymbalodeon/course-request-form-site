@@ -10,8 +10,8 @@ def get_config_value(key, value, raw=False):
     return config.get(key, value, raw=raw)
 
 
-def get_config_items(key):
-    return config.items(key)
+def get_config_values(key):
+    return (value[1] for value in config.items(key))
 
 
 def get_username_and_password():
