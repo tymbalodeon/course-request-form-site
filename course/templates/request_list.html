@@ -1,92 +1,80 @@
-{% extends "base_generic.html" %}
-{% load rest_framework %}
-{% load template_extra %}
-{% block requests %}active{% endblock %}
+{% extends "base_generic.html" %} {% load rest_framework %} {% load
+template_extra %} {% block requests %}active{% endblock %} {% block content %}
 
-{% block content %}
-
-
-
-<h1> Requests</h1>
+<h1>Requests</h1>
 
 <!-- FILTERING -->
 {% include "bits/filter_content.html" %}
-
-
 
 <!--  <button style="float: right; margin-right: 10px" data-toggle="modal" data-target="#filtersModal" class="btn btn-default">
     <span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
     <p> {{request}}</p>
   </button> -->
 
-
-
-
 <!--<p> previous{{ data.previous }} </p>
 <p> next{{ data.next}} </p>
 <p> num_pages{{ data.total_pages}} </p> -->
 
+<table class="striped-table requestTable">
+  <thead>
+    <tr>
+      <th>Section</th>
+      <th>Title</th>
+      <th>Requestor</th>
+      <th>Date Requested</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for request_instance in results %}
+    <tr>
+      <td>
+        <a
+          href="{% url 'UI-request-detail' pk=request_instance.course_requested %}"
+        >
+          {{request_instance.course_info|course_to_course_code}}
+        </a>
+      </td>
+      <td>{{request_instance.course_info.course_name}}</td>
+      <td>
+        {{request_instance.owner}} {% if request_instance.masquerade %}
+        ({{request_instance.masquerade}}) {% endif %}
+      </td>
 
+      <td>{{ request_instance.created }}</td>
+      <td>
+        {{request_instance.status}} {% if request_instance.status == 'LOCKED' %}
+        <i
+          class="fas fa-lock"
+          data-toggle="tooltip"
+          data-placement="top"
+          title=""
+          data-original-title="this request will not be processed until unlocked by admin"
+        ></i>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 
-  <table class="striped-table requestTable">
-    <thead>
-      <tr>
-        <th>Section</th>
-        <th>Title</th>
-        <th>Requestor</th>
-        <th>Date Requested</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for request_instance in results %}
-      <tr>
-        <td><a href="{% url 'UI-request-detail' pk=request_instance.course_requested %}"> {{request_instance.course_info|course_to_course_code}} </a></td>
-        <td>{{request_instance.course_info.course_name}}</td>
-        <td>{{request_instance.owner}}
-          {% if request_instance.masquerade %}
-          ({{request_instance.masquerade}})
-          {% endif %}
-        </td>
-
-        <td>{{ request_instance.created }}</td>
-        <td>{{request_instance.status}}
-          {% if request_instance.status == 'LOCKED' %}
-            <i class="fas fa-lock" data-toggle="tooltip" data-placement="top" title="" data-original-title="this request will not be processed until unlocked by admin"></i>
-          {% endif %}
-        </td>
-      </tr>
-        {% endfor %}
-    </tbody>
-  </table>
-
-
-  <!-- MODAL FILTERING -->
-  {% include "bits/filter_modal.html" %}
+<!-- MODAL FILTERING -->
+{% include "bits/filter_modal.html" %}
 <!-- END MODAL FILTERING -->
 
-
-
-
 <!-- PAGINATION -->
-{% include "bits/paginator.html" %}
-
-
-
-{% endblock %}
-
-
-{% block template_page_js %}
+{% include "bits/paginator.html" %} {% endblock %} {% block template_page_js %}
 <script>
-
-// removes null query_params ! <3
-$('form[method="get"]').submit(function(){
-    $(this).find(':input').each(function() {
+  // removes null query_params ! <3
+  $('form[method="get"]').submit(function () {
+    $(this)
+      .find(":input")
+      .each(function () {
         var inp = $(this);
         if (!inp.val()) {
-            inp.remove();
+          inp.remove();
         }
-    });
-});
+      });
+  });
 </script>
 {% endblock %}

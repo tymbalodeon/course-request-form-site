@@ -1,15 +1,9 @@
+{% extends "base_generic.html" %} {% load rest_framework %} {% block content %}
 
-{% extends "base_generic.html" %}
-{% load rest_framework %}
-
-{% block content %}
-
-
-  <h1> Subject</h1>
-  {% for key, value in data.items %}
-    <p>  <b>{{ key }}</b>: {{ value }}</p>
-  {% endfor %}
-
+<h1>Subject</h1>
+{% for key, value in data.items %}
+<p><b>{{ key }}</b>: {{ value }}</p>
+{% endfor %}
 
 <a href="/subjects/"> Go Back to Subject List </a>
 
