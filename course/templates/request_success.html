@@ -1,23 +1,29 @@
-{% extends "base_generic.html" %}
-{% load rest_framework %}
-{% load template_extra %}
-{% block content %}
+{% extends "base_generic.html" %} {% load rest_framework %} {% load
+template_extra %} {% block content %}
 
-
-<h1> Request Created </h1>
+<h1>Request Created</h1>
 <p>
-  You have successfully submitted a Request for a Canvas Site for the Course {{ request_instance.course_info|course_to_course_code }}.
+  You have successfully submitted a Request for a Canvas Site for the Course {{
+  request_instance.course_info|course_to_course_code }}.
 </p>
 
 <p>
-  {{ settings.BASE_URL }}
-You can see the request here: <a href="{% url 'UI-request-detail' pk=request_instance.course_requested %}">{% url 'UI-request-detail' pk=request_instance.course_requested %}</a>.
-Site requests are approved during business hours by Courseware Support Staff. Sites usually take an hour to be created but, can require slighlty more time if there are many requests.
-When the course site has been created, you will be sent a notification email from librarycrf@pobox.pobox.upenn(<i> currently emailing has been disabled</i>).
+  {{ settings.BASE_URL }} You can see the request here:
+  <a href="{% url 'UI-request-detail' pk=request_instance.course_requested %}"
+    >{% url 'UI-request-detail' pk=request_instance.course_requested %}</a
+  >. Site requests are approved during business hours by Courseware Support
+  Staff. Sites usually take an hour to be created but, can require slighlty more
+  time if there are many requests. When the course site has been created, you
+  will be sent a notification email from librarycrf@pobox.pobox.upenn(<i>
+    currently emailing has been disabled</i
+  >).
 </p>
 
 <p>
-Please visit <a href="https://infocanvas.upenn.edu/">Canvas at Penn</a> (<a href="https://infocanvas.upenn.edu/">https://infocanvas.upenn.edu/</a>) for Canvas instructions, news, and help.
+  Please visit <a href="https://infocanvas.upenn.edu/">Canvas at Penn</a> (<a
+    href="https://infocanvas.upenn.edu/"
+    >https://infocanvas.upenn.edu/</a
+  >) for Canvas instructions, news, and help.
 </p>
 
 <!--<h5 style="margin-bottom:0;">Other Canvas Features Here at Upenn</h5>
@@ -28,17 +34,20 @@ Please visit <a href="https://infocanvas.upenn.edu/">Canvas at Penn</a> (<a href
 To learn more, please visit the <a href="https://commons.library.upenn.edu/library-lounge"> Library Lounge website.</a>
   <p>
 -->
-<hr>
-<div class="bd-callout bd-callout-info" class="w-100" style="margin-bottom: 5%;">
-{% get_markdown "Request-Created" %}
-
-{% if staff %}
-  {% get_markdown_id 'Request-Created' as page_id %}
-  {% if page_id %}
-  <a href="{%  url 'admin:course_pagecontent_change' page_id %}" style="float:right;margin-top:-15px"> (change this message) </a>
+<hr />
+<div class="bd-callout bd-callout-info" class="w-100" style="margin-bottom: 5%">
+  {% get_markdown "Request-Created" %} {% if staff %} {% get_markdown_id
+  'Request-Created' as page_id %} {% if page_id %}
+  <a
+    href="{%  url 'admin:course_pagecontent_change' page_id %}"
+    style="float: right; margin-top: -15px"
+  >
+    (change this message)
+  </a>
   {% else %}
-  <a href="{%  url 'admin:course_pagecontent_add' %}" style="margin-top:-15px"> (add a message here) </a>
-  {% endif %}
-{% endif %}
+  <a href="{%  url 'admin:course_pagecontent_add' %}" style="margin-top: -15px">
+    (add a message here)
+  </a>
+  {% endif %} {% endif %}
 </div>
 {% endblock %}

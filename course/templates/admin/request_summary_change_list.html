@@ -1,11 +1,12 @@
 {% extends "admin/change_list.html" %}
 {% load humanize %}
+
 {% block content_title %}
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
-
     <h1> Requests Summary </h1>
-    <p> <mark> PSOM is BGS </mark>. Time zone needs to be confirmed to be correct.</p>
+    <p><mark>PSOM is BGS</mark>. Time zone needs to be confirmed to be correct.</p>
 {% endblock %}
+
 {% block object-tools-items %}
   <li>
     <a href='#' onclick='downloadCSV({ filename: "Request_Summary.csv" });' >
@@ -13,132 +14,130 @@
     </a>
   </li>
 {% endblock %}
+
 {% block result_list %}
 <div class="results">
     <table>
-
-    <thead>
-      <tr>
-        <th>
-          <div class="text">
-            <a href="#">School</a>
-          </div>
-        </th>
-
-        <th>
-          <div class="text">
-            <a href="#">Total</a>
-          </div>
-        </th>
-
-        <th>
-          <div class="text">
-            <a href="#">Multi-Section</a>
-          </div>
-        </th>
-
-        <th>
-          <div class="text">
-            <a href="#">Ares</a>
-          </div>
-        </th>
-
-        <th>
-          <div class="text">
-            <a href="#">Content Copy</a>
-          </div>
-        </th>
-
-        <th>
-          <div class="text">
-            <a href="#">Not Completed</a>
-          </div>
-        </th>
-
-        <th>
-          <div class="text">
-            <a href="#">
-              <strong>% Of Total Requests</strong>
-            </a>
-          </div>
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for row in summary %}
-      <tr class="{% cycle 'row1' 'row2' %}">
-        <td> {{ row.course_requested__course_schools__abbreviation }} </td>
-        <td> {{ row.total | intcomma }} </td>
-        <td> {{ row.multisection | intcomma }} </td>
-        <td> {{ row.ares | intcomma }} </td>
-        <td> {{ row.content_copy | intcomma }} </td>
-        <td> {{ row.not_completed | intcomma }} </td>
-        <td>
-          <strong>
-          {% widthratio row.total summary_total.total 100 %}%
-          </strong>
-        </td>
-      </tr>
-      {% endfor %}
-      <tr style="font-weight:bold; border-top:2px solid #DDDDDD;">
-            <td> Total </td>
-            <td> {{ summary_total.total | intcomma }} </td>
-            <td> {{ summary_total.multisection | intcomma }} </td>
-            <td> {{ summary_total.ares | intcomma }} </td>
-            <td> {{ summary_total.content_copy | intcomma }} </td>
-            <td> {{ summary_total.not_completed | intcomma }} </td>
-            <td> 100% </td>
+        <thead>
+        <tr>
+            <th>
+            <div class="text">
+                <a href="#">School</a>
+            </div>
+            </th>
+            <th>
+            <div class="text">
+                <a href="#">Total</a>
+            </div>
+            </th>
+            <th>
+            <div class="text">
+                <a href="#">Multi-Section</a>
+            </div>
+            </th>
+            <th>
+            <div class="text">
+                <a href="#">Ares</a>
+            </div>
+            </th>
+            <th>
+            <div class="text">
+                <a href="#">Content Copy</a>
+            </div>
+            </th>
+            <th>
+            <div class="text">
+                <a href="#">Not Completed</a>
+            </div>
+            </th>
+            <th>
+            <div class="text">
+                <a href="#">
+                <strong>% Of Total Requests</strong>
+                </a>
+            </div>
+            </th>
         </tr>
-    </tbody>
-
-  </table>
-
-  <h2>Request time (by {{ period}}) </h2>
+        </thead>
+        <tbody>
+        {% for row in summary %}
+        <tr class="{% cycle 'row1' 'row2' %}">
+            <td> {{ row.course_requested__course_schools__abbreviation }} </td>
+            <td> {{ row.total | intcomma }} </td>
+            <td> {{ row.multisection | intcomma }} </td>
+            <td> {{ row.ares | intcomma }} </td>
+            <td> {{ row.content_copy | intcomma }} </td>
+            <td> {{ row.not_completed | intcomma }} </td>
+            <td>
+            <strong>
+            {% widthratio row.total summary_total.total 100 %}%
+            </strong>
+            </td>
+        </tr>
+        {% endfor %}
+        <tr style="font-weight:bold; border-top:2px solid #DDDDDD;">
+                <td>Total</td>
+                <td> {{ summary_total.total | intcomma }} </td>
+                <td> {{ summary_total.multisection | intcomma }} </td>
+                <td> {{ summary_total.ares | intcomma }} </td>
+                <td> {{ summary_total.content_copy | intcomma }} </td>
+                <td> {{ summary_total.not_completed | intcomma }} </td>
+                <td>100%</td>
+            </tr>
+        </tbody>
+    </table>
+    <h2>Request time (by {{ period}})</h2>
     <style>
-    .download {
-    	content: "\f56d";
-    	font-family: 'FontAwesome';
-    }
+        .download {
+            content: "\f56d";
+            font-family: 'FontAwesome';
+        }
 
-    .bar-chart {
-      display: flex;
-      justify-content: space-around;
-      height: 160px;
-      padding-top: 60px;
-      overflow: hidden;
-    }
-    .bar-chart .bar {
-        flex: 100%;
-        align-self: flex-end;
-        margin-right: 2px;
-        position: relative;
-        background-color: #79aec8;
-        min-height:1px !important;
-    }
-    .bar-chart .bar:last-child {
-        margin: 0;
-    }
-    .bar-chart .bar:hover {
-        background-color: #417690;
-    }
-    .bar-chart .bar .bar-tooltip {
-        position: relative;
-        z-index: 999;
-    }
-    .bar-chart .bar .bar-tooltip {
-        position: absolute;
-        top: -60px;
-        left: 50%;
-        transform: translateX(-50%);
-        text-align: center;
-        font-weight: bold;
-        opacity: 0;
-    }
-    .bar-chart .bar:hover .bar-tooltip {
-        opacity: 1;
-    }
+        .bar-chart {
+        display: flex;
+        justify-content: space-around;
+        height: 160px;
+        padding-top: 60px;
+        overflow: hidden;
+        }
 
+        .bar-chart .bar {
+            flex: 100%;
+            align-self: flex-end;
+            margin-right: 2px;
+            position: relative;
+            background-color: #79aec8;
+            min-height:1px !important;
+        }
+
+        .bar-chart .bar:last-child {
+            margin: 0;
+        }
+
+        .bar-chart .bar:hover {
+            background-color: #417690;
+        }
+
+        .bar-chart .bar .bar-tooltip {
+            position: relative;
+            z-index: 999;
+        }
+
+        .bar-chart .bar .bar-tooltip {
+            position: absolute;
+            top: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            font-weight: bold;
+            opacity: 0;
+        }
+
+        .bar-chart .bar:hover .bar-tooltip {
+            opacity: 1;
+        }
     </style>
+
     <div class="results">
         <div class="bar-chart">
         {% for x in summary_over_time %}
@@ -160,7 +159,6 @@
         var totalSummary = {{summary_total|safe}};
         console.log(totalSummary)
         totalSummary['course_requested__course_schools__abbreviation']='TOTAL';
-        //delete totalSummary['total'];
         console.log(totalSummary)
         var stockData = {{summary|safe}};
         stockData.push(totalSummary);
@@ -215,7 +213,7 @@
            }
     </script>
 </div>
-</div>
-
 {% endblock %}
-{% block pagination %}{% endblock %}
+
+{% block pagination %}
+{% endblock %}

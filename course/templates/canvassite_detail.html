@@ -1,85 +1,91 @@
-{% extends "base_generic.html" %}
-{% load rest_framework %}
-{% load template_extra %}
-
+{% extends "base_generic.html" %} {% load rest_framework %} {% load
+template_extra %}
 
 <!-- see for date format info https://docs.djangoproject.com/en/2.1/ref/settings/#date-input-formats -->
 
 {% block content %}
 
 <fieldset>
-<legend>Canvas Site Info: {{data.name}} </legend>
-<dl class="row" style="line-height:1.1;">
-      <dt class="col-4 col-md-3 text-right" style="padding-right: 0px;">Canvas ID</dt>
-      <dd class="col-8 col-md-9"> {{data.canvas_id}}</dd>
+  <legend>Canvas Site Info: {{data.name}}</legend>
+  <dl class="row" style="line-height: 1.1">
+    <dt class="col-4 col-md-3 text-right" style="padding-right: 0px">
+      Canvas ID
+    </dt>
+    <dd class="col-8 col-md-9">{{data.canvas_id}}</dd>
 
-      <dt class="col-4 col-md-3 text-right" style="padding-right: 0px;">Workflow State</dt>
-      <dd class="col-8 col-md-9">{{data.workflow_state}}</dd>
+    <dt class="col-4 col-md-3 text-right" style="padding-right: 0px">
+      Workflow State
+    </dt>
+    <dd class="col-8 col-md-9">{{data.workflow_state}}</dd>
 
-      <dt class="col-4 col-md-3 text-right" style="padding-right: 0px;">SIS course ID</dt>
-      <dd class="col-8 col-md-9">{{data.sis_course_id}}</dd>
+    <dt class="col-4 col-md-3 text-right" style="padding-right: 0px">
+      SIS course ID
+    </dt>
+    <dd class="col-8 col-md-9">{{data.sis_course_id}}</dd>
 
-      <dt class="col-4 col-md-3 text-right" style="padding-right: 0px;">Request</dt>
-      <dd class="col-8 col-md-9">{{data.request_instance}}</dd>
+    <dt class="col-4 col-md-3 text-right" style="padding-right: 0px">
+      Request
+    </dt>
+    <dd class="col-8 col-md-9">{{data.request_instance}}</dd>
 
-      <dt class="col-4 col-md-3 text-right" style="padding-right: 0px;">Owners</dt>
-      <dd class="col-8 col-md-9">{{data.owners|join:", "}}</dd>
+    <dt class="col-4 col-md-3 text-right" style="padding-right: 0px">Owners</dt>
+    <dd class="col-8 col-md-9">{{data.owners|join:", "}}</dd>
 
-      <dt class="col-4 col-md-3 text-right" style="padding-right: 0px;">Additional Permissions</dt>
-      <dd class="col-8 col-md-9">{{data.added_permissions|join:", "}}</dd>
-</dl>
+    <dt class="col-4 col-md-3 text-right" style="padding-right: 0px">
+      Additional Permissions
+    </dt>
+    <dd class="col-8 col-md-9">{{data.added_permissions|join:", "}}</dd>
+  </dl>
 
-<p class="text-right">
-  <a href="https://canvas.upenn.edu/courses/{{data.canvas_id}}" target="_blank"><i class="fas fa-external-link-alt"></i> Open Canvas Site </a>
-</p>
+  <p class="text-right">
+    <a
+      href="https://canvas.upenn.edu/courses/{{data.canvas_id}}"
+      target="_blank"
+      ><i class="fas fa-external-link-alt"></i> Open Canvas Site
+    </a>
+  </p>
 </fieldset>
 
 <style>
-.select2-container {
-  z-index:inherit !important;
-}
+  .select2-container {
+    z-index: inherit !important;
+  }
 </style>
 <fieldset>
-<legend>Add Additional Permissions</legend>
-<form enctype='application/json' action="{% url 'UI-canvas_site-detail' canvas_id=data.canvas_id %}" method="put">
+  <legend>Add Additional Permissions</legend>
+  <form
+    enctype="application/json"
+    action="{% url 'UI-canvas_site-detail' canvas_id=data.canvas_id %}"
+    method="put"
+  >
+    <p>
+      Start typing the Course Title to find the course.
+      <i
+        class="fas fa-info-circle"
+        data-toggle="collapse"
+        href="#collapseExample"
+        role="button"
+        aria-expanded="false"
+        aria-controls="collapseExample"
+      ></i>
+    </p>
+    <div class="collapse" id="collapseExample">
+      <p style="font-size: 0.9rem">
+        If the user you are looking for doesnt auto-populate try to masquerade
+        as them to see if the pennkey is valid and if they are a user in the
+        CRF.
+      </p>
 
-  <p>Start typing the Course Title to find the course.
-    <i class="fas fa-info-circle" data-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample"></i>
-  </p>
-  <div class="collapse" id="collapseExample">
-    <p style="font-size:0.9rem;">
-      If the user you are looking for doesnt auto-populate try to masquerade as them to see if the pennkey is valid and if they are a user in the CRF.
-    <p/>
-
-  </div>
-
-
-
-
-
-    <br>
-    <div style="width:75%;">
-      {{ autocompleteUser.username }}
-      {{ autocompleteUser.media }}
+      <p />
     </div>
-  <br>
-  <input type="submit" value="Add User" />
 
-</form>
+    <br />
+    <div style="width: 75%">
+      {{ autocompleteUser.username }} {{ autocompleteUser.media }}
+    </div>
+    <br />
+    <input type="submit" value="Add User" />
+  </form>
 </fieldset>
 
-
-
-
-
-
-
-
-{% endblock %}
-
-
-{% block template_page_js %}
-
-
-
-{% endblock %}
+{% endblock %} {% block template_page_js %} {% endblock %}

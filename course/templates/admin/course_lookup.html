@@ -1,91 +1,70 @@
 {% extends "base_generic.html" %}
 {% load rest_framework %}
-{% block courselookup %}active{% endblock %}
-{% block content %
+{% block courselookup %}
+    active
+{% endblock %}
 
 {% block content %}
+<h1>Course Lookup</h1>
 
-
-
-<h1> Course Lookup</h1>
-
-<p> Does something seem wrong about a course? Lets see if they exist in the Registrar Data. 
-    <br>
-    <mark>Results are capped at 5 and labs are not listed as courses</mark>
+<p>
+  Does something seem wrong about a course? Lets see if they exist in the
+  Registrar Data.
+  <br />
+  <mark>Results are capped at 5 and labs are not listed as courses</mark>
 </p>
-
-
 
 <dl>
   <dt>Course Id</dt>
-  <dd>All capitalized Subject code ( e.g. ACCT, MATH) plus the course number (optional) and section (optional) (e.g. ACCT101001 , ACCT101, ACCT)</dd>
-  <dt>Year/Term ** optional ** </dt>
-  <dd>Full numerical year appended by uppercase term letter </dd>
-  <dt>Instructor ** optional ** </dt>
+  <dd>
+    All capitalized Subject code (e.g. ACCT, MATH) plus the course number
+    (optional) and section (optional) (e.g. ACCT101001 , ACCT101, ACCT)
+  </dd>
+  <dt>Year/Term ** optional **</dt>
+  <dd>Full numerical year appended by uppercase term letter</dd>
+  <dt>Instructor ** optional **</dt>
   <dd>valid pennkey (all lowecase)</dd>
 </dl>
 
-<fieldset> <legend>Course Lookup</legend>
-<form>
-  <div class="flex-row">
-    <div class="flex-large">
-    <label for="course_id">Course Id</label>
-    <input type="text" id="course_id" name="course_id" placeholder="Course Id">
+<fieldset>
+  <legend>Course Lookup</legend>
+  <form>
+    <div class="flex-row">
+      <div class="flex-large">
+        <label for="course_id">Course Id</label>
+        <input
+          type="text"
+          id="course_id"
+          name="course_id"
+          placeholder="Course Id"
+        />
+      </div>
+      <div class="flex-large">
+        <label for="term">Year/Term</label>
+        <input type="text" id="term" name="term" placeholder="e.g. 2019C" />
+      </div>
+      <div class="flex-large">
+        <label for="instructor">Instructor</label>
+        <input
+          type="text"
+          id="instructor"
+          name="instructor"
+          placeholder="pennkey"
+        />
+      </div>
     </div>
-    <div class="flex-large">
-    <label for="term">Year/Term</label>
-    <input type="text" id="term" name="term" placeholder="e.g. 2019C">
-    </div>
-    <div class="flex-large">
-    <label for="instructor">Instructor</label>
-    <input type="text" id="instructor" name="instructor" placeholder="pennkey">
-  </div>
-</div>
-    <input type="submit" value="Submit">
-</form>
+    <input type="submit" value="Submit" />
+  </form>
 </fieldset>
 
-<!--overflow:auto;height:-webkit-fill-available;-->
-<p> </p>
-<fieldset style="padding:0rem;">
+<fieldset style="padding: 0rem">
   <legend>Results ({{size}})</legend>
-<pre style="overflow-y:scroll;margin-bottom:0px;padding-bottom:0px;" id='json'>
+  <pre
+    style="overflow-y: scroll; margin-bottom: 0px; padding-bottom: 0px"
+    id="json"
+  >
    {{data | pprint}}
- </pre>
+ </pre
+  >
 </fieldset>
-
-
-
-<!--
-<fieldset id="showresults">
-  <legend>CRF Data</legend>
-  <p> search to load basic data from the CRF</p>
-</fieldset>
-
-<fieldset id="showresultscanvas">
-  <legend>Canvas Data</legend>
-  <p> search to load basic user data from canvas</p>
-</fieldset>
--->
 {% endblock %}
-
-{#
-{% block template_page_js %}
-<!--<script src="dist/json-formatter.js"></script>-->
-<script>
-
-const size = '{{size}}';
-
-
-if (size>0){
-  document.getElementById("json").style.height = "530px";
-  console.log("pass");
-}
-else{
-  console.log("fail");
-
-}
-
-</script>
-{% endblock %}
-#}
