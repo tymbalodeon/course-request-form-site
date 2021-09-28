@@ -8,7 +8,7 @@ from .school_data import school_data
 class Command(BaseCommand):
     help = "Add schools."
 
-    def handle(self):
+    def handle(self, **kwargs):
         print(") Adding schools...")
 
         for index, school in enumerate(school_data):
