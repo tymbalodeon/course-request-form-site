@@ -1,114 +1,115 @@
-{% extends "base_generic.html" %}
-{% load rest_framework %}
-{% load template_extra %}
+{% extends "base_generic.html" %} {% load rest_framework %} {% load
+template_extra %}
 <!-- this sets the nav li to active -->
 {% block courses %}active{% endblock %}
 <!-- see for date format info https://docs.djangoproject.com/en/2.1/ref/settings/#date-input-formats -->
 
 {% block content %}
 
-
-
-  <!-- add filtering bit -->
+<!-- add filtering bit -->
 
 <h1>Courses</h1>
 <!--   <i class="fas fa-info-circle"></i> -->
 
-
 <!-- FILTERING-->
 {% include "bits/filter_content.html" %}
 
-
-
-
-
 <!-- TABLE -->
 
+<table class="striped-table">
+  <thead>
+    <tr>
+      <th style="width: 20%">Section</th>
+      <th style="width: 25%">Title</th>
+      <th>Activity</th>
+      <th id="instructors">Instructor</th>
+      <!--<th>Created Date</th> -->
+      <th style="white-space: nowrap">Request Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for course in results %}
+    <tr>
+      <td>
+        <a href='{% url "UI-course-detail" course_code=course.course_code %}'
+          >{{ course|course_to_course_code }}
+        </a>
+      </td>
+      <td>{{ course.course_name }}</td>
+      <td>{{ course.course_activity }}</td>
 
-  <table class="striped-table">
-    <thead>
-      <tr>
-        <th style="width:20%;">Section</th>
-        <th style="width:25%;">Title</th>
-        <th>Activity</th>
-        <th id="instructors">Instructor</th>
-        <!--<th>Created Date</th> -->
-        <th style="white-space: nowrap;">Request Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for course in results %}
-      <tr>
+      <td id="instructors">
+        {% if course.instructors|length == 0 %} STAFF {% else %} {{
+        course.instructors| join:", "}} {% endif %}
+      </td>
 
-        <td>
-          <a href='{% url "UI-course-detail" course_code=course.course_code %}'>{{ course|course_to_course_code }} </a>
-        </td>
-        <td>{{ course.course_name }}</td>
-        <td>{{ course.course_activity }}</td>
+      <td style="padding-left: 4%">
+        {% if course.requested_override == True %}
+        <a
+          class="button muted-button"
+          data-toggle="tooltip"
+          data-placement="top"
+          title="Request not in CRF"
+          >Requested</a
+        >
 
-        <td id="instructors">
-          {% if course.instructors|length == 0 %} STAFF {% else %}
-          {{ course.instructors| join:", "}} {% endif %}
-        </td>
-
-
-        <td style="padding-left:4%;">
-
-          {% if course.requested_override == True %}
-            <a class="button muted-button" data-toggle="tooltip" data-placement="top" title="Request not in CRF">Requested</a>
-
-          {% elif course.requested == True %}
-
-              {% if course.associated_request %}
-              <a  href='{% url "UI-request-detail" pk=course.associated_request %}' class="button muted-button" data-toggle="tooltip" data-placement="top" title="click to see details">Requested</a>
-              {% else %}
-              <!-- this button should pull up the submitted request! -->
-              <a  href='{% url "UI-request-detail" pk=course.course_code %}' class="button muted-button" data-toggle="tooltip" data-placement="top" title="click to see details">Requested</a>
-              {% endif %}
-
-          {% else %}
-            <!--  <input type="hidden" name="requested" value="true">
+        {% elif course.requested == True %} {% if course.associated_request %}
+        <a
+          href='{% url "UI-request-detail" pk=course.associated_request %}'
+          class="button muted-button"
+          data-toggle="tooltip"
+          data-placement="top"
+          title="click to see details"
+          >Requested</a
+        >
+        {% else %}
+        <!-- this button should pull up the submitted request! -->
+        <a
+          href='{% url "UI-request-detail" pk=course.course_code %}'
+          class="button muted-button"
+          data-toggle="tooltip"
+          data-placement="top"
+          title="click to see details"
+          >Requested</a
+        >
+        {% endif %} {% else %}
+        <!--  <input type="hidden" name="requested" value="true">
               <button type="submit" class="button" >Request</button>-->
-              <!-- Button trigger modal -->
-              <button class="button" data-toggle="modal" data-target="#CourseModal" data-course="{{ course.course_code }}">
-                Request
-              </button>
-          {% endif %}
-        </td>
-      </tr>
-        {% endfor %}
-    </tbody>
-  </table>
-
+        <!-- Button trigger modal -->
+        <button
+          class="button"
+          data-toggle="modal"
+          data-target="#CourseModal"
+          data-course="{{ course.course_code }}"
+        >
+          Request
+        </button>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 
 <!-- END TABLE -->
 
-
-  <!-- Modal -->
-  <!-- simplify with this https://getbootstrap.com/docs/4.0/components/modal/#varying-modal-content -->
+<!-- Modal -->
+<!-- simplify with this https://getbootstrap.com/docs/4.0/components/modal/#varying-modal-content -->
 
 {% include "bits/quick_request_modal.html" with view_type="UI-course-list" %}
 <!-- END COURSE REQUEST MODAL -->
 
-
-
 <!-- MODAL FILTERING-->
-  {% include "bits/filter_modal.html" %}
+{% include "bits/filter_modal.html" %}
 
 <!-- END MODAL FILTERING -->
 
-
-  <!-- PAGINATION -->
-  {% include "bits/paginator.html" %}
-
-{% endblock %}
-
-
-{% block template_page_js %}
+<!-- PAGINATION -->
+{% include "bits/paginator.html" %} {% endblock %} {% block template_page_js %}
 <script>
-// do some formatting of the form
+  // do some formatting of the form
 
-//$(document).onready ( function(){
+  //$(document).onready ( function(){
   // first delete the rendered user input
   var form = document.getElementById("filterform");
   // this should remove the user field
@@ -118,48 +119,45 @@
   // then edit the auto complete user input name from username -> user
   var field = document.getElementById("id_username");
   field.setAttribute("name", "instructor");
-  field.setAttribute("id","id_instructor")
+  field.setAttribute("id", "id_instructor");
   field.required = false;
   //id_abbreviation
   var field2 = document.getElementById("id_abbreviation");
   field2.setAttribute("name", "subject");
-  field2.setAttribute("id","id_subject")
+  field2.setAttribute("id", "id_subject");
   //var x = field.nextSibling.innerHTML;
 
+  // For the Course List View
+  $("#CourseModal").on("show.bs.modal", function (event) {
+    var button = $(event.relatedTarget); // Button that triggered the modal
+    var course = button.data("course"); // Extract info from data-* attributes
+    var short_course = course.replace(/_/g, "");
+    // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+    // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+    console.log(course.replace("_", ""));
+    var modal = $(this);
+    modal.find(".modal-title").text("Quick Request for " + course);
+    modal
+      .find(".modal-footer input[name='course_requested']")
+      .val(short_course);
+    modal
+      .find(".modal-footer a")
+      .attr("href", "/courses/" + short_course + "#RequestForm");
+  });
 
-
-
-// For the Course List View
-$('#CourseModal').on('show.bs.modal', function (event) {
-  var button = $(event.relatedTarget) // Button that triggered the modal
-  var course = button.data('course') // Extract info from data-* attributes
-  var short_course = course.replace(/_/g,'')
-  // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
-  // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
-  console.log(course.replace('_',''))
-  var modal = $(this)
-  modal.find('.modal-title').text('Quick Request for ' + course)
-  modal.find(".modal-footer input[name='course_requested']").val(short_course)
-  modal.find(".modal-footer a").attr("href", '/courses/'+ short_course +'#RequestForm')
-})
-
-
-
-// removes null query_params ! <3
-$('form[method="get"]').submit(function(){
-    $(this).find(':input').each(function() {
+  // removes null query_params ! <3
+  $('form[method="get"]').submit(function () {
+    $(this)
+      .find(":input")
+      .each(function () {
         var inp = $(this);
         if (!inp.val()) {
-            inp.remove();
-        }
-        else{
+          inp.remove();
+        } else {
           console.log(inp.val);
         }
-    });
-});
-
-
-
+      });
+  });
 </script>
 
 {% endblock %}
