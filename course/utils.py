@@ -7,7 +7,7 @@ from django.db.models import Q
 
 from canvas.api import create_canvas_user, get_canvas, get_user_by_sis, get_user_courses
 from course.models import CanvasSite, Profile, Request, User
-from helpers.helpers import get_config_items
+from helpers.helpers import get_config_values
 
 LOG_FILENAME = "users.log"
 logging.basicConfig(
@@ -19,7 +19,7 @@ logging.basicConfig(
 
 
 def data_warehouse_lookup(penn_key=None, penn_id=None):
-    user, password, service = get_config_items("datawarehouse")
+    user, password, service = get_config_values("datawarehouse")
     connection = cx_Oracle.connect(user, password, service)
     cursor = connection.cursor()
 
