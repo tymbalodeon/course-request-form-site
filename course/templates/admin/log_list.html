@@ -1,23 +1,91 @@
 {% extends "base_generic.html" %}
 {% load rest_framework %}
 
-{% block bulkupdates %}
-    active
-{% endblock %}
+{% block bulkupdates %}active{% endblock %}
 
 {% block content %}
 <div class="medium-container">
-  <center><h1>~Still in development~</h1></center>
+
+  <center> <h1> ~Still in development~</h1></center>
   <h1>Bulk Updates</h1>
-  <p>
-    Here will be a UI to give information on the update log (<i>
-      in development </i
-    >) and how to automatically run processes.
+  <p> Here will be a UI to give information on the update log (<i> in development </i>) and how to automatically run processes.
   </p>
 
+
+  {% comment %}
+  <p> There will be a div detailing the last update timestamp, time till next, and a button to force an update/run of certain management processes </p>
+
+  <ul>
+  {% for task in data %}
+    <li>{{ task.name }} {{task.schedule }} enabled: {{task.enabled}}, last run at {{task.last_run_at}}</li>
+
+  {% endfor %}
+</ul>
   <fieldset>
-    <legend>One off tasks</legend>
-    <p>Here are all of the tasks you can force to run now</p>
+    <legend>Task Processing </legend>
+    <table>
+      <thead>
+        <tr>
+          <!-- headers -->
+          <th scope="col">Task Name</th>
+          <th scope="col">Enabled</th>
+          <th scope="col">Frequency</th>
+          <th scope="col">Last Run</th>
+          <th scope="col">Details</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td scope="row"> Validate Requests</td>
+          <td> x</td>
+          <td> x</td>
+          <td> x</td>
+          <td> x</td>
+        </tr>
+
+        <tr>
+          <td scope="row"> Site Creation</td>
+          <td> x</td>
+          <td> x</td>
+          <td> x</td>
+          <td> x</td>
+        </tr>
+        <tr>
+          <td scope="row">Registrar Sync</td>
+          <td> x</td>
+          <td> x</td>
+          <td> x</td>
+          <td> x</td>
+        </tr>
+        <tr>
+          <td scope="row">Canvas Sync </td>
+          <td> x</td>
+          <td> x</td>
+          <td> x</td>
+          <td> x</td>
+        </tr>
+
+      </tbody>
+    </table>
+
+
+    <!-- NOTE: the details should be a link to the most recent tasklog for that task type -->
+
+    <div style="font-size: 1rem;">
+      <p > <i>Validate Requests</i> - when a 'submitted' request is checked for errors </p>
+      <p > <i>Site Creation</i> - when a 'in process' request is created in Canvas</p>
+    </div>
+      <small> please refer to <a href="https://raw.githubusercontent.com/Mfhodges/CRF2/master/wiki/request_process.png">this diagram</a> for more info on the request process</small>
+
+  </fieldset>
+{% endcomment %}
+
+
+  <fieldset>
+    <legend>One off tasks </legend>
+    <p>
+      Here are all of the tasks you can force to run now
+    </p>
     <table>
       <thead>
         <tr>
@@ -30,226 +98,206 @@
       <tbody>
         <tr>
           <td scope="row">Process Requests</td>
-          <td>
-            <a
-              data-toggle="popover"
-              tabindex="0"
-              data-trigger="focus"
-              data-content="Run this process to create Canvas Sites for all of the Approved Requests. Anything stuck in IN_PROCESS needs immediate remediation."
-              ><i class="fas fa-info-circle"></i
-            ></a>
-          </td>
-          <td>
-            <button
-              id="viewRequests"
-              onclick="viewRequests()"
-              class="muted-button"
-            >
-              View Recent
-            </button>
-          </td>
-          <td>
-            <center>
-              <button id="processRequests" onclick="processRequests()">
-                Run
-              </button>
-            </center>
-          </td>
+          <td> <a data-toggle="popover" tabindex="0" data-trigger="focus" data-content="Run this process to create Canvas Sites for all of the Approved Requests. Anything stuck in IN_PROCESS needs immediate remediation."><i class="fas fa-info-circle"></i></a></td>
+          <td> <button id="viewRequests" onclick="viewRequests()" class="muted-button"> View Recent </button></td>
+          <td> <center><button id="processRequests" onclick="processRequests()"> Run </button></center></td>
         </tr>
         <tr>
           <td scope="row">Delete Canceled Requests</td>
-          <td>
-            <a
-              data-toggle="popover"
-              tabindex="0"
-              data-trigger="focus"
-              data-content="Requests that are Canceled are deleted every 20 minutes. If you need to delete them immediately, run this process."
-              ><i class="fas fa-info-circle"></i
-            ></a>
-          </td>
-          <td>
-            N/A
-          </td>
-          <td>
-            <center>
-              <button id="" onclick="deleteCanceledRequests()">Run</button>
-            </center>
-          </td>
+          <td> <a data-toggle="popover" tabindex="0" data-trigger="focus" data-content="Requests that are Canceled are deleted every 20 minutes. If you need to delete them immediately, run this process."><i class="fas fa-info-circle"></i></a></td>
+          <td> <!--<button id="viewRequests" onclick="viewRequests()" class="muted-button"> View Recent </button>--> N/A</td>
+          <td> <center><button id="" onclick="deleteCanceledRequests()"> Run </button></center></td>
         </tr>
         <tr>
           <td scope="row">Check Canceled SRS Courses</td>
-          <td>
-            <a
-              data-toggle="popover"
-              tabindex="0"
-              data-trigger="focus"
-              data-content="Every night the CRF checks if SRS courses with Canvas sites have been canceled. Click 'View Recent' to see the file."
-              ><i class="fas fa-info-circle"></i
-            ></a>
-          </td>
-          <td>
-            <button
-              id="viewRequests"
-              onclick="viewCanceledSRS()"
-              class="muted-button"
-            >
-              View Recent
-            </button>
-          </td>
-          <td>
-            N/A
-          </td>
+          <td> <a data-toggle="popover" tabindex="0" data-trigger="focus" data-content="Every night the CRF checks if SRS courses with Canvas sites have been canceled. Click 'View Recent' to see the file."><i class="fas fa-info-circle"></i></a></td>
+          <td> <button id="viewRequests"  onclick="viewCanceledSRS()"class="muted-button"> View Recent </button></td>
+          <td> <!-- <center><button id="" onclick="viewCanceledSRS()"> Run </button> </center>--> N/A </td>
         </tr>
-      </tbody>
-    </table>
+
+   </tbody>
+   </table>
   </fieldset>
 
-  <fieldset id="oneOffTasks" style="display: none">
-    <legend></legend>
+<fieldset id="oneOffTasks" style="display:none;">
+  <legend></legend>
 
-    <div id="loader" style="display: none"></div>
-    <pre id="json" style="overflow: auto; height: 300px; display: none"></pre>
-  </fieldset>
+    <div id="loader" style="display:none;"></div>
+    <pre id="json" style="overflow:auto;height:300px;display:none">
 
-  <fieldset>
-    <legend>Helpful Tools</legend>
-    <ul>
-      <li>
-        <a href="https://esb.isc-seo.upenn.edu/8093/jsp/registerUser.jsp">
-          Create Canvas Account</a
-        >
-      </li>
-      <li>
-        <a href="https://canvas.upenn.edu/accounts/96678/sis_import">
-          SIS Import</a
-        >
-      </li>
-      <li>
-        <a href="https://esb.isc-seo.upenn.edu/8093/jsp/research.jsp">
-          Enrollment Research</a
-        >
-      </li>
-      <li>
-        <a
-          href="https://www.site24x7.com/sv.do?id=wpdDGdqhZh3AEfebhWS0zB19hcUM6sQepLjBjOdP5x-zAm3C-LDZ-7Dxe4xsaLS2FgajJGBvx2K3sn59m650wH19kAV6t9WQschut6uKx1o%3D"
-        >
-          LTS Status Page</a
-        >
-      </li>
-    </ul>
-  </fieldset>
+     </pre>
+</fieldset>
+
+
+<fieldset>
+  <legend>Helpful Tools</legend>
+  <ul>
+    <li><a href="https://esb.isc-seo.upenn.edu/8093/jsp/registerUser.jsp"> Create Canvas Account</a></li>
+    <li><a href="https://canvas.upenn.edu/accounts/96678/sis_import"> SIS Import</a></li>
+    <li><a href="https://esb.isc-seo.upenn.edu/8093/jsp/research.jsp"> Enrollment Research</a></li>
+    <li><a href="https://www.site24x7.com/sv.do?id=wpdDGdqhZh3AEfebhWS0zB19hcUM6sQepLjBjOdP5x-zAm3C-LDZ-7Dxe4xsaLS2FgajJGBvx2K3sn59m650wH19kAV6t9WQschut6uKx1o%3D"> LTS Status Page</a></li>
+  </ul>
+
+</fieldset>
+
 </div>
+
+
+
+
+
 {% endblock %}
 
 {% block template_page_js %}
-<script>
-  $(function () {
-    $('[data-toggle="popover"]').popover();
-  });
-  $(".popover-dismiss").popover({
-    trigger: "focus",
-  });
 
-  function deleteCanceledRequests() {
-    console.log("Deleting Canceled Requests");
-    $.ajax({
-      url: "/admin/delete_canceled_requests/",
-      type: "GET",
-      beforeSend: function () {
+<script>
+$(function () {
+  $('[data-toggle="popover"]').popover()
+});
+$('.popover-dismiss').popover({
+  trigger: 'focus'
+});
+
+function deleteCanceledRequests() {
+  console.log('Deleting Canceled Requests');
+  $.ajax({
+    url: '/admin/delete_canceled_requests/',
+    type: 'GET',
+    beforeSend: function() {
         console.log("beforesend");
 
         $("#oneOffTasks").show(400);
         $("#oneOffTasks > legend").text("Deleting: Canceled Requests");
-        $("#json").hide(300);
+        $("#json").hide(300)//css("display","none");
         $("#loader").show(400);
-      },
-      success: function (result) {
-        console.log("success");
-        console.log(result);
-        var myJSON = JSON.stringify(result, undefined, 2);
-        console.log(myJSON);
-        $("#loader").hide(300);
-        document.getElementById("json").innerHTML = myJSON;
-        $("#json").show(500).css("height", "300px");
-      },
-    });
-  }
+    },
+     success: function(result){
+       console.log("success");
+       console.log(result);
+       var myJSON = JSON.stringify(result,undefined,2);
+       console.log(myJSON);
+       $("#loader").hide(300);//css("display","none");
+       //$("#json").show(100);//css("display","block");
+       document.getElementById("json").innerHTML = myJSON;
+       $("#json").show(500).css("height","300px");
 
-  function viewCanceledSRS() {
-    console.log("running view canceled");
-    $.ajax({
-      url: "/admin/view_canceled_SRS",
-      type: "GET",
-      beforeSend: function () {
+  }});
+};
+
+
+
+
+function viewCanceledSRS() {
+  console.log('running view canceled');
+  $.ajax({
+    url: '/admin/view_canceled_SRS',
+    type: 'GET',
+    beforeSend: function() {
         console.log("beforesend");
 
         $("#oneOffTasks").show(400);
         $("#oneOffTasks > legend").text("Viewing: Canceled SRS Courses");
-        $("#json").hide(300);
+        $("#json").hide(300)//css("display","none");
         $("#loader").show(400);
-      },
-      success: function (result) {
-        console.log("success");
-        console.log(result);
-        $("#loader").hide(300);
-        document.getElementById("json").innerHTML = result;
-        $("#json").show(500).css("height", "300px");
-      },
-    });
-  }
+    },
+     success: function(result){
+       console.log("success");
+       console.log(result);
+       //var myJSON = JSON.stringify(result,undefined,2);
+       //console.log(myJSON);
+       $("#loader").hide(300);//css("display","none");
+       //$("#json").show(100);//css("display","block");
+       document.getElementById("json").innerHTML = result;
+       $("#json").show(500).css("height","300px");
 
-  function viewRequests() {
-    console.log("running view");
+  }});
+};
 
-    $.ajax({
-      url: "/admin/view_requests",
-      type: "GET",
-      beforeSend: function () {
+
+
+
+
+function viewRequests() {
+  console.log('running view');
+
+  $.ajax({
+    url: '/admin/view_requests',
+    type: 'GET',
+    beforeSend: function() {
         console.log("beforesend");
 
         $("#oneOffTasks").show(400);
         $("#oneOffTasks > legend").text("Viewing: Requests");
-        $("#json").hide(300);
+        $("#json").hide(300)//css("display","none");
         $("#loader").show(400);
-      },
-      success: function (result) {
-        console.log("success");
-        console.log(result);
-        var myJSON = JSON.stringify(result, undefined, 2);
-        console.log(myJSON);
-        $("#loader").hide(300);
-        document.getElementById("json").innerHTML = myJSON;
-        $("#json").show(500).css("height", "300px");
-      },
-    });
-  }
+    },
+     success: function(result){
+       console.log("success");
+       console.log(result);
+       var myJSON = JSON.stringify(result,undefined,2);
+       console.log(myJSON);
+       $("#loader").hide(300);//css("display","none");
+       //$("#json").show(100);//css("display","block");
+       document.getElementById("json").innerHTML = myJSON;
+       $("#json").show(500).css("height","300px");
 
-  function processRequests() {
-    console.log("running process");
-    $.ajax({
-      url: "/admin/process_requests",
-      type: "GET",
-      beforeSend: function () {
+  }});
+};
+
+
+
+
+
+
+//$(document).ready(function(){
+function processRequests() {
+  console.log('running process');
+  $.ajax({
+    url: '/admin/process_requests',
+    type: 'GET',
+    beforeSend: function() {
         console.log("beforesend");
         $("#processRequests").text("Running").fadeIn(900);
         $("#processRequests").attr("disabled", true);
-        $("#oneOffTasks").css("display", "block");
+        $("#oneOffTasks").css("display","block");
         $("#oneOffTasks > legend").text("Running: Requests");
-        $("#json").hide(300);
-        $("#loader").show(500);
-      },
-      success: function (result) {
-        console.log("success");
-        console.log(result);
-        var myJSON = JSON.stringify(result, undefined, 2);
-        console.log(myJSON);
-        document.getElementById("json").innerHTML = myJSON;
-        $("#loader").hide(300);
-        $("#json").show(300).css("height", "300px");
-        $("#processRequests").html("Run").fadeIn(900);
-        $("#processRequests").attr("disabled", false);
-      },
-    });
-  }
+        $("#json").hide(300)//.css("display","none");
+        $("#loader").show(500)//.css("display","block");
+    },
+     success: function(result){
+       console.log("success");
+       console.log(result);
+       var myJSON = JSON.stringify(result,undefined,2);
+       console.log(myJSON);
+       document.getElementById("json").innerHTML = myJSON;
+       $("#loader").hide(300)//.css("display","none");
+      $("#json").show(300).css("height","300px");
+       $("#processRequests").html("Run").fadeIn(900);
+       $("#processRequests").attr("disabled", false);
+  }});
+};
+
+
+
+
+//});
+
+// document.getElementById("json").innerHTML = JSON.stringify(data, undefined, 2);
+
+/*
+jQuery.ajax({
+    type: "POST",
+    url: 'YOU_URL_TO_WHICH_DATA_SEND',
+    data:'YOUR_DATA_TO_SEND',
+    beforeSend: function() {
+        $("#loaderDiv").show();
+    },
+    success: function(data) {
+        $("#loaderDiv").hide();
+    }
+});
+
+*/
+
 </script>
 {% endblock %}
