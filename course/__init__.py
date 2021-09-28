@@ -8,7 +8,7 @@ from .celery import app as celery_app
 
 
 @receiver(user_logged_in)
-def on_login(sender, user, request):
+def on_login(sender, user, request, **kwargs):
     print(f'"{user.username}" logging in...')
     request.session["on_behalf_of"] = ""
     messages.info(request, "Welcome!")
