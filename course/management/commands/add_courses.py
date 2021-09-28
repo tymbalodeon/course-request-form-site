@@ -4,7 +4,7 @@ import logging
 from django.core.management.base import BaseCommand
 
 from course.models import Activity, Course, School, Subject, User
-from helpers.helpers import get_config_items
+from helpers.helpers import get_config_values
 from open_data.open_data import OpenData
 
 
@@ -40,7 +40,7 @@ class Command(BaseCommand):
         term = year_and_term[-1]
 
         if opendata:
-            open_data_id, key, domain = get_config_items("opendata")[:3]
+            open_data_id, key, domain = get_config_values("opendata")[:3]
             Open_Data = OpenData(base_url=domain, id=open_data_id, key=key)
             courses = Open_Data.get_courses_by_term(year_and_term)
             page = 1

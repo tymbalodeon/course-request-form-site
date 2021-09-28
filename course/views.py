@@ -17,7 +17,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django_celery_beat.models import PeriodicTask
 from django_filters import rest_framework as filters
-from helpers.helpers import get_config_items
+from helpers.helpers import get_config_values
 from open_data.open_data import OpenData
 from rest_framework import permissions, serializers, status, viewsets
 from rest_framework.exceptions import PermissionDenied
@@ -1367,7 +1367,7 @@ def open_data_proxy(request):
             course_id = request.GET.get("course_id", None)
             term = request.GET.get("term", None)
             instructor = request.GET.get("instructor", None)
-            open_data_id, key, domain = get_config_items("opendata")[:3]
+            open_data_id, key, domain = get_config_values("opendata")[:3]
             open_data = OpenData(domain, open_data_id, key)
             open_data.set_uri("course_section_search")
             open_data.add_param("course_id", course_id)
