@@ -1,10 +1,9 @@
+from course.models import PageContent
 from django import template
 from django.contrib.auth.models import User
 from django.utils.encoding import iri_to_uri
 from django.utils.html import escape
 from rest_framework.utils.urls import remove_query_param
-
-from course.models import PageContent
 
 register = template.Library()
 
@@ -14,6 +13,7 @@ def delete_query_param(request, key):
     iri = request.get_full_path()
     uri = iri_to_uri(iri)
     value = remove_query_param(uri, key)
+
     return escape(value)
 
 
@@ -25,19 +25,10 @@ def get_user(user):
         return None
 
 
-@register.simple_tag
-def masquerading(request):
-    return True if request.session["on_behalf_of"] else False
-
-
-@register.simple_tag
-def filter_messages(messages, type):
-    return [message for message in messages if message.tags == type]
-
-
 @register.filter
 def course_code_to_string(course_code):
     middle = course_code[:-5][4:]
+
     return f"{course_code[:-11]}-{middle[:3]}-{middle[3:]} {course_code[-5:]}"
 
 
