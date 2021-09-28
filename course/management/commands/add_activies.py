@@ -37,7 +37,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, **kwargs):
-        opendata = kwargs["opendata"]
+        opendata = kwargs["open_data"]
 
         if opendata:
             open_data_id, key, domain = get_config_values("opendata")[:3]

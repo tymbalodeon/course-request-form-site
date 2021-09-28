@@ -34,7 +34,7 @@ class Command(BaseCommand):
     def handle(self, **kwargs):
         print(") Adding courses...")
 
-        opendata = kwargs["opendata"]
+        opendata = kwargs["open_data"]
         year_and_term = kwargs["term"]
         year = year_and_term[:-1]
         term = year_and_term[-1]
@@ -147,7 +147,7 @@ class Command(BaseCommand):
                             },
                         )
 
-                        course, created = course_created
+                        course_object, created = course_created
 
                         if created:
                             print("\t* Course CREATED")
@@ -155,7 +155,7 @@ class Command(BaseCommand):
                             print("\t* Course UPDATED")
 
                         if course["is_cancelled"]:
-                            course.delete()
+                            course_object.delete()
                     except Exception as error:
                         logging.getLogger("error_logger").error(error)
                         print(f"- ERROR:{error}")
