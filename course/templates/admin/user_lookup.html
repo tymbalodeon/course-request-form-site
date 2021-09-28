@@ -7,26 +7,31 @@
 
 {% block content %}
     <h1>Canvas User Lookup</h1>
+
     <p>
-        Does something seem wrong about a User? Lets see if they exist in the CRF and
-        if they exist in Canvas! Canvas Course sites listed are those with teacher
-        enrollment status.
+        Does something seem wrong about a User? Lets see if they exist in the CRF and if they exist in Canvas!
+        Canvas Course sites listed are those with teacher enrollment status.
     </p>
+
     <form id="myForm" action="#" onsubmit="submitForm();return false;">
-        <label style="width: 45%">
+        <label style="width: 45%;">
             User
             <input name="user" type="text" id="pennkey" />
             {{ form2.username }}
         </label>
     </form>
+
     <div>
-        <button class="apireq">Check user</button>
+        <button class="apireq">click me </button>
     </div>
+
     {{ form2.media }}
+
     <fieldset id="showresults">
         <legend>CRF Data</legend>
         <p>Search to load basic data from the CRF</p>
     </fieldset>
+
     <fieldset id="showresultscanvas">
         <legend>Canvas Data</legend>
         <p>Search to load basic user data from canvas</p>
@@ -36,82 +41,76 @@
 {% block template_page_js %}
     <script>
      function submitForm() {
-         $(".apireq").click();
+         $('.apireq').click();
          return false;
      }
 
-     $(".apireq").click(function () {
+     $('.apireq').click( function() {
          var pennkey = $("#pennkey").val();
          console.log(pennkey);
          $.ajax({
-             url: `/api/users/${pennkey}`,
+             url : `/api/users/${pennkey}`,
              dataType: "json",
-             success: function (data) {
+             success : function (data) {
                  console.log(data);
                  var test = data;
-                 $("#showresults").empty().append("<legend>CRF Data</legend>");
-                 for (const element in data) {
+                 $('#showresults').empty().append("<legend>CRF Data</legend>");
+                 for ( const element in data) {
                      console.log(element, data[element]);
-                     if (Array.isArray(data[element])) {
-                         $("#showresults").append(`<p>${element}:</p>`);
+                     if (Array.isArray(data[element])){
+                         $('#showresults').append(`<p>${element}:</p>`);
                          var items = data[element];
-                         var ul = document.createElement("ul"); document.getElementById("showresults").appendChild(ul);
+                         var ul = document.createElement('ul');
+                         document.getElementById('showresults').appendChild(ul);
                          items.forEach(function (item) {
-                             var li = document.createElement("li");
+                             var li = document.createElement('li');
                              ul.appendChild(li);
                              li.innerHTML += item;
                          });
-                     } else {
-                         $("#showresults").append(`<p>${element}: ${data[element]}</p>`);
                      }
-                 }
-                 console.log(data.username);
+                     else {
+                         $('#showresults').append(`<p>${element}: ${data[element]}</p>`);
+                     }
+                 };
+                 console.log(data.username)
              },
              error: function (xhr, status) {
-                 $("#showresults")
-                     .empty()
-                     .append(
-                         "<legend>CRF Data</legend><p>Sorry, there was a problem! Check that this user exists in the CRF</p>"
-                     );
-             },
+                 $('#showresults').empty().append("<legend>CRF Data</legend><p>Sorry, there was a problem! Check that this user exists in the CRF</p>");
+             }
          });
 
          $.ajax({
-             url: `/canvasuser/${pennkey}`,
+             url : `/canvasuser/${pennkey}`,
              dataType: "json",
 
-             success: function (data) {
+             success : function (data) {
                  console.log(data);
                  var test = data;
-                 $("#showresultscanvas").empty().append("<legend>Canvas Data</legend>");
-                 for (const element in data) {
+                 $('#showresultscanvas').empty().append("<legend>Canvas Data</legend>");
+                 for ( const element in data) {
                      console.log(element, data[element]);
-                     if (Array.isArray(data[element])) {
-                         $("#showresultscanvas").append(`<p>${element}:</p>`);
+                     if (Array.isArray(data[element])){
+                         $('#showresultscanvas').append(`<p>${element}:</p>`);
                          var items = data[element];
-                         var ol = document.createElement("ol");
-                         document.getElementById("showresultscanvas").appendChild(ol);
+                         var ol = document.createElement('ol');
+                         document.getElementById('showresultscanvas').appendChild(ol);
                          items.forEach(function (item) {
-                             var li = document.createElement("li");
+                             var li = document.createElement('li');
                              ol.appendChild(li);
                              li.innerHTML += JSON.stringify(item);
                          });
-                     } else {
-                         $("#showresultscanvas").append(
-                             `<p>${element}: ${data[element]}</p>`
-                         );
                      }
-                 }
+                     else {
+                         $('#showresultscanvas').append(`<p>${element}: ${data[element]}</p>`);
+                     }
+                 };
                  console.log("ok");
-                 console.log(data.username);
+                 console.log(data.username)
              },
              error: function (xhr, status) {
-                 $("#showresultscanvas")
-                     .empty()
-                     .append(
-                         "<legend>Canvas Data</legend><p>Sorry, there was a problem! Check that this user exists in Canvas.</p>"
-                     );
-             },
+                 $('#showresultscanvas').empty().append("<legend>Canvas Data</legend><p>Sorry, there was a problem! Check that this user exists in Canvas.</p>");
+             }
          });
+     });
     </script>
 {% endblock %}
