@@ -45,19 +45,26 @@ class Command(BaseCommand):
 
         if total:
             for user in range(total):
-                if prefix:
-                    username = f"{prefix}_{get_random_string()}"
-                else:
-                    username = get_random_string()
+                try:
+                    username = (
+                        f"{prefix}_{get_random_string()}"
+                        if prefix
+                        else get_random_string()
+                    )
 
-                if admin:
-                    User.objects.create_superuser(
-                        username=username, email="", password="123"
+                    user_object = (
+                        User.objects.create_superuser(
+                            username=username, email="", password="123"
+                        )
+                        if admin
+                        else User.objects.create_user(
+                            username=username, email="", password="123"
+                        )
                     )
-                else:
-                    User.objects.create_user(
-                        username=username, email="", password="123"
-                    )
+                    print(f"- ADDED user: {user_object}")
+                except Exception:
+                    print(f"- FAILED to add user: {username}")
+
         if courseware:
             username, password = get_username_and_password()
 

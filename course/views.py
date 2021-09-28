@@ -5,8 +5,6 @@ from logging import getLogger
 from os import listdir, mkdir
 from pathlib import Path
 
-from canvas.api import CanvasException, create_canvas_user, get_canvas, get_user_by_sis
-from data_warehouse.data_warehouse import inspect_course
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.mixins import UserPassesTestMixin
@@ -17,8 +15,6 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django_celery_beat.models import PeriodicTask
 from django_filters import rest_framework as filters
-from helpers.helpers import get_config_values
-from open_data.open_data import OpenData
 from rest_framework import permissions, serializers, status, viewsets
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -28,6 +24,7 @@ from rest_framework.reverse import reverse
 from rest_framework.utils import html
 from rest_framework.views import APIView
 
+from canvas.api import CanvasException, create_canvas_user, get_canvas, get_user_by_sis
 from course import email_processor
 from course.forms import (
     CanvasSiteForm,
@@ -61,6 +58,9 @@ from course.serializers import (
 )
 from course.tasks import create_canvas_sites
 from course.utils import data_warehouse_lookup, update_user_courses, validate_pennkey
+from data_warehouse.data_warehouse import inspect_course
+from helpers.helpers import get_config_values
+from open_data.open_data import OpenData
 
 
 def emergency_redirect(request):

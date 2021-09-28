@@ -18,7 +18,7 @@ class Command(BaseCommand):
             help="Pull from the OpenData API.",
         )
 
-    def handle(self):
+    def handle(self, **kwargs):
         print(") Adding subjects...")
 
         missing_schools = list()

@@ -11,7 +11,7 @@ def get_config_value(key, value, raw=False):
 
 
 def get_config_values(key):
-    return (value[1] for value in config.items(key))
+    return [value[1] for value in config.items(key)]
 
 
 def get_username_and_password():
