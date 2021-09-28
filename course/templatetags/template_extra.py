@@ -66,14 +66,20 @@ def get_markdown_id(location):
     )
 
 
-@register.filter("crf_truncate_chars")
-def truncate_chars(value, max_length):
+@register.filter()
+def truncate_course_name(value, max_length):
+    def get_longest_whole_words(words, max_length):
+        phrase = " ".join(words)
+
+        return (
+            get_longest_whole_words(words[:-1], max_length)
+            if len(phrase) > max_length
+            else phrase
+        )
+
     if not len(value) > max_length:
         return value
     else:
-        truncated_value = value[:max_length]
+        words = value.split()
 
-        if not len(value) == max_length + 1 and value[max_length + 1] != " ":
-            truncated_value = truncated_value[: truncated_value.rfind(" ")]
-
-        return truncated_value
+        return get_longest_whole_words(words, max_length)
