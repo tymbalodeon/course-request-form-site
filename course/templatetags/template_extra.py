@@ -28,6 +28,7 @@ def get_user(user):
 
 @register.filter
 def course_code_to_string(course_code):
+    print(course_code)
     middle = course_code[:-5][4:]
 
     return f"{course_code[:-11]}-{middle[:3]}-{middle[3:]} {course_code[-5:]}"
