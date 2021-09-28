@@ -264,11 +264,7 @@ class Course(models.Model):
             return request
 
     def get_subjects(self):
-        return (
-            self.course_subject.abbreviation
-            if self.crosslisted is None
-            else ",\n".join([sub.abbreviation for sub in self.crosslisted])
-        )
+        return self.course_subject.abbreviation
 
     def get_schools(self):
         return self.course_schools
