@@ -1,50 +1,46 @@
 {% extends "base_generic.html" %}
 {% load rest_framework %}
-{% block dwlookup %}active{% endblock %}
-{% block content %
+
+{% block dwlookup %}
+    active
+{% endblock %}
 
 {% block content %}
+    <h1>Check Data Warehouse for Course</h1>
+    <p>If a course is missing that you think should be in the CRF, check to see if
+        the course is in the Data Warehouse. If not, there is nothing we can do but
+        wait. If it IS in the DW, but missing in the CRF, please
+        <a href="https://gitlab.library.upenn.edu/courseware/course-request/CRF2/-/issues">
+            report this as a bug
+        </a>.</p>
+    <dl>
+        <dt>Course Code</dt>
+        <dd>Subject Code + Course Number + Course Section. You may optionally include
+            the Year + Term at the end if you wish to limit the results to a specific
+            term. If you do not include the Year + Term, it will return courses from all
+            periods matching the course subject, number, and section values. To allow for
+            easy copy-and-pasting, the course code can be input in any form, whether that
+            includes dashes, underscores, or spaces, or includes "SRS_" or not. Example:
+            'SUBJ-100-101' or 'SRS_SUBJ-100-101 2021A'.</dd>
+    </dl>
 
-<h1>Check Data Warehouse for Course</h1>
+    <fieldset>
+        <legend>Check Data Warehouse</legend>
+        <form>
+            <div class="flex-row">
+                <div class="flex-large">
+                    <label for="course_code">Course Code</label>
+                    <input type="text" id="course_code" name="course_code" placeholder="Course Code">
+                </div>
+            </div>
+            <input type="submit" value="Submit">
+        </form>
+    </fieldset>
 
-<p>If a course is missing that you think should be in the CRF, check to see if
-the course is in the Data Warehouse. If not, there is nothing we can do but
-wait. If it IS in the DW, but missing in the CRF, please <a
-href="https://gitlab.library.upenn.edu/courseware/course-request/CRF2/-/issues">report
-this as a bug</a>.</p>
-
-<dl>
-  <dt>Course Code</dt>
-  <dd>Subject Code + Course Number + Course Section. You may optionally include
-  the Year + Term at the end if you wish to limit the results to a specific
-  term. If you do not include the Year + Term, it will return courses from all
-  periods matching the course subject, number, and section values. To allow for
-  easy copy-and-pasting, the course code can be input in any form, whether that
-  includes dashes, underscores, or spaces, or includes "SRS_" or not. Example:
-  'SUBJ-100-101' or 'SRS_SUBJ-100-101 2021A'.</dd>
-</dl>
-
-<fieldset>
-    <legend>Check Data Warehouse</legend>
-    <form>
-        <div class="flex-row">
-          <div class="flex-large">
-            <label for="course_code">Course Code</label>
-            <input type="text" id="course_code" name="course_code" placeholder="Course Code">
-          </div>
-        </div>
-        <input type="submit" value="Submit">
-    </form>
-</fieldset>
-
-<!--overflow:auto;height:-webkit-fill-available;-->
-<fieldset style="padding:0rem;">
-  <legend>Results ({{size}})</legend>
-  <pre style="overflow-y:scroll;margin-bottom:0px;padding-bottom:0px;" id='json'>
-      {{data | pprint}}
-  </pre>
-</fieldset>
-
-
-
+    <fieldset style="padding:0rem;">
+        <legend>Results ({{size}})</legend>
+        <pre style="overflow-y:scroll;margin-bottom:0px;padding-bottom:0px;" id='json'>
+            {{data | pprint}}
+        </pre>
+    </fieldset>
 {% endblock %}
