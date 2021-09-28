@@ -167,11 +167,30 @@ class CourseViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         12: "C",
     }
     lookup_field = "course_code"
-    queryset = Course.objects.filter(
-        course_subject__visible=True,
-        course_schools__visible=True,
-        year__gte=current_date.year,
-        course_term__gte=month_terms.get(current_date.month),
+    queryset = (
+        Course.objects.filter(
+            course_subject__visible=True,
+            course_schools__visible=True,
+            year=current_date.year,
+            course_term__gte=month_terms.get(current_date.month),
+        )
+        if current_date.month < 12
+        else list(
+            Course.objects.filter(
+                course_subject__visible=True,
+                course_schools__visible=True,
+                year=current_date.year,
+                course_term__gte=month_terms.get(current_date.month),
+            )
+        )
+        + list(
+            Course.objects.filter(
+                course_subject__visible=True,
+                course_schools__visible=True,
+                year=current_date.year + 1,
+                course_term="A",
+            )
+        )
     )
     serializer_class = CourseSerializer
     search_fields = (
