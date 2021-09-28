@@ -5,8 +5,7 @@
     <em style="text-decoration: underline;">
         {% if course.primary_crosslist %} {{course.primary_crosslist|course_code_to_string}}
         {% else %}{{course.course_code|course_code_to_string}}
-        {% endif %} {{ course.course_name|truncate_course_name:30 }}
-    </em>. You may modify it in the box provided below. The primary course code will always prepend the title.
+        {% endif %} {{course.course_name|truncate_course_name:30}}</em>. You may modify it in the box provided below. The primary course code will always prepend the title.
 </p>
 
 {% render_field request_form.title_override style=style %}
