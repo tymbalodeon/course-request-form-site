@@ -184,17 +184,12 @@ class Course(models.Model):
             return True
         else:
             try:
-                exists = self.request
-
-                return True
+                return True if self.request else False
             except Exception:
                 exists = self.multisection_request
                 exists_cross = self.crosslisted_request
 
-                if exists or exists_cross:
-                    return True
-                else:
-                    return False
+                return True if exists or exists_cross else False
 
     def set_requested(self, requested):
         self.requested = requested
