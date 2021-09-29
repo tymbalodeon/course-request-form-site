@@ -255,19 +255,19 @@ class CourseViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
             return response
 
     def retrieve(self, request, *args, **kwargs):
-        print("in CourseViewSet.retrieve()")
+        print(") Receiving course detail...")
         response = super(CourseViewSet, self).retrieve(request, *args, **kwargs)
-        print("response")
 
         if request.accepted_renderer.format == "html":
             course_instance = self.get_object()
+            print(f"- Course instance found: {course_instance}")
 
-            if course_instance.requested is True:
-
-                if course_instance.multisection_request:
-                    request_instance = ""
-                else:
-                    request_instance = course_instance.get_request()
+            if course_instance.requested:
+                request_instance = (
+                    ""
+                    if course_instance.multisection_request
+                    else course_instance.get_request()
+                )
                 this_form = ""
             else:
                 reserves = (
@@ -300,7 +300,6 @@ class CourseViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
                 template_name="course_detail.html",
             )
         else:
-
             return response
 
 
