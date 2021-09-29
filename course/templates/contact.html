@@ -1,27 +1,9 @@
-{% extends "base_generic.html" %} {% block content %}
+{% extends "base_generic.html" %}
 
-<!-- https://wsvincent.com/django-contact-form/ -->
-
-<h1>Contact</h1>
-<p>
-  If you have any feedback on this site or encounter any issues please forward
-  them to librarycrf@pobox.upenn.edu
-  <!--or fill out the form below: -->
-</p>
-<!--
-  <div class="card" >
-    <h5 class="card-header no-margin-top">Contact Form</h5>
-    <div class="card-body">
-      <form role="form" action="" method="post">
-          {% csrf_token %}
-          {{ form.as_p }}
-          <button type="submit">Send <i class="far fa-paper-plane"></i>
-
-          </button>
-      </form>
-    </div>
-  </div>
-<br>
-<br>
--->
+{% block content %}
+    <h1>Contact</h1>
+    <p>
+        If you have any feedback on this site or encounter any issues please forward
+        them to librarycrf@pobox.upenn.edu
+    </p>
 {% endblock %}

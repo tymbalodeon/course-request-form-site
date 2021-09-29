@@ -9,6 +9,7 @@
 </p>
 
 {% render_field request_form.title_override style=style %}
+
 <p>
     If you would like to copy content from an existing course site, please click
     'Select Copy' and select the source from the list.
@@ -38,7 +39,6 @@
             <button class="btn btn-outline-secondary accent-button" type="button" data-toggle="modal"  data-target="#ContentCopy" data-backdrop="static" data-keyboard="false" style='z-index:unset;'>Select Copy</button>
         </div>
     </div>
-
 </div>
 
 {% include "bits/copy_course_modal.html" %}
