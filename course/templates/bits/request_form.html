@@ -1,25 +1,23 @@
 {% load rest_framework %}
 {% load template_extra %}
 
-<p>Course site title will default to
+<p>The Canvas site title will default to:
     <em style="text-decoration: underline;">
         {% if course.primary_crosslist %} {{course.primary_crosslist|course_code_to_string}}
         {% else %}{{course.course_code|course_code_to_string}}
-        {% endif %} {{course.course_name|truncate_course_name:30}}</em>. You may modify it in the box provided below. The primary course code will always prepend the title.
+        {% endif %} {{course.course_name|truncate_course_name:30}}</em>. If you wish to modify the course name, please provide the new value in the box below. (The primary course code will always be included.)
 </p>
-
+<br>
 {% render_field request_form.title_override style=style %}
-
 <p>
-    If you would like to copy content from an existing course site, please click
-    'Select Copy' and select the source from the list.
-    <i>
-        The field should populate with a 7 digit number.
-    </i>
+    If you would like to copy content from an existing Canvas site, please click
+    "Select Copy," select a source from the list, and click "Add Source." When
+    successful, the field will automatically populate with the site's 7-digit
+    course id number.
 </p>
-
+<br>
 <div class="form-group">
-    <label>Copy from course</label>
+    <label>"Copy from" Canvas site ID (7-digit number)</label>
     {{copy_from_course}}
     <div class="input-group mb-3">
         {% if request_instance.copy_from_course %}
