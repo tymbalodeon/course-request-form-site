@@ -1,52 +1,42 @@
-
 {% extends "base_generic.html" %}
 {% load rest_framework %}
 {% load template_extra %}
 
 {% block content %}
-
-
-<h1> User Documentation </h1>
-<h4>
-  <a href="https://docs.google.com/document/d/e/2PACX-1vQmPyukmwTmgefEnMPYttYZCzzsF2ZNS_eNtu60fhZDAu32omnLGc7V08qQz7Vt7t5Ab09q3OLP7bnf/pub" target="_blank">
-    Link to full document
-  </a>
-</h4>
-{% if staff %}
-<h6>Courseware Support:
-  <ul>
-    <li>
-      <a href="https://docs.google.com/document/d/1-VcUr70xOlAPwPH07CB61_CwVDw18QlrE_3KFPhYK7o/edit#" target="_blank">
-      Link to User edit documentation
-      </a>
-    </li>
-    <li>
-      <a href="https://docs.google.com/document/d/1bGQBDn9CEJ_-3NpYKYEMTcQX25yppw1FRKetYoOAtnE/edit?usp=sharing" target="_blank">
-      Link to Admin documentation
-      </a>
-    </li>
-    <li>
-      <a href="https://docs.google.com/document/d/1b5td0NS-r1DB2bFfL3EwhGQshboes8HyFE_TL0er8RE/edit" target="_blank">
-        Link to Admin Feedback
-      </a>
-    </li>
-  </ul>
-</h6>
-{% endif %}
-
-
-<p>For any issues or questions please email <a href="mailto:librarycrf@pobox.upenn.edu?&amp;subject=CRF%20Question">librarycrf@pobox.upenn.edu</a> and a Courseware Support team member will be in contact with you.</p>
+    <h1> User Documentation </h1>
+    <h4>
+        <a href="https://docs.google.com/document/d/e/2PACX-1vQmPyukmwTmgefEnMPYttYZCzzsF2ZNS_eNtu60fhZDAu32omnLGc7V08qQz7Vt7t5Ab09q3OLP7bnf/pub" target="_blank">
+            Link to full document
+        </a>
+    </h4>
+    {% if staff %}
+        <h6>Courseware Support:
+            <ul>
+                <li>
+                    <a href="https://docs.google.com/document/d/1-VcUr70xOlAPwPH07CB61_CwVDw18QlrE_3KFPhYK7o/edit#" target="_blank">
+                        Link to User edit documentation
+                    </a>
+                </li>
+                <li>
+                    <a href="https://docs.google.com/document/d/1bGQBDn9CEJ_-3NpYKYEMTcQX25yppw1FRKetYoOAtnE/edit?usp=sharing" target="_blank">
+                        Link to Admin documentation
+                    </a>
+                </li>
+                <li>
+                    <a href="https://docs.google.com/document/d/1b5td0NS-r1DB2bFfL3EwhGQshboes8HyFE_TL0er8RE/edit" target="_blank">
+                        Link to Admin Feedback
+                    </a>
+                </li>
+            </ul>
+        </h6>
+    {% endif %}
+    <p>For any issues or questions please email <a href="mailto:librarycrf@pobox.upenn.edu?&amp;subject=CRF%20Question">librarycrf@pobox.upenn.edu</a> and a Courseware Support team member will be in contact with you.</p>
     <iframe src="https://docs.google.com/document/d/e/2PACX-1vQmPyukmwTmgefEnMPYttYZCzzsF2ZNS_eNtu60fhZDAu32omnLGc7V08qQz7Vt7t5Ab09q3OLP7bnf/pub?embedded=true" style="height: 100%;width: 100%;">
     </iframe>
 
-<style>
-.medium-container {
-  height:80%;
-}
-</style>
-
-<!-- add report issue -->
-
-
-
+    <style>
+     .medium-container {
+         height:80%;
+     }
+    </style>
 {% endblock %}
