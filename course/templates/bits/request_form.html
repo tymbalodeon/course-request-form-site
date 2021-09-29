@@ -1,14 +1,15 @@
 {% load rest_framework %}
 {% load template_extra %}
 
-<p>The Canvas site title will default to:
+<p>Default course title:
     <em style="text-decoration: underline;">
         {% if course.primary_crosslist %} {{course.primary_crosslist|course_code_to_string}}
         {% else %}{{course.course_code|course_code_to_string}}
-        {% endif %} {{course.course_name|truncate_course_name:30}}</em>. If you wish to modify the course name, please provide the new value in the box below. (The primary course code will always be included.)
+        {% endif %} {{course.course_name|truncate_course_name:30}}</em>. If you wish to modify the title, please provide the new value in the box below. (The primary course code will always be included.)
 </p>
 <br>
 {% render_field request_form.title_override style=style %}
+<br>
 <p>
     If you would like to copy content from an existing Canvas site, please click
     "Select Copy," select a source from the list, and click "Add Source." When
@@ -106,7 +107,7 @@
 </fieldset>
 
 <fieldset>
-    <legend><h6 style="margin:0;">Add Additional Users </h6></legend>
+    <legend><h6 style="margin:0;">Add Additional Users</h6></legend>
     {% if course.course_schools != 'GSE' %}
         <p>Batch Enrollment Processes will pull in any Instructors or TAs listed in the Registrar. To add other users to the Canvas site you can specify them below. If you receive an error when trying to add an enrollment, try to proxy as the user in the box at the top of the page to ensure they are a user in the CRF.</p>
         <fieldset id="additional_enrollments" style="border:none;padding-right:0px;padding-left:0px;margin-top:0px;">
