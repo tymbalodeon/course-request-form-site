@@ -188,7 +188,6 @@ class CanvasSiteSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def validate(self, data):
-        print("in here")
         return data
 
     def update(self, instance, validated_data):
