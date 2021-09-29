@@ -75,9 +75,9 @@
 {% block template_page_js %}
     <script>
      function formUpdateContentCopy() {
-         var hi = document.querySelector("#id_name > option:nth-child(2)").value;
-         $('input[name="copy_from_course"]').val(hi);
-         console.log(hi);
+         var courseCode = document.querySelector("#id_name > option:nth-child(2)").value;
+         $('input[name="copy_from_course"]').val(courseCode);
+         console.log("Copy from course code selected: ", courseCode);
          $("#ContentCopy").modal("hide");
      }
     </script>
