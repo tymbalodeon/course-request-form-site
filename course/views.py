@@ -1360,7 +1360,7 @@ def quick_config(request):
 def open_data_proxy(request):
     data = {"data": "none"}
     size = 0
-    print("Course lookup failed: {request}")
+    print(f"Course lookup failed: {request}")
 
     if request.GET:
         try:
