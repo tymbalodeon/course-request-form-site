@@ -23,6 +23,8 @@ from data_warehouse.data_warehouse import (
     pull_instructors,
 )
 
+LPS_ONLINE_ACCOUNT_ID = 132413
+
 
 @task()
 def task_nightly_sync(term):
@@ -121,7 +123,10 @@ def create_canvas_sites(
             print(f") Creating Canvas site for {course_requested}...")
 
         account = find_account(
-            course_requested.course_schools.canvas_subaccount, test=test
+            LPS_ONLINE_ACCOUNT_ID
+            if request.lps_online
+            else course_requested.course_schools.canvas_subaccount,
+            test=test,
         )
 
         if account:
