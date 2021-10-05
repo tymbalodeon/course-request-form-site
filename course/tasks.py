@@ -493,7 +493,11 @@ def create_canvas_sites(
         request.save()
 
         if verbose:
-            print(f"- Canvas site successfully created: {site}.")
+            print(
+                f"- ALREADY EXISTS: {canvas_course}"
+                if already_exists
+                else f"- Canvas site successfully created: {site}."
+            )
 
     if verbose:
         print("FINISHED")
