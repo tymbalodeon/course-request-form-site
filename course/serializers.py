@@ -217,6 +217,7 @@ class RequestSerializer(DynamicFieldsModelSerializer):
         max_length=45,
         style={"base_template": "input.html"},
     )
+    lps_online = serializers.BooleanField(default=False)
     additional_enrollments = AdditionalEnrollmentSerializer(
         many=True,
         default=[],
