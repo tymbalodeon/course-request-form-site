@@ -153,7 +153,7 @@ class CourseAdmin(admin.ModelAdmin):
         else:
             return ["created", "updated", "owner", "course_code", "request"]
 
-    def save_model(self, request, obj):
+    def save_model(self, request, obj, form, change):
         obj.owner = request.user
         obj.save()
 
@@ -183,7 +183,7 @@ class RequestAdmin(admin.ModelAdmin):
                     "course_requested",
                     "copy_from_course",
                     "title_override",
-                    "lpsonline",
+                    "lps_online",
                     "additional_sections",
                     "reserves",
                     "additional_instructions",
@@ -212,7 +212,7 @@ class RequestAdmin(admin.ModelAdmin):
 
         return masquerade
 
-    def save_model(self, request, obj):
+    def save_model(self, request, obj, form, change):
         obj.save()
 
 
