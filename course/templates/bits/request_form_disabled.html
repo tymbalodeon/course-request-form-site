@@ -25,14 +25,29 @@
 
 {% endif %}
 
-<div class="form-group ">
-    <label>Title override</label>
-    <input name="title_override" class="form-control" type="text" value="{{ request_instance.title_override }}" disabled>
+<div class="form-group">
+    <fieldset>
+        <legend><h6 style="margin:0;">Title Override</h6></legend>
+        <input name="title_override" class="form-control" type="text" value="{{ request_instance.title_override }}" disabled>
+    </fieldset>
 </div>
 
+{% if course.course_schools == "SAS" %}
+
+    <div class="form-group ">
+        <fieldset>
+            <legend><h6 style="margin:0;">LPS Online</h6></legend>
+            <input name="lps_online" class="form-control" type="text" value="{{ request_instance.lps_online }}" disabled>
+        </fieldset>
+    </div>
+
+{% endif %}
+
 <div class="form-group ">
-    <label>Copy from course</label>
-    <input name="copy_from_course" class="form-control" type="text" value="{{ request_instance.copy_from_course }}" disabled>
+    <fieldset>
+        <legend><h6 style="margin:0;">Copy from existing site</h6></legend>
+        <input name="copy_from_course" class="form-control" type="text" value="{{ request_instance.copy_from_course }}" disabled>
+    </fieldset>
 </div>
 
 <fieldset>
@@ -41,6 +56,7 @@
         <p style="font-size:0.9rem;"> Sections of a course can share a single Canvas site. If you are teaching a large introductory course
             or several sections of a course, you can have the sections broken out into a single site. please select all sections you would like included.
         </p>
+        <br>
         {% if course.sections %}
             <div class="contain-table vertical-center">
                 <table style="max-width:500px;">
@@ -78,6 +94,7 @@
 <fieldset>
     <legend><h6 style="margin:0;">Library Services</h6></legend>
     <p> Course Reserve services are available to your course. See <a target="_blank" href="http://www.library.upenn.edu/using-libraries/reserves"> http://www.library.upenn.edu/using-libraries/reserves</a> for more information.</p>
+    <br>
     <dl class="row" style="line-height:1.1;">
         <dt class="col-4 col-md-3 text-right" style="padding-right: 0px;">Reserves</dt>
         <dd class="col-8 col-md-9"> {{ request_instance.reserves }}</dd>
@@ -88,6 +105,7 @@
     <legend><h6 style="margin:0;">Add Additional Users </h6></legend>
     {% if course.course_schools != 'GSE' %}
         <p>Batch Enrollment Processes will pull in any Instructors or TAs listed in the Registrar. To add other users to the Canvas site you can specify them below.</p>
+        <br>
         <div>
             {% if request_instance.additional_enrollments %}
                 <div class="contain-table vertical-center">
@@ -121,7 +139,9 @@
     {% endif %}
 </fieldset>
 
-<div class="form-group ">
-    <label>Additional instructions</label>
-    <textarea name="additional_instructions" class="form-control" disabled>{{ request_instance.additional_instructions }}</textarea>
+<div class="form-group">
+    <fieldset>
+        <legend><h6 style="margin:0;">Additional instructions</h6></legend>
+        <textarea name="additional_instructions" class="form-control" disabled>{{ request_instance.additional_instructions }}</textarea>
+    </fieldset>
 </div>
