@@ -16,7 +16,6 @@ from course.auto_complete import (
 
 schema_view = get_swagger_view(title="Pastebin API")
 
-
 router = DefaultRouter()
 router.register(r"courses", views.CourseViewSet)
 router.register(r"users", views.UserViewSet)

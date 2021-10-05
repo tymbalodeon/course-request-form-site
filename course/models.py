@@ -400,6 +400,7 @@ class Request(models.Model):
     title_override = models.CharField(
         max_length=100, null=True, default=None, blank=True
     )
+    lps_online = models.BooleanField(default=False)
     additional_instructions = models.TextField(blank=True, default=None, null=True)
     admin_additional_instructions = models.TextField(
         blank=True, default=None, null=True

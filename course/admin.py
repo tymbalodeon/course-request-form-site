@@ -183,6 +183,7 @@ class RequestAdmin(admin.ModelAdmin):
                     "course_requested",
                     "copy_from_course",
                     "title_override",
+                    "lpsonline",
                     "additional_sections",
                     "reserves",
                     "additional_instructions",
@@ -255,10 +256,12 @@ class RequestSummaryAdmin(admin.ModelAdmin):
             request,
             extra_context=extra_context,
         )
+
         try:
             query_set = response.context_data["cl"].queryset
         except (AttributeError, KeyError):
             return response
+
         multisectionExists = query_set.filter(
             course_requested=OuterRef("pk"), additional_sections__isnull=False
         )
