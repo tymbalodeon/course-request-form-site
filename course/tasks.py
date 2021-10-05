@@ -125,6 +125,7 @@ def create_canvas_sites(
         account = find_account(
             LPS_ONLINE_ACCOUNT_ID
             if request.lps_online
+            and course_requested.course_schools.abbreviation == "SAS"
             else course_requested.course_schools.canvas_subaccount,
             test=test,
         )
