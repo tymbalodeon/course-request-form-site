@@ -255,12 +255,13 @@ class CourseViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
             return response
 
     def retrieve(self, request, *args, **kwargs):
-        print(") Receiving course detail...")
+        print(") Retrieving course detail...")
+
         response = super(CourseViewSet, self).retrieve(request, *args, **kwargs)
 
         if request.accepted_renderer.format == "html":
             course_instance = self.get_object()
-            print(f"- Course instance found: {course_instance}")
+            print(f"- Course found: {course_instance}")
 
             if course_instance.requested:
                 request_instance = (
@@ -555,7 +556,11 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         return ""
 
     def retrieve(self, request, *args, **kwargs):
+        print(") Retrieving request detail...")
+
         response = super(RequestViewSet, self).retrieve(request, *args, **kwargs)
+        print(f"- Request found: {response.data['course_requested']}")
+
         if request.resolver_match.url_name == "UI-request-detail-success":
             return Response(
                 {"request_instance": response.data},
@@ -587,6 +592,7 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
                 {"request_instance": response.data, "permissions": permissions},
                 template_name="request_detail.html",
             )
+
         return response
 
     def destroy(self, request, *args, **kwargs):
