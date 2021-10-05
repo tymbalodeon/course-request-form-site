@@ -175,31 +175,46 @@ class RequestAdmin(admin.ModelAdmin):
     readonly_fields = ["created", "updated", "masquerade", "additional_sections"]
     inlines = [AdditionalEnrollmentInline]
     autocomplete_fields = ["owner", "course_requested", "canvas_instance"]
-    fieldsets = (
-        (
-            None,
-            {
-                "fields": (
-                    "course_requested",
-                    "copy_from_course",
-                    "title_override",
-                    "lps_online",
-                    "additional_sections",
-                    "reserves",
-                    "additional_instructions",
-                    "admin_additional_instructions",
-                    "status",
-                    "canvas_instance",
-                )
-            },
-        ),
-        (
-            "Metadata",
-            {
-                "fields": ("created", "updated", "owner", "masquerade"),
-            },
-        ),
-    )
+
+    def get_fieldsets(self, request, obj):
+        if obj.course_requested.course_schools.abbreviation == "SAS":
+            fields = (
+                "course_requested",
+                "copy_from_course",
+                "title_override",
+                "lps_online",
+                "additional_sections",
+                "reserves",
+                "additional_instructions",
+                "admin_additional_instructions",
+                "status",
+                "canvas_instance",
+            )
+        else:
+            fields = (
+                "course_requested",
+                "copy_from_course",
+                "title_override",
+                "additional_sections",
+                "reserves",
+                "additional_instructions",
+                "admin_additional_instructions",
+                "status",
+                "canvas_instance",
+            )
+
+        return (
+            (
+                None,
+                {"fields": fields},
+            ),
+            (
+                "Metadata",
+                {
+                    "fields": ("created", "updated", "owner", "masquerade"),
+                },
+            ),
+        )
 
     def additional_sections(self, instance):
         return instance.additional_sections.course_code
