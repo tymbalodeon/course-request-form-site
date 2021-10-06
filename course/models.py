@@ -401,6 +401,7 @@ class Request(models.Model):
         max_length=100, null=True, default=None, blank=True
     )
     lps_online = models.BooleanField(default=False)
+    exclude_announcements = models.BooleanField(default=False)
     additional_instructions = models.TextField(blank=True, default=None, null=True)
     admin_additional_instructions = models.TextField(
         blank=True, default=None, null=True
