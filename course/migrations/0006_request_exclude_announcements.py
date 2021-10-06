@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('course', '0005_request_lps_online'),
+        ("course", "0005_request_lps_online"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='request',
-            name='exclude_announcements',
+            model_name="request",
+            name="exclude_announcements",
             field=models.BooleanField(default=False),
         ),
     ]
