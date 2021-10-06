@@ -54,7 +54,7 @@ CANVAS_ENVIRONMENT = "PRODUCTION"
 ALLOWED_HOSTS = ["*", "localhost"]
 INTERNAL_IPS = ["127.0.0.1"]
 STATIC_URL = "/static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 LOGOUT_REDIRECT_URL = (
     "/Shibboleth.sso/Logout?return=https://idp.pennkey.upenn.edu/logout"
 )
