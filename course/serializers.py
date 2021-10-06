@@ -218,6 +218,7 @@ class RequestSerializer(DynamicFieldsModelSerializer):
         style={"base_template": "input.html"},
     )
     lps_online = serializers.BooleanField(default=False)
+    exclude_announcements = serializers.BooleanField(default=False)
     additional_enrollments = AdditionalEnrollmentSerializer(
         many=True,
         default=[],
