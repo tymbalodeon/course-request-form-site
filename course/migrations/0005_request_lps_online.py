@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('course', '0004_delete_tools'),
+        ("course", "0004_delete_tools"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='request',
-            name='lps_online',
+            model_name="request",
+            name="lps_online",
             field=models.BooleanField(default=False),
         ),
     ]
