@@ -1,46 +1,78 @@
 {% load rest_framework %}
 {% load template_extra %}
 
-<p>Default course title:
-    <em style="text-decoration: underline;">
-        {% if course.primary_crosslist %} {{course.primary_crosslist|course_code_to_string}}
-        {% else %}{{course.course_code|course_code_to_string}}
-        {% endif %} {{course.course_name|truncate_course_name:30}}</em>. If you wish to modify the title, please provide the new value in the box below. (The primary course code will always be included.)
-</p>
-<br>
-{% render_field request_form.title_override style=style %}
-<br>
-<p>
-    If you would like to copy content from an existing Canvas site, please click
-    "Select Copy," select a source from the list, and click "Add Source." When
-    successful, the field will automatically populate with the site's 7-digit
-    course id number.
-</p>
-<br>
-<div class="form-group">
-    <label>"Copy from" Canvas site ID (7-digit number)</label>
-    {{copy_from_course}}
-    <div class="input-group mb-3">
-        {% if request_instance.copy_from_course %}
-            {% if staff %}
-                <input name="copy_from_course" value="{{request_instance.copy_from_course}}" type="text" class="form-control" placeholder="Canvas Id" aria-label="Canvas ID for content copy" style="width:unset;margin-bottom:8px;">
+<fieldset>
+    <legend><h6 style="margin:0;">Title</h6></legend>
+    The default title is provided below. If you wish to modify it, please provide the new value in the box below. (Do not include the course code--this will be added automatically.)
+    <br>
+    <br>
+    <strong><p>Default:
+        <em style="text-decoration: underline;">
+            {% if course.primary_crosslist %} {{course.primary_crosslist|course_code_to_string}}
+            {% else %}{{course.course_code|course_code_to_string}}
+            {% endif %} {{course.course_name|truncate_course_name:30}}</em>.</strong>
+    </p>
+    <br>
+    {% render_field request_form.title_override style=style %}
+</fieldset>
+
+{% if course.course_schools == "SAS" %}
+    <fieldset>
+        <legend><h6 style="margin:0;">Account</h6></legend>
+        <p>By default, this course will be created in the <em style="text-decoration: underline;">School of Arts and Sciences</em>
+            sub-account. If you would like to create this site in the <strong><em>Penn LPS Online</em></strong>
+            sub-account instead, please check the box below.</p>
+        <br>
+        {% render_field request_form.lps_online style=style %}
+        <br>
+    </fieldset>
+{% endif %}
+
+<fieldset>
+    <legend><h6 style="margin:0;">Copy from existing site</h6></legend>
+    <div class="form-group">
+        <p>
+            If you would like to copy content from an existing Canvas site, please click
+            "Select Copy," select a source from the list, and click "Add Source." When
+            successful, the field will automatically populate with the site's 7-digit
+            course id number.
+        </p>
+        <br>
+        {{copy_from_course}}
+        <label>Canvas ID (7-digit number)</label>
+        <div class="input-group mb-3">
+            {% if request_instance.copy_from_course %}
+                {% if staff %}
+                    <input name="copy_from_course" value="{{request_instance.copy_from_course}}" type="text" class="form-control"  aria-label="Canvas ID for content copy" style="width:unset;margin-bottom:8px;">
+                {% else %}
+                    <input name="copy_from_course" value="{{request_instance.copy_from_course}}" type="text" class="form-control"  aria-label="Canvas ID for content copy" style="width:unset;margin-bottom:8px;" disabled>
+                {% endif %}
             {% else %}
-                <input name="copy_from_course" value="{{request_instance.copy_from_course}}" type="text" class="form-control" placeholder="Canvas Id" aria-label="Canvas ID for content copy" style="width:unset;margin-bottom:8px;" disabled>
+                {% if staff %}
+                    <input name="copy_from_course" value="" type="text" class="form-control"  aria-label="Canvas ID for content copy" style="width:unset;margin-bottom:8px;">
+                {% else %}
+                    <input name="copy_from_course" value="" type="text" class="form-control"  aria-label="Canvas ID for content copy" style="width:unset;margin-bottom:8px;" disabled>
+                {% endif %}
             {% endif %}
-        {% else %}
-            {% if staff %}
-                <input name="copy_from_course" value="" type="text" class="form-control" placeholder="Canvas Id" aria-label="Canvas ID for content copy" style="width:unset;margin-bottom:8px;">
-            {% else %}
-                <input name="copy_from_course" value="" type="text" class="form-control" placeholder="Canvas Id" aria-label="Canvas ID for content copy" style="width:unset;margin-bottom:8px;" disabled>
-            {% endif %}
-        {% endif %}
-        <div class="input-group-append">
-            <button class="btn btn-outline-secondary accent-button" type="button" data-toggle="modal"  data-target="#ContentCopy" data-backdrop="static" data-keyboard="false" style='z-index:unset;'>Select Copy</button>
+            <div class="input-group-append">
+                <button class="btn btn-outline-secondary accent-button" type="button" data-toggle="modal"  data-target="#ContentCopy" data-backdrop="static" data-keyboard="false" style='z-index:unset;'>Select Copy</button>
+            </div>
         </div>
     </div>
-</div>
+</fieldset>
 
 {% include "bits/copy_course_modal.html" %}
+
+<blockquote style="min-width:unset;" class="show" id="noticeForm">
+    <div>
+        <h5 style="margin:0rem 0rem 0.5rem 0rem;font-family: Menlo, monospace;">Please Read Before Submitting</h5>
+        <p> If you have set a Content Copy, please check that it has properly populated as a numeric ID in the field 'Copy from course'.<br><br>
+            If the field has not populated, please specify the Course you would like to copy content from in the text field below. </p>
+    </div>
+    <div style="height:40px;">
+        <i class="fas fa-times" style="font-size:20px;height:20px;" onclick="document.getElementById('noticeForm').remove()"></i>
+    </div>
+</blockquote>
 
 <fieldset>
     <legend><h6 style="margin:0;">Multi-Section Course Sites</h6></legend>
@@ -53,6 +85,7 @@
                 Please select all sections you would like included. If a course is gray-ed out that means it has been already requested in another course request and therefore cannot be added to this one
             </p>
         </div>
+        <br>
         {% if course.sections %}
             <div class="contain-table vertical-center">
                 <table style="max-width:500px;">
@@ -103,6 +136,7 @@
 <fieldset>
     <legend><h6 style="margin:0;">Library Services</h6></legend>
     <p> Course Reserve services are available to your course. See <a target="_blank" href="http://www.library.upenn.edu/using-libraries/reserves"> http://www.library.upenn.edu/using-libraries/reserves</a> for more information.</p>
+    <br>
     {% render_field request_form.reserves style=style %}
 </fieldset>
 
@@ -113,12 +147,12 @@
         <fieldset id="additional_enrollments" style="border:none;padding-right:0px;padding-left:0px;margin-top:0px;">
             {% if request_instance.additional_enrollments %}
                 {% for enrollment in request_instance.additional_enrollments %}
-                    <div id="addEnroll-{{ forloop.counter0 }}" class="row vertical-center" style="">
-                        <label style="width: 45%;" for="name">
-                            User(pennkey)
-                            <input  name="additional_enrollments[{{ forloop.counter0 }}][user]" value="{{enrollment.user}}" class="form-control" type="text">
+                    <div id="addEnroll-{{ forloop.counter0 }}" class="additional-enrollments">
+                        <label class="additional-enrollments-user" for="name">
+                            User (pennkey)
+                            <input name="additional_enrollments[{{ forloop.counter0 }}][user]" value="{{enrollment.user}}" class="form-control" type="text">
                         </label>
-                        <label>
+                        <label class="additional-enrollments-role">
                             Role
                             <select id="choose" name="additional_enrollments[{{ forloop.counter0 }}][role]" >
                                 <option disabled>Please select</option>
@@ -128,16 +162,16 @@
                                 <option value="INST" {% if enrollment.role == "INST" or enrollment.role == "instructor" %} selected {% endif %}>Instructor</option>
                             </select>
                         </label>
-                        <a onClick="removeElement('additional_enrollments', 'addEnroll-{{ forloop.counter0 }}');" style="padding-left:5px;"> Delete <i class="fas fa-times"></i></a>
+                        <a class="additional-enrollments-delete" onClick="removeElement('additional_enrollments', 'addEnroll-{{ forloop.counter0 }}');"> Delete <i class="fas fa-times"></i></a>
                     </div>
                 {% endfor %}
             {% else %}
-                <div id="addEnroll-1" class="row vertical-center" style="">
-                    <label style="width: 45%;">
+                <div id="addEnroll-1" class="additional-enrollments">
+                    <label class="additional-enrollments-user">
                         User
                         <input name="additional_enrollments[0][user]" value="" class="form-control" type="text">
                     </label>
-                    <label>
+                    <label class="additional-enrollments-role">
                         Role
                         <select id="choose" name="additional_enrollments[0][role]" >
                             <option disabled selected>Please select</option>
@@ -145,15 +179,14 @@
                             <option value="DES">Designer</option>
                             <option value="LIB">Librarian</option>
                             <option value="INST">Instructor</option>
-
                         </select>
                     </label>
-                    <a onClick="removeElement('additional_enrollments', 'addEnroll-1');" style="padding-left:5px;"> Delete <i class="fas fa-times"></i></a>
+                    <a class="additional-enrollments-delete" onClick="removeElement('additional_enrollments', 'addEnroll-1');"> Delete <i class="fas fa-times"></i></a>
                 </div>
             {% endif %}
         </fieldset>
         <div onclick="addrow()"> <a>
-            <i class="fas fa-plus"></i> add another </a>
+            <i class="fas fa-plus"></i> Add another</a>
         </div>
     {% else %} 
         <p>
@@ -165,18 +198,10 @@
     {% endif %}
 </fieldset>
 
-<blockquote style="min-width:unset;" class="show" id="noticeForm">
-    <div>
-        <h5 style="margin:0rem 0rem 0.5rem 0rem;font-family: Menlo, monospace;">Please Read Before Submitting</h5>
-        <p> If you have set a Content Copy, please check that it has properly populated as a numeric ID in the field 'Copy from course'.<br>
-            If the field has not populated, please specify the Course you would like to copy content from in the text field below. </p>
-    </div>
-    <div style="height:40px;">
-        <i class="fas fa-times" style="font-size:20px;height:20px;" onclick="document.getElementById('noticeForm').remove()"></i>
-    </div>
-</blockquote>
-
-{% render_field request_form.additional_instructions style=style %}
+<fieldset>
+    <legend><h6 style="margin:0;">Additional Instructions</h6></legend>
+    {% render_field request_form.additional_instructions style=style %}
+</fieldset>
 
 {% if staff %}
     <fieldset>

@@ -153,7 +153,7 @@ class CourseAdmin(admin.ModelAdmin):
         else:
             return ["created", "updated", "owner", "course_code", "request"]
 
-    def save_model(self, request, obj):
+    def save_model(self, request, obj, form, change):
         obj.owner = request.user
         obj.save()
 
@@ -175,30 +175,46 @@ class RequestAdmin(admin.ModelAdmin):
     readonly_fields = ["created", "updated", "masquerade", "additional_sections"]
     inlines = [AdditionalEnrollmentInline]
     autocomplete_fields = ["owner", "course_requested", "canvas_instance"]
-    fieldsets = (
-        (
-            None,
-            {
-                "fields": (
-                    "course_requested",
-                    "copy_from_course",
-                    "title_override",
-                    "additional_sections",
-                    "reserves",
-                    "additional_instructions",
-                    "admin_additional_instructions",
-                    "status",
-                    "canvas_instance",
-                )
-            },
-        ),
-        (
-            "Metadata",
-            {
-                "fields": ("created", "updated", "owner", "masquerade"),
-            },
-        ),
-    )
+
+    def get_fieldsets(self, request, obj):
+        if obj.course_requested.course_schools.abbreviation == "SAS":
+            fields = (
+                "course_requested",
+                "copy_from_course",
+                "title_override",
+                "lps_online",
+                "additional_sections",
+                "reserves",
+                "additional_instructions",
+                "admin_additional_instructions",
+                "status",
+                "canvas_instance",
+            )
+        else:
+            fields = (
+                "course_requested",
+                "copy_from_course",
+                "title_override",
+                "additional_sections",
+                "reserves",
+                "additional_instructions",
+                "admin_additional_instructions",
+                "status",
+                "canvas_instance",
+            )
+
+        return (
+            (
+                None,
+                {"fields": fields},
+            ),
+            (
+                "Metadata",
+                {
+                    "fields": ("created", "updated", "owner", "masquerade"),
+                },
+            ),
+        )
 
     def additional_sections(self, instance):
         return instance.additional_sections.course_code
@@ -211,7 +227,7 @@ class RequestAdmin(admin.ModelAdmin):
 
         return masquerade
 
-    def save_model(self, request, obj):
+    def save_model(self, request, obj, form, change):
         obj.save()
 
 
@@ -255,10 +271,12 @@ class RequestSummaryAdmin(admin.ModelAdmin):
             request,
             extra_context=extra_context,
         )
+
         try:
             query_set = response.context_data["cl"].queryset
         except (AttributeError, KeyError):
             return response
+
         multisectionExists = query_set.filter(
             course_requested=OuterRef("pk"), additional_sections__isnull=False
         )
