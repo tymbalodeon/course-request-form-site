@@ -67,6 +67,19 @@ def emergency_redirect(request):
     return redirect("/")
 
 
+def print_log_message(request, object_type, action_type):
+    search_term = request.GET.get("search", None)
+
+    if not search_term:
+        search_term = request.GET.get("subject", None)
+
+    search_term_display = f'using search term "{search_term}" ' if search_term else ""
+
+    print(
+        f') Retrieving {object_type} {action_type.upper()} {search_term_display}for "{request.user}"...'
+    )
+
+
 class TestUserProfileCreated(UserPassesTestMixin):
     def test_func(self):
         user = User.objects.get(username=self.request.user.username)
@@ -209,7 +222,7 @@ class CourseViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         serializer.save(owner=self.request.user)
 
     def list(self, request):
-        print(f") Retrieving course LIST for {request.user}...")
+        print_log_message(request, "course", "list")
 
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
@@ -260,7 +273,7 @@ class CourseViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
             return response
 
     def retrieve(self, request, *args, **kwargs):
-        print(f") Retrieving course DETAIL for {request.user}...")
+        print_log_message(request, "course", "detail")
 
         response = super(CourseViewSet, self).retrieve(request, *args, **kwargs)
 
@@ -452,7 +465,7 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         serializer.save(owner=self.request.user)
 
     def list(self, request):
-        print(f") Retrieving request LIST for {request.user}...")
+        print_log_message(request, "request", "list")
 
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
@@ -568,7 +581,7 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         return ""
 
     def retrieve(self, request, *args, **kwargs):
-        print(f") Retrieving request DETAIL for {request.user}...")
+        print_log_message(request, "request", "detail")
 
         response = super(RequestViewSet, self).retrieve(request, *args, **kwargs)
         print(f"- Request found: {response.data['course_requested']}")
@@ -754,7 +767,7 @@ class SchoolViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
     }
 
     def list(self, request):
-        print(f") Retrieving school LIST for {request.user}...")
+        print_log_message(request, "school", "list")
 
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
@@ -787,7 +800,7 @@ class SchoolViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def retrieve(self, request, *args, **kwargs):
-        print(f") Retrieving school DETAIL for {request.user}...")
+        print_log_message(request, "school", "detail")
 
         response = super(SchoolViewSet, self).retrieve(request, *args, **kwargs)
 
@@ -823,7 +836,7 @@ class SubjectViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         )
 
     def list(self, request):
-        print(f") Retrieving subject LIST for {request.user}...")
+        print_log_message(request, "subject", "list")
 
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
@@ -844,7 +857,7 @@ class SubjectViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
             return response
 
     def retrieve(self, request, *args, **kwargs):
-        print(f") Retrieving subject DETAIL for {request.user}...")
+        print_log_message(request, "subject", "detail")
 
         response = super(SubjectViewSet, self).retrieve(request, *args, **kwargs)
 
@@ -1079,7 +1092,7 @@ class AutoAddViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
             return response
 
     def list(self, request):
-        print(") Retrieving auto-add LIST...")
+        print_log_message(request, "auto-added user", "list")
 
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
