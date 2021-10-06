@@ -95,8 +95,6 @@ class MixedPermissionModelViewSet(viewsets.ModelViewSet):
     login_url = "/accounts/login/"
 
     def get_permissions(self):
-        print(f"Action: {self.action}")
-
         try:
             return [
                 permission()
@@ -211,6 +209,8 @@ class CourseViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         serializer.save(owner=self.request.user)
 
     def list(self, request):
+        print(") Retrieving course LIST...")
+
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
 
@@ -252,15 +252,21 @@ class CourseViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
                     "style": {"template_pack": "rest_framework/vertical/"},
                 }
 
+            print(response.data["paginator"].page)
+
+            for course in response.data["results"]:
+                print(f"- Course found: {course['course_code']}")
+
             return response
 
     def retrieve(self, request, *args, **kwargs):
-        print(") Receiving course detail...")
+        print(") Retrieving course DETAIL...")
+
         response = super(CourseViewSet, self).retrieve(request, *args, **kwargs)
 
         if request.accepted_renderer.format == "html":
             course_instance = self.get_object()
-            print(f"- Course instance found: {course_instance}")
+            print(f"- Course found: {course_instance}")
 
             if course_instance.requested:
                 request_instance = (
@@ -446,6 +452,8 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         serializer.save(owner=self.request.user)
 
     def list(self, request):
+        print(") Retrieving request LIST...")
+
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
 
@@ -472,6 +480,11 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
                     "filter": RequestFilter,
                     "autocompleteUser": UserForm(),
                 }
+
+            print(response.data["paginator"].page)
+
+            for request in response.data["results"]:
+                print(f"- Request found: {request['course_requested']}")
 
             return response
 
@@ -555,7 +568,11 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         return ""
 
     def retrieve(self, request, *args, **kwargs):
+        print(") Retrieving request DETAIL...")
+
         response = super(RequestViewSet, self).retrieve(request, *args, **kwargs)
+        print(f"- Request found: {response.data['course_requested']}")
+
         if request.resolver_match.url_name == "UI-request-detail-success":
             return Response(
                 {"request_instance": response.data},
@@ -587,6 +604,7 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
                 {"request_instance": response.data, "permissions": permissions},
                 template_name="request_detail.html",
             )
+
         return response
 
     def destroy(self, request, *args, **kwargs):
@@ -736,6 +754,8 @@ class SchoolViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
     }
 
     def list(self, request):
+        print(") Retrieving school LIST...")
+
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
 
@@ -746,6 +766,11 @@ class SchoolViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
             if request.accepted_renderer.format == "html":
                 response.template_name = "schools_list.html"
                 response.data = {"results": response.data, "paginator": self.paginator}
+
+            print(response.data["paginator"].page)
+
+            for school in response.data["results"]:
+                print(f"- School found: {school['name']}")
 
             return response
 
@@ -762,7 +787,11 @@ class SchoolViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def retrieve(self, request, *args, **kwargs):
+        print(") Retrieving school DETAIL...")
+
         response = super(SchoolViewSet, self).retrieve(request, *args, **kwargs)
+
+        print(f"- School found: {response.data['name']}")
 
         return (
             Response({"data": response.data}, template_name="school_detail.html")
@@ -794,6 +823,8 @@ class SubjectViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         )
 
     def list(self, request):
+        print(") Retrieving subject LIST...")
+
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
 
@@ -805,10 +836,19 @@ class SubjectViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
                 response.template_name = "subjects_list.html"
                 response.data = {"results": response.data, "paginator": self.paginator}
 
+            print(response.data["paginator"].page)
+
+            for subject in response.data["results"]:
+                print(f"- Subject found: {subject['name']}")
+
             return response
 
     def retrieve(self, request, *args, **kwargs):
+        print(") Retrieving subject DETAIL...")
+
         response = super(SubjectViewSet, self).retrieve(request, *args, **kwargs)
+
+        print(f"- Subject found: {response.data['name']}")
 
         return (
             Response({"data": response.data}, template_name="subject_detail.html")
@@ -1039,6 +1079,8 @@ class AutoAddViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
             return response
 
     def list(self, request):
+        print(") Retrieving auto-add LIST...")
+
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
 
@@ -1054,6 +1096,11 @@ class AutoAddViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
                     "serializer": AutoAddSerializer,
                     "autocompleteUser": UserForm(),
                 }
+
+            print(response.data["paginator"].page)
+
+            for user in response.data["results"]:
+                print(f"- Auto-added user found: {user}")
 
             return response
 

@@ -964,32 +964,26 @@ textarea.has-error:active {
   color: #9a9a9a;
 }
 
-#RequestForm input[type="text"],
-#RequestForm textarea {
-  margin-left: 6%;
-  width: 90%;
+.additional-enrollments {
+  display: flex;
+  justify-content: space-evenly;
 }
 
-#additional_enrollments input[type="text"],
-#additional_enrollments textera,
-#additional_enrollments select {
-  margin-left: 0%;
-  margin-right: 0%;
-  padding: 6px;
-}
-#additional_enrollments select {
-  padding: 6px;
-  width: 125px;
-}
-#additional_enrollments label {
-  margin: 0px;
+.additional-enrollments-user {
+  width: 54%;
+  margin-right: 1%;
 }
 
-/*.form-group{
-  margin-top:5px;
-}*/
+.additional-enrollments-role {
+  width: 34%;
+}
 
-/* search bar */
+.additional-enrollments-delete {
+  margin-left: 1%;
+  align-self: center;
+  width: 10%;
+}
+
 #search {
   float: right;
 }
