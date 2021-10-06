@@ -13,13 +13,28 @@
             <form action="{% url 'UI-request-list' %}" method="post">
                 {% csrf_token %}
                 <div class="modal-body">
-                    <p style="margin: .5rem 0 0.5rem 0;">If you would like the full form please click 'Custom Request'.</p>
-                    <label for="inputCanvasID">Copy From Canvas Site (OPTIONAL) </label>
-                    <input type="number" id="inputCanvasID" name="copy_from_course" class="form-control" placeholder="Canvas Site ID (number)" aria-describedby="textHelpInline">
-                    <small id="passwordHelpInline" class="text-muted">
-                        Canvas Site ID is the terminal number in the URL of the Canvas site.
-                    </small>
-                    <p style="margin: .5rem 0 0 0;"> If you would like to specify more customizations (add Reserves, additional Users, etc.) please click 'Custom Request'.</p>
+                    <p>
+                        To request this site using the default options,
+                        optionally provide a Canvas site to copy from, and click
+                        "Submit Request."
+                    </p>
+                    <mark>
+                        <em>**To see more options, please click "Custom Request" below.**
+                        </em>
+                    </mark>
+                    <fieldset>
+                        <legend><h6 style="margin:0;">Copy from existing site (OPTIONAL)</h6></legend>
+                        <label for="inputCanvasID">Canvas site id</label>
+                        <input type="number" id="inputCanvasID" name="copy_from_course" class="form-control" placeholder="7-digit number" aria-describedby="textHelpInline">
+                        <small id="passwordHelpInline" class="text-muted">
+                            The number that appears after "courses/" in the course site's URL.
+                        </small>
+                        <br>
+                        <br>
+                        <input type="checkbox" id="exclude_announcements" name="exclude_announcements">
+                        <label style="display: inline;" for="exclude_announcements">Exclude announcements</label>
+                        <br>
+                    </fieldset>
                 </div>
                 <div class="modal-footer">
                     <input name="course_requested" type="hidden"class="form-control" type="text" value="">
