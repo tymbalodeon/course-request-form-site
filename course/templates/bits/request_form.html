@@ -43,15 +43,15 @@
         <div class="input-group mb-3">
             {% if request_instance.copy_from_course %}
                 {% if staff %}
-                    <input name="copy_from_course" value="{{request_instance.copy_from_course}}" type="text" class="form-control"  aria-label="Canvas ID for content copy" style="width:unset;margin-bottom:8px;">
+                    <input name="copy_from_course" value="{{request_instance.copy_from_course}}" type="number" class="form-control"  aria-label="Canvas ID for content copy" style="width:unset;margin-bottom:8px;">
                 {% else %}
-                    <input name="copy_from_course" value="{{request_instance.copy_from_course}}" type="text" class="form-control"  aria-label="Canvas ID for content copy" style="width:unset;margin-bottom:8px;" disabled>
+                    <input name="copy_from_course" value="{{request_instance.copy_from_course}}" type="number" class="form-control"  aria-label="Canvas ID for content copy" style="width:unset;margin-bottom:8px;" disabled>
                 {% endif %}
             {% else %}
                 {% if staff %}
-                    <input name="copy_from_course" value="" type="text" class="form-control"  aria-label="Canvas ID for content copy" style="width:unset;margin-bottom:8px;">
+                    <input name="copy_from_course" value="" type="number" class="form-control"  aria-label="Canvas ID for content copy" style="width:unset;margin-bottom:8px;">
                 {% else %}
-                    <input name="copy_from_course" value="" type="text" class="form-control"  aria-label="Canvas ID for content copy" style="width:unset;margin-bottom:8px;" disabled>
+                    <input name="copy_from_course" value="" type="number" class="form-control"  aria-label="Canvas ID for content copy" style="width:unset;margin-bottom:8px;" disabled>
                 {% endif %}
             {% endif %}
             <div class="input-group-append">
