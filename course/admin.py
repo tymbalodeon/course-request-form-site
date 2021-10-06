@@ -177,36 +177,28 @@ class RequestAdmin(admin.ModelAdmin):
     autocomplete_fields = ["owner", "course_requested", "canvas_instance"]
 
     def get_fieldsets(self, request, obj):
+        fields = [
+            "course_requested",
+            "copy_from_course",
+            "title_override",
+            "additional_sections",
+            "reserves",
+            "additional_instructions",
+            "admin_additional_instructions",
+            "status",
+            "canvas_instance",
+        ]
+
         if obj.course_requested.course_schools.abbreviation == "SAS":
-            fields = (
-                "course_requested",
-                "copy_from_course",
-                "title_override",
-                "lps_online",
-                "additional_sections",
-                "reserves",
-                "additional_instructions",
-                "admin_additional_instructions",
-                "status",
-                "canvas_instance",
-            )
-        else:
-            fields = (
-                "course_requested",
-                "copy_from_course",
-                "title_override",
-                "additional_sections",
-                "reserves",
-                "additional_instructions",
-                "admin_additional_instructions",
-                "status",
-                "canvas_instance",
-            )
+            fields.insert(1, "lps_online")
+
+        if obj.copy_from_course:
+            fields.insert(2, "exclude_announcements")
 
         return (
             (
                 None,
-                {"fields": fields},
+                {"fields": tuple(fields)},
             ),
             (
                 "Metadata",

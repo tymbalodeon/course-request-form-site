@@ -1,9 +1,14 @@
 {% load rest_framework %}
 {% load template_extra %}
-
 <fieldset>
     <legend><h6 style="margin:0;">Title</h6></legend>
-    The default title is provided below. If you wish to modify it, please provide the new value in the box below. (Do not include the course code--this will be added automatically.)
+    <p>
+        The default title is provided below. If you wish to modify it, please
+        provide the new value in the box below.</p>
+    <br>
+    <mark>
+        <em>**Do not include the course code--this will be added automatically.**</em>
+    </mark>
     <br>
     <br>
     <strong><p>Default:
@@ -23,8 +28,10 @@
             sub-account. If you would like to create this site in the <strong><em>Penn LPS Online</em></strong>
             sub-account instead, please check the box below.</p>
         <br>
-        {% render_field request_form.lps_online style=style %}
+        <mark><em>**If you are unsure about this, please leave this unchecked!**</em></mark>
         <br>
+        <br>
+        {% render_field request_form.lps_online style=style %}
     </fieldset>
 {% endif %}
 
@@ -32,13 +39,12 @@
     <legend><h6 style="margin:0;">Copy from existing site</h6></legend>
     <div class="form-group">
         <p>
-            If you would like to copy content from an existing Canvas site, please click
-            "Select Copy," select a source from the list, and click "Add Source." When
-            successful, the field will automatically populate with the site's 7-digit
-            course id number.
-        </p>
-        <br>
+            If you would like to copy content from an existing Canvas site,
+            please click "Select Copy," select a source from the list, and click
+            "Add Source." When successful, the field will automatically populate
+            with the site's 7-digit course id number.</p>
         {{copy_from_course}}
+        <br>
         <label>Canvas ID (7-digit number)</label>
         <div class="input-group mb-3">
             {% if request_instance.copy_from_course %}
@@ -58,6 +64,13 @@
                 <button class="btn btn-outline-secondary accent-button" type="button" data-toggle="modal"  data-target="#ContentCopy" data-backdrop="static" data-keyboard="false" style='z-index:unset;'>Select Copy</button>
             </div>
         </div>
+        <p>
+            Course announcements may
+            be excluded from the import. If you do <strong>NOT</strong> wish to copy
+            announcements from the source site, please check the box below.
+        </p>
+        <br>
+        {% render_field request_form.exclude_announcements style=style %}
     </div>
 </fieldset>
 

@@ -58,7 +58,6 @@
 {% block template_page_js %}
     <script>
      var form = document.getElementById("filterform");
-     console.log(form.childNodes[1].childNodes);
      var field = document.getElementById("id_username");
      field.setAttribute("name", "instructor");
      field.setAttribute("id","id_instructor")
@@ -71,7 +70,6 @@
          var button = $(event.relatedTarget)
          var course = button.data('course')
          var short_course = course.replace(/_/g,'')
-         console.log(course.replace('_',''))
          var modal = $(this)
          modal.find('.modal-title').text('Quick Request for ' + course)
          modal.find(".modal-footer input[name='course_requested']").val(short_course)
