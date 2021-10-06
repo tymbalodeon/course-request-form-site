@@ -1,77 +1,56 @@
 define([
-  "jquery",
-  "require",
+  'jquery',
+  'require',
 
-  "./results",
+  './results',
 
-  "./selection/single",
-  "./selection/multiple",
-  "./selection/placeholder",
-  "./selection/allowClear",
-  "./selection/search",
-  "./selection/eventRelay",
+  './selection/single',
+  './selection/multiple',
+  './selection/placeholder',
+  './selection/allowClear',
+  './selection/search',
+  './selection/eventRelay',
 
-  "./utils",
-  "./translation",
-  "./diacritics",
+  './utils',
+  './translation',
+  './diacritics',
 
-  "./data/select",
-  "./data/array",
-  "./data/ajax",
-  "./data/tags",
-  "./data/tokenizer",
-  "./data/minimumInputLength",
-  "./data/maximumInputLength",
-  "./data/maximumSelectionLength",
+  './data/select',
+  './data/array',
+  './data/ajax',
+  './data/tags',
+  './data/tokenizer',
+  './data/minimumInputLength',
+  './data/maximumInputLength',
+  './data/maximumSelectionLength',
 
-  "./dropdown",
-  "./dropdown/search",
-  "./dropdown/hidePlaceholder",
-  "./dropdown/infiniteScroll",
-  "./dropdown/attachBody",
-  "./dropdown/minimumResultsForSearch",
-  "./dropdown/selectOnClose",
-  "./dropdown/closeOnSelect",
+  './dropdown',
+  './dropdown/search',
+  './dropdown/hidePlaceholder',
+  './dropdown/infiniteScroll',
+  './dropdown/attachBody',
+  './dropdown/minimumResultsForSearch',
+  './dropdown/selectOnClose',
+  './dropdown/closeOnSelect',
 
-  "./i18n/en",
-], function (
-  $,
-  require,
+  './i18n/en'
+], function ($, require,
 
-  ResultsList,
+             ResultsList,
 
-  SingleSelection,
-  MultipleSelection,
-  Placeholder,
-  AllowClear,
-  SelectionSearch,
-  EventRelay,
+             SingleSelection, MultipleSelection, Placeholder, AllowClear,
+             SelectionSearch, EventRelay,
 
-  Utils,
-  Translation,
-  DIACRITICS,
+             Utils, Translation, DIACRITICS,
 
-  SelectData,
-  ArrayData,
-  AjaxData,
-  Tags,
-  Tokenizer,
-  MinimumInputLength,
-  MaximumInputLength,
-  MaximumSelectionLength,
+             SelectData, ArrayData, AjaxData, Tags, Tokenizer,
+             MinimumInputLength, MaximumInputLength, MaximumSelectionLength,
 
-  Dropdown,
-  DropdownSearch,
-  HidePlaceholder,
-  InfiniteScroll,
-  AttachBody,
-  MinimumResultsForSearch,
-  SelectOnClose,
-  CloseOnSelect,
+             Dropdown, DropdownSearch, HidePlaceholder, InfiniteScroll,
+             AttachBody, MinimumResultsForSearch, SelectOnClose, CloseOnSelect,
 
-  EnglishTranslation
-) {
-  function Defaults() {
+             EnglishTranslation) {
+  function Defaults () {
     this.reset();
   }
 
@@ -113,17 +92,23 @@ define([
       }
 
       if (options.tokenSeparators != null || options.tokenizer != null) {
-        options.dataAdapter = Utils.Decorate(options.dataAdapter, Tokenizer);
+        options.dataAdapter = Utils.Decorate(
+          options.dataAdapter,
+          Tokenizer
+        );
       }
 
       if (options.query != null) {
-        var Query = require(options.amdBase + "compat/query");
+        var Query = require(options.amdBase + 'compat/query');
 
-        options.dataAdapter = Utils.Decorate(options.dataAdapter, Query);
+        options.dataAdapter = Utils.Decorate(
+          options.dataAdapter,
+          Query
+        );
       }
 
       if (options.initSelection != null) {
-        var InitSelection = require(options.amdBase + "compat/initSelection");
+        var InitSelection = require(options.amdBase + 'compat/initSelection');
 
         options.dataAdapter = Utils.Decorate(
           options.dataAdapter,
@@ -185,7 +170,7 @@ define([
         options.dropdownCss != null ||
         options.adaptDropdownCssClass != null
       ) {
-        var DropdownCSS = require(options.amdBase + "compat/dropdownCss");
+        var DropdownCSS = require(options.amdBase + 'compat/dropdownCss');
 
         options.dropdownAdapter = Utils.Decorate(
           options.dropdownAdapter,
@@ -233,7 +218,7 @@ define([
         options.containerCss != null ||
         options.adaptContainerCssClass != null
       ) {
-        var ContainerCSS = require(options.amdBase + "compat/containerCss");
+        var ContainerCSS = require(options.amdBase + 'compat/containerCss');
 
         options.selectionAdapter = Utils.Decorate(
           options.selectionAdapter,
@@ -247,11 +232,11 @@ define([
       );
     }
 
-    if (typeof options.language === "string") {
+    if (typeof options.language === 'string') {
       // Check if the language is specified with a region
-      if (options.language.indexOf("-") > 0) {
+      if (options.language.indexOf('-') > 0) {
         // Extract the region information if it is included
-        var languageParts = options.language.split("-");
+        var languageParts = options.language.split('-');
         var baseLanguage = languageParts[0];
 
         options.language = [options.language, baseLanguage];
@@ -262,7 +247,7 @@ define([
 
     if ($.isArray(options.language)) {
       var languages = new Translation();
-      options.language.push("en");
+      options.language.push('en');
 
       var languageNames = options.language;
 
@@ -284,10 +269,8 @@ define([
             // because of how Select2 helps load all possible translation files.
             if (options.debug && window.console && console.warn) {
               console.warn(
-                'Select2: The language file for "' +
-                  name +
-                  '" could not be ' +
-                  "automatically loaded. A fallback will be used instead."
+                'Select2: The language file for "' + name + '" could not be ' +
+                'automatically loaded. A fallback will be used instead.'
               );
             }
 
@@ -301,7 +284,7 @@ define([
       options.translations = languages;
     } else {
       var baseTranslation = Translation.loadPath(
-        this.defaults.amdLanguageBase + "en"
+        this.defaults.amdLanguageBase + 'en'
       );
       var customTranslation = new Translation(options.language);
 
@@ -314,7 +297,7 @@ define([
   };
 
   Defaults.prototype.reset = function () {
-    function stripDiacritics(text) {
+    function stripDiacritics (text) {
       // Used 'uni range + named function' from http://jsperf.com/diacritics/18
       function match(a) {
         return DIACRITICS[a] || a;
@@ -323,9 +306,9 @@ define([
       return text.replace(/[^\u0000-\u007E]/g, match);
     }
 
-    function matcher(params, data) {
+    function matcher (params, data) {
       // Always return the object if there is nothing to compare
-      if ($.trim(params.term) === "") {
+      if ($.trim(params.term) === '') {
         return data;
       }
 
@@ -369,8 +352,8 @@ define([
     }
 
     this.defaults = {
-      amdBase: "./",
-      amdLanguageBase: "./i18n/",
+      amdBase: './',
+      amdLanguageBase: './i18n/',
       closeOnSelect: true,
       debug: false,
       dropdownAutoWidth: false,
@@ -391,8 +374,8 @@ define([
       templateSelection: function (selection) {
         return selection.text;
       },
-      theme: "default",
-      width: "resolve",
+      theme: 'default',
+      width: 'resolve'
     };
   };
 
