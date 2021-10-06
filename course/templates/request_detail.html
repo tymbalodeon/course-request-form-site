@@ -6,7 +6,7 @@
     <fieldset id="RequestForm">
         <legend>Request for {{request_instance.course_info|course_to_course_code}}</legend>
         {% include "bits/request_form_disabled.html" with enrollments=request_instance.additional_enrollments course=request_instance.course_info %}
-        <div class="row" style="margin-left:7px;margin-top:2.5rem;margin-bottom:.5rem;">
+        <div>
             {% if 'cancel' in permissions %}
                 <button style="margin-right:20px" class="cancel" data-toggle="modal" data-target="#cancelModal">
                     Cancel
