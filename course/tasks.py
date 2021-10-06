@@ -24,6 +24,20 @@ from data_warehouse.data_warehouse import (
 )
 
 LPS_ONLINE_ACCOUNT_ID = 132413
+MIGRATION_CATEGORIES = [
+    "folders",
+    "files",
+    "attachments",
+    "quizzes",
+    "assignments",
+    "announcements",
+    "calendar_events",
+    "discussion_topics",
+    "modules",
+    "module_items",
+    "pages",
+    "rubrics",
+]
 
 
 @task()
@@ -408,16 +422,30 @@ def create_canvas_sites(
 
         if serialized.data["copy_from_course"]:
             try:
+                exclude_announcements = serialized.data.get(
+                    "exclude_announcements", None
+                )
+
                 if verbose:
                     print(
                         "\t* Copying course data from course id"
-                        f" {serialized.data['copy_from_course']}..."
+                        f" {serialized.data['copy_from_course']}"
+                        f"{' WITHOUT announcements' if exclude_announcements else ''}..."
                     )
 
                 source_course_id = serialized.data["copy_from_course"]
+                migration_categories = MIGRATION_CATEGORIES[:]
+
+                if exclude_announcements:
+                    migration_categories.remove("announcements")
+                    migration_categories = {
+                        category: category for category in migration_categories
+                    }
+
                 content_migration = canvas_course.create_content_migration(
                     migration_type="course_copy_importer",
                     settings={"source_course_id": source_course_id},
+                    select=migration_categories,
                 )
 
                 while (
@@ -458,7 +486,6 @@ def create_canvas_sites(
                     )
                     if verbose:
                         print(f"\t- Event '{deleted}' deleted.")
-
             except Exception as error:
                 message = f"\t- ERROR: {error}"
                 getLogger("error_logger").error(message)

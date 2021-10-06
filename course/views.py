@@ -76,7 +76,8 @@ def print_log_message(request, object_type, action_type):
     search_term_display = f'using search term "{search_term}" ' if search_term else ""
 
     print(
-        f') Retrieving {object_type} {action_type.upper()} {search_term_display}for "{request.user}"...'
+        f") Retrieving {object_type} {action_type.upper()} {search_term_display}for"
+        f' "{request.user}"...'
     )
 
 
