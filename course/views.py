@@ -209,7 +209,7 @@ class CourseViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         serializer.save(owner=self.request.user)
 
     def list(self, request):
-        print(") Retrieving course LIST...")
+        print(f") Retrieving course LIST for {request.user}...")
 
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
@@ -260,7 +260,7 @@ class CourseViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
             return response
 
     def retrieve(self, request, *args, **kwargs):
-        print(") Retrieving course DETAIL...")
+        print(f") Retrieving course DETAIL for {request.user}...")
 
         response = super(CourseViewSet, self).retrieve(request, *args, **kwargs)
 
@@ -452,7 +452,7 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         serializer.save(owner=self.request.user)
 
     def list(self, request):
-        print(") Retrieving request LIST...")
+        print(f") Retrieving request LIST for {request.user}...")
 
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
@@ -568,7 +568,7 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         return ""
 
     def retrieve(self, request, *args, **kwargs):
-        print(") Retrieving request DETAIL...")
+        print(f") Retrieving request DETAIL for {request.user}...")
 
         response = super(RequestViewSet, self).retrieve(request, *args, **kwargs)
         print(f"- Request found: {response.data['course_requested']}")
@@ -754,7 +754,7 @@ class SchoolViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
     }
 
     def list(self, request):
-        print(") Retrieving school LIST...")
+        print(f") Retrieving school LIST for {request.user}...")
 
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
@@ -787,7 +787,7 @@ class SchoolViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def retrieve(self, request, *args, **kwargs):
-        print(") Retrieving school DETAIL...")
+        print(f") Retrieving school DETAIL for {request.user}...")
 
         response = super(SchoolViewSet, self).retrieve(request, *args, **kwargs)
 
@@ -823,7 +823,7 @@ class SubjectViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         )
 
     def list(self, request):
-        print(") Retrieving subject LIST...")
+        print(f") Retrieving subject LIST for {request.user}...")
 
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
@@ -844,7 +844,7 @@ class SubjectViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
             return response
 
     def retrieve(self, request, *args, **kwargs):
-        print(") Retrieving subject DETAIL...")
+        print(f") Retrieving subject DETAIL for {request.user}...")
 
         response = super(SubjectViewSet, self).retrieve(request, *args, **kwargs)
 
@@ -947,12 +947,12 @@ class HomePage(APIView, UserPassesTestMixin):
 
     def test_func(self):
         user_name = self.request.user.username
-        print(f'Checking Users for "{user_name}"...')
+        print(f') Checking Users for "{user_name}"...')
         user = User.objects.get(username=self.request.user.username)
 
         try:
             if user.profile:
-                print(f'FOUND user "{user_name}".')
+                print(f'- FOUND user "{user_name}".')
 
                 return True
         except Exception:
