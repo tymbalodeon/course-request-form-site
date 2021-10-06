@@ -1,6 +1,10 @@
-define(["./select", "../utils", "jquery"], function (SelectAdapter, Utils, $) {
-  function ArrayAdapter($element, options) {
-    var data = options.get("data") || [];
+define([
+  './select',
+  '../utils',
+  'jquery'
+], function (SelectAdapter, Utils, $) {
+  function ArrayAdapter ($element, options) {
+    var data = options.get('data') || [];
 
     ArrayAdapter.__super__.constructor.call(this, $element, options);
 
@@ -10,7 +14,7 @@ define(["./select", "../utils", "jquery"], function (SelectAdapter, Utils, $) {
   Utils.Extend(ArrayAdapter, SelectAdapter);
 
   ArrayAdapter.prototype.select = function (data) {
-    var $option = this.$element.find("option").filter(function (i, elm) {
+    var $option = this.$element.find('option').filter(function (i, elm) {
       return elm.value == data.id.toString();
     });
 
@@ -26,17 +30,15 @@ define(["./select", "../utils", "jquery"], function (SelectAdapter, Utils, $) {
   ArrayAdapter.prototype.convertToOptions = function (data) {
     var self = this;
 
-    var $existing = this.$element.find("option");
-    var existingIds = $existing
-      .map(function () {
-        return self.item($(this)).id;
-      })
-      .get();
+    var $existing = this.$element.find('option');
+    var existingIds = $existing.map(function () {
+      return self.item($(this)).id;
+    }).get();
 
     var $options = [];
 
     // Filter out all items except for the one passed in the argument
-    function onlyItem(item) {
+    function onlyItem (item) {
       return function () {
         return $(this).val() == item.id;
       };
