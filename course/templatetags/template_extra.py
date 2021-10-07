@@ -28,11 +28,17 @@ def get_user(user):
 
 @register.filter
 def course_code_to_string(course_code):
-    includes_year = len(course_code) >= 14
+    includes_year = len(course_code) >= 13
     year = course_code[-5:] if includes_year else ""
     section = course_code[:-5][-3:] if includes_year else course_code[-3:]
     course = course_code[:-8][-3:] if includes_year else course_code[:-3][-3:]
-    subject = course_code[:3] if course_code[3].isnumeric() else course_code[:4]
+
+    if course_code[2].isnumeric():
+        subject = course_code[:2]
+    elif course_code[3].isnumeric():
+        subject = course_code[:3]
+    else:
+        subject = course_code[:4]
 
     return f"{subject}-{course}-{section}{' ' if year else ''}{year}"
 

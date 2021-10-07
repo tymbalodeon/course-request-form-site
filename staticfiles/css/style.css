@@ -984,6 +984,19 @@ textarea.has-error:active {
   width: 10%;
 }
 
+.select2-selection__rendered {
+  margin-top: -3px;
+}
+
+.select2-selection__arrow {
+  margin-top: 2px;
+  margin-right: 4px;
+}
+
+.select2-selection__clear {
+  display: none;
+}
+
 #search {
   float: right;
 }
