@@ -1,8 +1,6 @@
 # Course Request Form
 
-Site that manages the creation of SRS courses in Penn's Canvas instance. Built with [Django](https://www.djangoproject.com/).
-
-For more information, see the [wiki](https://github.com/Mfhodges/CRF2/wiki).
+Site that manages the creation of SRS courses in Penn's Canvas instance. Built with [Django](https://www.djangoproject.com/) and [Django Rest Framework](https://www.django-rest-framework.org/).
 
 Production instance: [reqform01.library.upenn.int/](http://reqform01.library.upenn.int/)  
 Development instance: [reqform-dev.library.upenn.int/](http://reqform-dev.library.upenn.int/)  
@@ -100,7 +98,7 @@ To interactively query the sqlite3 database, run `python manage.py dbshell`.
 
 To run the application:
 
-2. `python manage.py runserver`
+- `python manage.py runserver`
 
 To log in as an admin: [http://localhost:8000/admin/](http://localhost:8000/admin/)  
 To log in as a user: [http://localhost:8000/accounts/login/](http://localhost:8000/accounts/login/)
@@ -111,6 +109,10 @@ If you make changes to your "models.py" file, you will need to run:
 
 1. `python manage.py makemigrations`
 2. `python manage.py migrate`
+
+To make changes to CSS or other static files, run:
+
+- `python manage.py collectstatic`
 
 ### Data Warehouse
 
@@ -157,8 +159,6 @@ Working with the virtual environment:
 - /var/log/celery/ (`pull_courses`)
 
 ## Workflow
-
-It is not currently possible to establish a complete local development environment. Until this can be fixed, the recommended workflow is as follows:
 
 1. Create a new [issue](https://gitlab.library.upenn.edu/course-request/CRF2/-/issues) explaining the bug or enhancement (use the templates and appropriate tags when possible).
 2. Create a branch for the issue.
