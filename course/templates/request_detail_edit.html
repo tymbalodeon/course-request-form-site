@@ -43,14 +43,3 @@
     {% include "bits/course_info.html" with course=request_instance.course_info %}
     {% include "bits/canvas_site_info.html" with course=request_instance.course_info copy_from_course=request_instance.copy_from_course %}
 {% endblock %}
-
-{% block template_page_js %}
-    <script>
-     function formUpdateContentCopy() {
-         var hi = document.querySelector("#id_name > option:nth-child(2)").value;
-         $('input[name="copy_from_course"]').val(hi);
-         console.log(hi);
-         $('#ContentCopy').modal('hide');
-     }
-    </script>
-{% endblock %}

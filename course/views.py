@@ -282,6 +282,7 @@ class CourseViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
                     "is_staff": request.user.is_staff,
                     "autocompleteUser": UserForm(),
                     "autocompleteSubject": SubjectForm(),
+                    "autocompleteCanvasSite": CanvasSiteForm(),
                     "style": {"template_pack": "rest_framework/vertical/"},
                 }
 

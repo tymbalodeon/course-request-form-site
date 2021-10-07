@@ -1,7 +1,7 @@
 {% load rest_framework %}
 {% load template_extra %}
 
-<div class="modal fade" id="CourseModal" tabindex="-1" role="dialog" aria-labelledby="" aria-hidden="true">
+<div class="modal fade" id="CourseModal" role="dialog" aria-labelledby="" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -14,22 +14,20 @@
                 {% csrf_token %}
                 <div class="modal-body">
                     <p>
-                        To request this site using the default options,
-                        optionally provide a Canvas site to copy from, and click
+                        To request a site for this course using the default options,
+                        (optionally) choose one of your existing Canvas site to copy from, and click
                         "Submit Request."
                     </p>
                     <mark>
-                        <em>**To see more options, please click "Custom Request" below.**
-                        </em>
+                        <em>**To see more options, please click "Custom Request" below.**</em>
                     </mark>
                     <fieldset>
                         <legend><h6 style="margin:0;">Copy from existing site (OPTIONAL)</h6></legend>
-                        <label for="inputCanvasID">Canvas site id</label>
-                        <input type="number" id="inputCanvasID" name="copy_from_course" class="form-control" placeholder="7-digit number" aria-describedby="textHelpInline">
-                        <small id="passwordHelpInline" class="text-muted">
-                            The number that appears after "courses/" in the course site's URL.
-                        </small>
-                        <br>
+                        <label for="inputCanvasID">Canvas site</label>
+                        <div class="input-group mb-3">
+                            {{ autocompleteCanvasSite.name }}
+                            {{ autocompleteCanvasSite.media }}
+                        </div>
                         <br>
                         <input type="checkbox" id="exclude_announcements" name="exclude_announcements">
                         <label style="display: inline;" for="exclude_announcements">Exclude announcements</label>
