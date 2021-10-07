@@ -11,21 +11,23 @@
             <dd class="col-8 col-md-9"> {{request_instance.canvas_instance.workflow_state}}</dd>
             <dt class="col-4 col-md-3 text-right" style="padding-right: 0px;">SIS Course ID</dt>
             <dd class="col-8 col-md-9"> {{request_instance.canvas_instance.sis_course_id}}</dd>
-            {% if request_instance.canvas_instance.workflow_state != "deleted" %}
-                <a target="_blank" href="https://canvas.upenn.edu/courses/{{request_instance.canvas_instance.canvas_id}}"> <i class="fas fa-external-link-alt"></i> Open Canvas Site </a>
-            {% else %}
-                <p>(No Canvas Site on File -- This course was likely canceled.)</p>
-            {% endif %}
         </dl>
+        {% if request_instance.canvas_instance.workflow_state != "deleted" %}
+            <a target="_blank" href="https://canvas.upenn.edu/courses/{{request_instance.canvas_instance.canvas_id}}"> <i class="fas fa-external-link-alt"></i> Open Canvas Site </a>
+        {% else %}
+            <p>(No Canvas Site on File -- This course was likely canceled.)</p>
+        {% endif %}
     {% else %}
         <legend>Canvas Site</legend>
-        <center><p> No Canvas Site on File.</p></center>
+        <em><p>No Canvas Site on File.</p></em>
+        <br>
         {% if staff %}
             {% if course.primary_crosslist %}
-                <a target="_blank" href="https://canvas.upenn.edu/api/v1/sections/sis_section_id:SRS_{{course.primary_crosslist|course_code_to_string}}"> CHECK FOR CANVAS SITE ({{course.primary_crosslist|course_code_to_string}}) </a>
+                <a target="_blank" href="https://canvas.upenn.edu/api/v1/sections/sis_section_id:SRS_{{course.primary_crosslist|course_code_to_string}}">Check Canvas for existing "{{course.primary_crosslist|course_code_to_string}}" site.</a>
             {% else %}
-                <a target="_blank" href="https://canvas.upenn.edu/api/v1/sections/sis_section_id:SRS_{{course|course_to_course_code}}"> CHECK FOR CANVAS SITE ({{course|course_to_course_code}})</a>
+                <a target="_blank" href="https://canvas.upenn.edu/api/v1/sections/sis_section_id:SRS_{{course|course_to_course_code}}">Check Canvas for existing "{{course|course_to_course_code}}" site.</a>
             {% endif %}
         {% endif %}
     {% endif %}
 </fieldset>
+<br>
