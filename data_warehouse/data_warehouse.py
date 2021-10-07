@@ -289,18 +289,18 @@ def pull_courses(term):
     cursor.execute(
         """
         SELECT
-            cs.section_id || cs.term section,
-            cs.term,
-            cs.subject_area subject_id,
-            cs.tuition_school school_id,
-            cs.xlist,
-            cs.xlist_primary,
-            cs.activity,
-            trim(cs.title) srs_title,
+            section.section_id || section.term section,
+            section.term,
+            section.subject_area subject_id,
+            section.tuition_school school_id,
+            section.xlist,
+            section.xlist_primary,
+            section.activity,
+            trim(section.title) srs_title,
         FROM
-            dwadmin.course_section cs
+            dwadmin.course_section section
         WHERE
-            cs.activity IN (
+            section.activity IN (
                 'LEC',
                 'REC',
                 'LAB',
@@ -312,9 +312,9 @@ def pull_courses(term):
                 'ONL',
                 'HYB'
             )
-        AND cs.tuition_school NOT IN ('WH', 'LW')
-        AND cs.status in ('O')
-        AND cs.term = :term
+        AND section.tuition_school NOT IN ('WH', 'LW')
+        AND section.status in ('O')
+        AND section.term = :term
         """,
         term=term,
     )
@@ -483,16 +483,16 @@ def pull_instructors(term):
     cursor.execute(
         """
         SELECT
-            e.FIRST_NAME,
-            e.LAST_NAME,
-            e.PENNKEY,
-            e.PENN_ID,
-            e.EMAIL_ADDRESS,
-            cs.Section_Id
-        FROM dwadmin.course_section_instructor cs
-        JOIN dwadmin.employee_general_v e
-        ON cs.Instructor_Penn_Id=e.PENN_ID
-        WHERE cs.TERM= :term
+            employee.FIRST_NAME,
+            employee.LAST_NAME,
+            employee.PENNKEY,
+            employee.PENN_ID,
+            employee.EMAIL_ADDRESS,
+            instructor.Section_Id
+        FROM dwadmin.course_section_instructor instructor
+        INNER JOIN dwadmin.employee_general_v employee
+        ON instructor.Instructor_Penn_Id=employee.PENN_ID
+        WHERE instructor.TERM= :term
         """,
         term=term,
     )
