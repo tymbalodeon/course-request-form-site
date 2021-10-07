@@ -13,9 +13,13 @@
     <br>
     <strong><p>Default:
         <em style="text-decoration: underline;">
-            {% if course.primary_crosslist %} {{course.primary_crosslist|course_code_to_string}}
-            {% else %}{{course.course_code|course_code_to_string}}
-            {% endif %} {{course.course_name|truncate_course_name:30}}</em>.</strong>
+            {% if course.primary_crosslist %}
+                {{course.primary_crosslist|course_code_to_string}}
+            {% else %}
+                {{course.course_code|course_code_to_string}}
+            {% endif %}
+            {{course.course_name|truncate_course_name:30}}
+        </em>.</strong>
     </p>
     <br>
     {% render_field request_form.title_override style=style %}
@@ -45,24 +49,23 @@
             with the site's 7-digit course id number.</p>
         {{copy_from_course}}
         <br>
-        <label>Canvas ID (7-digit number)</label>
+        <label>Canvas site</label>
         <div class="input-group mb-3">
             {% if request_instance.copy_from_course %}
                 {% if staff %}
-                    <input name="copy_from_course" value="{{request_instance.copy_from_course}}" type="number" class="form-control"  aria-label="Canvas ID for content copy" style="width:unset;margin-bottom:8px;">
+                    {{ autocompleteCanvasSite.name }}
+                    {{ autocompleteCanvasSite.media }}
                 {% else %}
-                    <input name="copy_from_course" value="{{request_instance.copy_from_course}}" type="number" class="form-control"  aria-label="Canvas ID for content copy" style="width:unset;margin-bottom:8px;" disabled>
+                    <input name="copy_from_course" value="{{ request_instance.copy_from_course }}" type="number" class="form-control" aria-label="Canvas ID for content copy" style="width:unset;margin-bottom:8px;" disabled>
                 {% endif %}
             {% else %}
                 {% if staff %}
-                    <input name="copy_from_course" value="" type="number" class="form-control"  aria-label="Canvas ID for content copy" style="width:unset;margin-bottom:8px;">
+                    {{ autocompleteCanvasSite.name }}
+                    {{ autocompleteCanvasSite.media }}
                 {% else %}
-                    <input name="copy_from_course" value="" type="number" class="form-control"  aria-label="Canvas ID for content copy" style="width:unset;margin-bottom:8px;" disabled>
+                    <input name="copy_from_course" value="" type="number" class="form-control" aria-label="Canvas ID for content copy" style="width:unset;margin-bottom:8px;" disabled>
                 {% endif %}
             {% endif %}
-            <div class="input-group-append">
-                <button class="btn btn-outline-secondary accent-button" type="button" data-toggle="modal"  data-target="#ContentCopy" data-backdrop="static" data-keyboard="false" style='z-index:unset;'>Select Copy</button>
-            </div>
         </div>
         <p>
             Course announcements may
@@ -73,8 +76,6 @@
         {% render_field request_form.exclude_announcements style=style %}
     </div>
 </fieldset>
-
-{% include "bits/copy_course_modal.html" %}
 
 <blockquote style="min-width:unset;" class="show" id="noticeForm">
     <div>

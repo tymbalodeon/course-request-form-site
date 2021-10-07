@@ -50,7 +50,11 @@ class CanvasSiteForm(ModelForm):
         label="content_copy",
         queryset=CanvasSite.objects.all(),
         required=False,
-        widget=autocomplete.ModelSelect2(url="canvas_site-autocomplete"),
+        widget=autocomplete.ModelSelect2(
+            url="canvas_site-autocomplete",
+            attrs={"data-placeholder": "Type to search for a course title..."},
+        ),
+        to_field_name="canvas_id",
     )
 
     class Meta:
