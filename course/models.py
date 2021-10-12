@@ -511,6 +511,7 @@ class AutoAdd(models.Model):
         max_length=10,
         choices=ROLE_CHOICES,
     )
+    created = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         ordering = ("user__username",)
