@@ -183,13 +183,17 @@ class Course(models.Model):
         if self.requested_override is True:
             return True
         else:
-            try:
-                return True if self.request else False
-            except Exception:
-                exists = self.multisection_request
-                exists_cross = self.crosslisted_request
+            multi_section_request = self.multisection_request
+            crosslisted_request = self.crosslisted_request
 
-                return True if exists or exists_cross else False
+            try:
+                request = Request.objects.get(course_requested=self.course_code)
+            except Exception:
+                request = None
+
+            exists = request or multi_section_request or crosslisted_request
+
+            return bool(exists)
 
     def set_requested(self, requested):
         self.requested = requested
@@ -221,12 +225,13 @@ class Course(models.Model):
             course.requested_override = self.requested_override
 
         try:
-            request = self.request
+            request = Request.objects.get(course_requested=self.course_code)
+        except Exception:
+            request = None
 
+        if request:
             for course in cross_courses:
                 course.crosslisted_request = request
-        except Exception as error:
-            print(error)
 
     def save(self, *args, **kwargs):
         self.course_code = (
