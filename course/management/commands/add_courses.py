@@ -61,7 +61,6 @@ class Command(BaseCommand):
                     course["crosslist_primary"] = course["crosslist_primary"].replace(
                         " ", ""
                     )
-                    print(f"- Adding {course['section_id']}...")
 
                     try:
                         subject = Subject.objects.get(
@@ -149,10 +148,9 @@ class Command(BaseCommand):
 
                         course_object, created = course_created
 
-                        if created:
-                            print("\t* Course CREATED")
-                        else:
-                            print("\t* Course UPDATED")
+                        print(
+                            f"- {'CREATED' if created else 'UPDATED'} {course['section_id']}"
+                        )
 
                         if course["is_cancelled"]:
                             course_object.delete()

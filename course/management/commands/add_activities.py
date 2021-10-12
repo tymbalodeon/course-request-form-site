@@ -51,9 +51,13 @@ class Command(BaseCommand):
 
             for abbreviation, name in activities:
                 try:
-                    Activity.objects.create(name=name, abbr=abbreviation)
+                    added = Activity.objects.update_or_create(
+                        name=name, abbr=abbreviation
+                    )[1]
 
-                    print(f"- ADDED activity: {name} ({abbreviation})")
+                    print(
+                        f"- {'ADDED' if added else 'UPDATED'} activity: {name} ({abbreviation})"
+                    )
                 except Exception:
                     print(f"- FAILED to add activity: {name} ({abbreviation})")
 
