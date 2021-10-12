@@ -1128,7 +1128,7 @@ class AutoAddViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
 
             return response
 
-    def destroy(self, request):
+    def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         self.perform_destroy(instance)
         response = Response(status=status.HTTP_204_NO_CONTENT)
