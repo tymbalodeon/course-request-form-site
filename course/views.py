@@ -288,9 +288,6 @@ class CourseViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
 
             print(response.data["paginator"].page)
 
-            for course in response.data["results"]:
-                print(f"- Course found: {course['course_code']}")
-
             return response
 
     def retrieve(self, request, *args, **kwargs):
@@ -520,9 +517,6 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
                 }
 
             print(response.data["paginator"].page)
-
-            for request in response.data["results"]:
-                print(f"- Request found: {request['course_requested']}")
 
             return response
 
@@ -807,9 +801,6 @@ class SchoolViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
 
             print(response.data["paginator"].page)
 
-            for school in response.data["results"]:
-                print(f"- School found: {school['name']}")
-
             return response
 
     def update(self, request, **kwargs):
@@ -875,9 +866,6 @@ class SubjectViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
                 response.data = {"results": response.data, "paginator": self.paginator}
 
             print(response.data["paginator"].page)
-
-            for subject in response.data["results"]:
-                print(f"- Subject found: {subject['name']}")
 
             return response
 
@@ -1136,9 +1124,6 @@ class AutoAddViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
                 }
 
             print(response.data["paginator"].page)
-
-            for user in response.data["results"]:
-                print(f"- Auto-added user found: {user}")
 
             return response
 
