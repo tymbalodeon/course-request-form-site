@@ -7,11 +7,6 @@ from course.models import CanvasSite, Subject
 
 class UserAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
-        print(
-            f"{self.request.user} is"
-            f" {'' if self.request.user.is_authenticated else 'not'} authenticated."
-        )
-
         if not self.request.user.is_authenticated:
             return User.objects.none()
 
