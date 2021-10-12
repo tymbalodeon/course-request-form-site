@@ -41,7 +41,12 @@ class School(models.Model):
     )
 
     def get_subjects(self):
-        return self.subjects
+        try:
+            subjects = Subject.objects.filter(schools=self)
+        except Exception:
+            subjects = None
+
+        return subjects
 
     def save(self, *args, **kwargs):
         subjects = Subject.objects.filter(schools=self.abbreviation)
