@@ -221,6 +221,7 @@ class CourseViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
     )
     serializer_class = CourseSerializer
     filterset_class = CourseFilter
+    search_fields = ("$course_name", "$course_code")
     permission_classes_by_action = {
         "create": [IsAdminUser],
         "list": [IsAuthenticated],
@@ -243,7 +244,7 @@ class CourseViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
                 | Q(course_name__contains=search_term)
             )
             if search_term
-            else self.get_queryset()
+            else self.filter_queryset(self.get_queryset())
         )
         page = self.paginate_queryset(queryset)
 
