@@ -240,6 +240,7 @@ class UserAdmin(BaseUserAdmin):
 
 class AutoAddAdmin(admin.ModelAdmin):
     autocomplete_fields = ["user"]
+    list_display = [field.name for field in AutoAdd._meta.get_fields()]
 
 
 def get_next_in_date_hierarchy(request, date_hierarchy):
