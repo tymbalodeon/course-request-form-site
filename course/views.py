@@ -298,7 +298,7 @@ class CourseViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
 
         if request.accepted_renderer.format == "html":
             course_instance = self.get_object()
-            print(f"- Course found: {course_instance}")
+            print(f"- COURSE: {course_instance}")
 
             if course_instance.requested:
                 request_instance = (
@@ -604,7 +604,7 @@ class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         print_log_message(request, "request", "detail")
 
         response = super(RequestViewSet, self).retrieve(request, *args, **kwargs)
-        print(f"- Request found: {response.data['course_requested']}")
+        print(f"- REQUEST: {response.data['course_requested']}")
 
         if request.resolver_match.url_name == "UI-request-detail-success":
             return Response(
@@ -821,7 +821,7 @@ class SchoolViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
 
         response = super(SchoolViewSet, self).retrieve(request, *args, **kwargs)
 
-        print(f"- School found: {response.data['name']}")
+        print(f"- SCHOOL: {response.data['name']}")
 
         return (
             Response({"data": response.data}, template_name="school_detail.html")
@@ -875,7 +875,7 @@ class SubjectViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
 
         response = super(SubjectViewSet, self).retrieve(request, *args, **kwargs)
 
-        print(f"- Subject found: {response.data['name']}")
+        print(f"- SUBJECT: {response.data['name']}")
 
         return (
             Response({"data": response.data}, template_name="subject_detail.html")
