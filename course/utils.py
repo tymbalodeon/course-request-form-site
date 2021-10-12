@@ -45,7 +45,7 @@ def data_warehouse_lookup(penn_key=None, penn_id=None):
             )
 
             return {
-                "firs_tname": first_name,
+                "first_name": first_name,
                 "last_name": last_name,
                 "email": email,
                 "penn_id": dw_penn_id,
