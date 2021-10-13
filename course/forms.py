@@ -1,4 +1,4 @@
-from dal import autocomplete
+from dal.autocomplete import ModelSelect2
 from django.contrib.auth.models import User
 from django.forms import (
     CharField,
@@ -24,7 +24,7 @@ class UserForm(ModelForm):
     username = ModelChoiceField(
         label="user",
         queryset=User.objects.all(),
-        widget=autocomplete.ModelSelect2(url="user-autocomplete"),
+        widget=ModelSelect2(url="user-autocomplete"),
     )
 
     class Meta:
@@ -37,7 +37,7 @@ class SubjectForm(ModelForm):
         label="Abbreviation",
         queryset=Subject.objects.all(),
         required=False,
-        widget=autocomplete.ModelSelect2(url="subject-autocomplete"),
+        widget=ModelSelect2(url="subject-autocomplete"),
     )
 
     class Meta:
@@ -50,7 +50,7 @@ class CanvasSiteForm(ModelForm):
         label="content_copy",
         queryset=CanvasSite.objects.all(),
         required=False,
-        widget=autocomplete.ModelSelect2(
+        widget=ModelSelect2(
             url="canvas_site-autocomplete",
             attrs={"data-placeholder": "Type to search for a course title..."},
         ),
@@ -67,12 +67,10 @@ class EmailChangeForm(Form):
         "email_mismatch": "The two email addresses fields didn't match.",
         "not_changed": "The email address is the same as the one already defined.",
     }
-
     new_email_one = EmailField(
         label="New email address",
         widget=EmailInput,
     )
-
     new_email_two = EmailField(
         label="New email address confirmation",
         widget=EmailInput,

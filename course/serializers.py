@@ -1,7 +1,15 @@
 import collections
 
 from django.contrib.auth.models import User
-from rest_framework import serializers
+from rest_framework.serializers import (
+    BooleanField,
+    CharField,
+    HyperlinkedModelSerializer,
+    ModelSerializer,
+    ReadOnlyField,
+    SerializerMethodField,
+    SlugRelatedField,
+)
 
 from course.models import (
     Activity,
@@ -19,7 +27,7 @@ from course.models import (
 from course.utils import validate_pennkey
 
 
-class DynamicFieldsModelSerializer(serializers.ModelSerializer):
+class DynamicFieldsModelSerializer(ModelSerializer):
     def __init__(self, *args, **kwargs):
         fields = kwargs.pop("fields", None)
         super(DynamicFieldsModelSerializer, self).__init__(*args, **kwargs)
@@ -33,31 +41,31 @@ class DynamicFieldsModelSerializer(serializers.ModelSerializer):
 
 
 class CourseSerializer(DynamicFieldsModelSerializer):
-    owner = serializers.ReadOnlyField(source="owner.username")
-    course_code = serializers.CharField()
-    crosslisted = serializers.SlugRelatedField(
+    owner = ReadOnlyField(source="owner.username")
+    course_code = CharField()
+    crosslisted = SlugRelatedField(
         many=True,
         queryset=Course.objects.all(),
         slug_field="course_code",
         required=False,
     )
-    requested = serializers.BooleanField(default=False)
-    sections = serializers.SerializerMethodField()  #
-    instructors = serializers.SlugRelatedField(
+    requested = BooleanField(default=False)
+    sections = SerializerMethodField()  #
+    instructors = SlugRelatedField(
         many=True, queryset=User.objects.all(), slug_field="username"
     )
-    course_schools = serializers.SlugRelatedField(
+    course_schools = SlugRelatedField(
         many=False, queryset=School.objects.all(), slug_field="abbreviation"
     )
-    course_subject = serializers.SlugRelatedField(
+    course_subject = SlugRelatedField(
         many=False, queryset=Subject.objects.all(), slug_field="abbreviation"
     )
-    course_activity = serializers.SlugRelatedField(
+    course_activity = SlugRelatedField(
         many=False, queryset=Activity.objects.all(), slug_field="abbr"
     )
-    id = serializers.ReadOnlyField()
-    requested_override = serializers.ReadOnlyField()
-    associated_request = serializers.SerializerMethodField()
+    id = ReadOnlyField()
+    requested_override = ReadOnlyField()
+    associated_request = SerializerMethodField()
 
     class Meta:
         model = Course
@@ -131,11 +139,11 @@ class CourseSerializer(DynamicFieldsModelSerializer):
             return instance
 
 
-class UserSerializer(serializers.ModelSerializer):
-    requests = serializers.HyperlinkedRelatedField(
+class UserSerializer(ModelSerializer):
+    requests = HyperlinkedRelatedField(
         many=True, view_name="request-detail", read_only=True
     )
-    penn_id = serializers.CharField(source="profile.penn_id")
+    penn_id = CharField(source="profile.penn_id")
 
     class Meta:
         model = User
@@ -163,8 +171,8 @@ class UserSerializer(serializers.ModelSerializer):
         return instance
 
 
-class AdditionalEnrollmentSerializer(serializers.ModelSerializer):
-    user = serializers.SlugRelatedField(
+class AdditionalEnrollmentSerializer(ModelSerializer):
+    user = SlugRelatedField(
         queryset=User.objects.all(),
         slug_field="username",
         style={"base_template": "input.html"},
@@ -175,11 +183,11 @@ class AdditionalEnrollmentSerializer(serializers.ModelSerializer):
         exclude = ("id", "course_request")
 
 
-class CanvasSiteSerializer(serializers.ModelSerializer):
-    owners = serializers.SlugRelatedField(
+class CanvasSiteSerializer(ModelSerializer):
+    owners = SlugRelatedField(
         many=True, queryset=User.objects.all(), slug_field="username"
     )
-    added_permissions = serializers.SlugRelatedField(
+    added_permissions = SlugRelatedField(
         many=True, queryset=User.objects.all(), slug_field="username"
     )
 
@@ -201,33 +209,33 @@ class CanvasSiteSerializer(serializers.ModelSerializer):
 
 
 class RequestSerializer(DynamicFieldsModelSerializer):
-    owner = serializers.ReadOnlyField(source="owner.username", required=False)
+    owner = ReadOnlyField(source="owner.username", required=False)
     course_info = CourseSerializer(source="course_requested", read_only=True)
     canvas_instance = CanvasSiteSerializer(read_only=True)
-    masquerade = serializers.ReadOnlyField()
-    course_requested = serializers.SlugRelatedField(
+    masquerade = ReadOnlyField()
+    course_requested = SlugRelatedField(
         many=False,
         queryset=Course.objects.all(),
         slug_field="course_code",
         style={"base_template": "input.html"},
     )
-    title_override = serializers.CharField(
+    title_override = CharField(
         allow_null=True,
         required=False,
         max_length=45,
         style={"base_template": "input.html"},
     )
-    lps_online = serializers.BooleanField(default=False)
-    exclude_announcements = serializers.BooleanField(default=False)
+    lps_online = BooleanField(default=False)
+    exclude_announcements = BooleanField(default=False)
     additional_enrollments = AdditionalEnrollmentSerializer(
         many=True,
         default=[],
         style={"base_template": "list_fieldset.html"},
         required=False,
     )
-    created = serializers.DateTimeField(format="%I:%M%p %b,%d %Y", required=False)
-    updated = serializers.DateTimeField(format="%I:%M%p %b,%d %Y", required=False)
-    additional_sections = serializers.SlugRelatedField(
+    created = DateTimeField(format="%I:%M%p %b,%d %Y", required=False)
+    updated = DateTimeField(format="%I:%M%p %b,%d %Y", required=False)
+    additional_sections = SlugRelatedField(
         many=True,
         default=[],
         queryset=Course.objects.all(),
@@ -274,7 +282,7 @@ class RequestSerializer(DynamicFieldsModelSerializer):
                     if user is None:
                         print(f"FAILED to find User {enrollment['user']}.")
 
-                        raise serializers.ValidationError(
+                        raise ValidationError(
                             {
                                 "error": (
                                     "An error occurred. Please check that the pennkeys"
@@ -377,7 +385,7 @@ class RequestSerializer(DynamicFieldsModelSerializer):
         return instance
 
 
-class SubjectSerializer(serializers.ModelSerializer):
+class SubjectSerializer(ModelSerializer):
     class Meta:
         model = Subject
         fields = "__all__"
@@ -396,7 +404,7 @@ class SubjectSerializer(serializers.ModelSerializer):
         return instance
 
 
-class SchoolSerializer(serializers.ModelSerializer):
+class SchoolSerializer(ModelSerializer):
     subjects = SubjectSerializer(many=True, read_only=True)
 
     class Meta:
@@ -426,9 +434,9 @@ class SchoolSerializer(serializers.ModelSerializer):
         return instance
 
 
-class NoticeSerializer(serializers.HyperlinkedModelSerializer):
-    owner = serializers.ReadOnlyField(source="owner.username")
-    id = serializers.ReadOnlyField()
+class NoticeSerializer(HyperlinkedModelSerializer):
+    owner = ReadOnlyField(source="owner.username")
+    id = ReadOnlyField()
 
     class Meta:
         model = Notice
@@ -444,23 +452,23 @@ class NoticeSerializer(serializers.HyperlinkedModelSerializer):
         return instance
 
 
-class AutoAddSerializer(serializers.HyperlinkedModelSerializer):
-    user = serializers.SlugRelatedField(
+class AutoAddSerializer(HyperlinkedModelSerializer):
+    user = SlugRelatedField(
         many=False,
         queryset=User.objects.all(),
         slug_field="username",
         style={"base_template": "input.html"},
     )
-    school = serializers.SlugRelatedField(
+    school = SlugRelatedField(
         many=False, queryset=School.objects.all(), slug_field="abbreviation"
     )
-    subject = serializers.SlugRelatedField(
+    subject = SlugRelatedField(
         many=False,
         queryset=Subject.objects.all(),
         slug_field="abbreviation",
         style={"base_template": "input.html"},
     )
-    id = serializers.ReadOnlyField()
+    id = ReadOnlyField()
 
     class Meta:
         model = AutoAdd
@@ -475,7 +483,7 @@ class AutoAddSerializer(serializers.HyperlinkedModelSerializer):
         return instance
 
 
-class UpdateLogSerializer(serializers.ModelSerializer):
+class UpdateLogSerializer(ModelSerializer):
     class Meta:
         model = UpdateLog
         fields = "__all__"
