@@ -4,10 +4,11 @@ from django.contrib.auth.models import User
 from rest_framework.serializers import (
     BooleanField,
     CharField,
+    DateTimeField,
     HyperlinkedModelSerializer,
+    HyperlinkedRelatedField,
     ModelSerializer,
     ReadOnlyField,
-    HyperlinkedRelatedField,
     SerializerMethodField,
     SlugRelatedField,
 )
