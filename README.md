@@ -8,8 +8,11 @@ Server configuration: [https://gitlab.library.upenn.edu/course-request/crf2_conf
 
 ## Makefile
 
-A Makefile is provided with aliases to common commands. (To install "make" on MacOS, run: `xcode-select --install`)  
-_To see the actual commands, inspect the Makefile_
+A Makefile is provided with aliases to common commands.
+
+_This README uses these aliases. Actual commands can be seen in the Makefile itself._
+
+- To install "make" on MacOS: `xcode-select --install`
 
 ## Local Development
 
@@ -84,9 +87,8 @@ service = whse.upenn.edu
 - To populate a local database with real data: `make populate`
   _For more information, see the files in course/management/commands/_
 - To run the application: `make run`
-- If you make changes to your "models.py" file, you will need to run: `make migrations` (Note the plural!)
+- If you make changes to your "models.py" file, you will need to run: `make migrations`
   _This is run automatically by `make run`_
-- To add CSS or other static file changes to the build, run: `make static`
 - To run python interactively using your virtual environment's shell: `make shell`
 - To interactively query the sqlite3 database, run `make db`
   - To view tables: `.tables`
@@ -123,6 +125,7 @@ To login to the production and development instances, make sure you are connecte
 
 - To pull changes from GitLab: `make pull`
 - To restart the app (run this after pulling changes): `make restart`
+  _This automatically runs `make migrations` and `make static` as well_
 
 Working with the virtual environment:
 

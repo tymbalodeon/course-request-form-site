@@ -46,7 +46,7 @@ prod:
 pull:
 	cd /home/django/crf2 && git pull
 
-restart:
+restart: migrations static
 	touch /home/django/crf2/crf2/wsgi.py
 
 run: migrations
