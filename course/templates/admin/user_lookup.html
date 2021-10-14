@@ -8,7 +8,7 @@
 {% block content %}
     <h1>User Lookup</h1>
     <p>
-        Check for a user's info in the CRF and in Canvas.
+        Look up a user's info in the CRF and in Canvas.
     </p>
     <em>Only lists Canvas sites where the user has Teacher enrollment status.</em>
     <br>
@@ -22,18 +22,18 @@
     </form>
     <br>
     <div>
-        <button class="check-user">Check user</button>
+        <button class="check-user">Look up user</button>
     </div>
 
     {{ form2.media }}
 
     <fieldset id="crf-results">
-        <legend>CRF Data</legend>
+        <legend>CRF Results</legend>
         <em>Search to load basic data from the CRF</em>
     </fieldset>
 
     <fieldset id="canvas-results">
-        <legend>Canvas Data</legend>
+        <legend>Canvas Results</legend>
         <em>Search to load basic user data from canvas</em>
     </fieldset>
     <br>
@@ -54,7 +54,7 @@
      }
 
      const displayCRFResults = (data) => {
-         $('#crf-results').empty().append("<legend>CRF Data</legend>");
+         $('#crf-results').empty().append("<legend>CRF Results</legend>");
 
          for (const element in data) {
              if (Array.isArray(data[element]) && data[element].length){
@@ -70,7 +70,7 @@
      }
 
      const displayCRFError = (xhr, status) => {
-         $('#crf-results').empty().append("<legend>CRF Data</legend><em>User not found.</em>");
+         $('#crf-results').empty().append("<legend>CRF Results</legend><em>User not found.</em>");
      }
 
      const makeCanvasListItem = (item, ol) => {
@@ -80,10 +80,10 @@
      }
 
      const displayCanvasResults = (data) => {
-         $('#canvas-results').empty().append("<legend>Canvas Data</legend>");
+         $('#canvas-results').empty().append("<legend>Canvas Results</legend>");
 
          if (!Object.keys(data).length) {
-            $('#canvas-results').empty().append("<legend>Canvas Data</legend><em>User not found.</em>");
+            $('#canvas-results').empty().append("<legend>Canvas Results</legend><em>User not found.</em>");
 
              return;
          }
@@ -102,7 +102,7 @@
      }
 
      const displayCanvasError = (xhr, status) => {
-         $('#canvas-results').empty().append("<legend>Canvas Data</legend><em>User not found.</em>");
+         $('#canvas-results').empty().append("<legend>Canvas Results</legend><em>User not found.</em>");
      }
 
      $('.check-user').click(function() {

@@ -6,37 +6,36 @@
 {% endblock %}
 
 {% block content %}
-    <h1> Course Lookup</h1>
-    <p> Does something seem wrong about a course? Lets see if they exist in the Registrar Data...
-        <br>
-        <mark><strong>NB:</strong> Results are capped at 5 courses and labs are not listed as courses.</mark>
-    </p>
+    <h1>Course Lookup</h1>
+    <p>Look up course information in the Registrar.</p>
     <dl>
-        <dt>Course Id</dt>
+        <dt>Code</dt>
         <dd>Subject code (required), plus course number (optional if no section number), plus section number (optional); must be in CAPS</dd>
-        <dt>Year/Term (optional)</dt>
-        <dd>Year plus term code: "A" for spring, "B" for summer, "C" for fall</dd>
+        <dt>Year and Term (optional)</dt>
+        <dd>Year plus term code ("A" for spring, "B" for summer, "C" for fall)</dd>
         <dt>Instructor (optional)</dt>
         <dd>Valid pennkey; must be lowercase</dd>
     </dl>
+    <em>Results are capped at 5 courses and labs are not listed as courses.</em>
     <fieldset>
         <legend>Course Lookup</legend>
         <form>
             <div class="flex-row">
                 <div class="flex-large">
-                    <label for="course_id">Course Id</label>
-                    <input type="text" id="course_id" name="course_id" placeholder="Course Id">
+                    <label for="course_id">Code</label>
+                    <input type="text" id="course_id" name="course_id" placeholder="SUBJ or SUBJ123 or SUBJ123456">
                 </div>
                 <div class="flex-large">
                     <label for="term">Year/Term</label>
-                    <input type="text" id="term" name="term" placeholder="e.g. 2019C">
+                    <input type="text" id="term" name="term" placeholder="e.g., 2022A">
                 </div>
                 <div class="flex-large">
                     <label for="instructor">Instructor</label>
                     <input type="text" id="instructor" name="instructor" placeholder="pennkey">
                 </div>
             </div>
-            <input type="submit" value="Submit">
+            <br>
+            <input type="submit" value="Look up course">
         </form>
     </fieldset>
     <fieldset style="padding:0rem;">
@@ -45,4 +44,5 @@
             {{data | pprint}}
         </pre>
     </fieldset>
+    <br>
 {% endblock %}
