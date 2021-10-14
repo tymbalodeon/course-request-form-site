@@ -49,7 +49,7 @@ LOGGING = {
 }
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = get_config_value("django", "secret_key", raw=True)
-DEBUG = False
+DEBUG = get_config_value("django", "debug")
 CANVAS_ENVIRONMENT = "PRODUCTION"
 ALLOWED_HOSTS = ["*", "localhost"]
 INTERNAL_IPS = ["127.0.0.1"]
