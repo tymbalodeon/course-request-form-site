@@ -1118,7 +1118,7 @@ class AutoAddViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
             if request.accepted_renderer.format == "html":
                 response.template_name = "admin/autoadd_list.html"
                 response.data = {
-                    "results": response.data,
+                    "auto_adds": response.data,
                     "paginator": self.paginator,
                     "serializer": AutoAddSerializer,
                     "autocomplete_user": UserForm(),
