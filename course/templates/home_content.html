@@ -34,7 +34,7 @@
                     <dt class="col-4 col-md-2 text-right" style="padding-right: 0px;">User: </dt>
                     <dd class="col-8 col-md-10"> {{masq_user.first_name }} {{masq_user.last_name}} </dd>
                 {% endif %}
-                <dt class="col-4 col-md-2 text-right" style="padding-right: 0px;">Penn Key: </dt>
+                <dt class="col-4 col-md-2 text-right" style="padding-right: 0px;">Pennkey: </dt>
                 <dd class="col-8 col-md-10"> {{masq_user.username}}</dd>
                 <dt class="col-4 col-md-2 text-right" style="padding-right: 0px;">Penn ID: </dt>
                 <dd class="col-8 col-md-10"> {{ masq_user.profile.penn_id}}</dd>
@@ -47,7 +47,7 @@
                     <dt class="col-4 col-md-2 text-right" style="padding-right: 0px;">User: </dt>
                     <dd class="col-8 col-md-10"> {{user.first_name }} {{user.last_name}} </dd>
                 {% endif %}
-                <dt class="col-4 col-md-2 text-right" style="padding-right: 0px;">Penn Key: </dt>
+                <dt class="col-4 col-md-2 text-right" style="padding-right: 0px;">Pennkey: </dt>
                 <dd class="col-8 col-md-10"> {{user.username}} </dd>
                 <dt class="col-4 col-md-2 text-right" style="padding-right: 0px;">Penn ID: </dt>
                 <dd class="col-8 col-md-10"> {{user.profile.penn_id}}</dd>
@@ -58,8 +58,9 @@
         {% endif %}
     </div>
     <div class="homepage-container">
-        <dt>Request site on behalf of user:</dt>
-        <form class="" method="POST" action="{% url 'home' %}" style="display:inherit;max-width:500px;margin-left:auto;margin-right:auto;">
+        <dt>Request site on behalf of user</dt>
+        <br>
+        <form method="POST" action="{% url 'home' %}" style="max-width:300px;margin:auto">
             {% csrf_token %}
             <label for="name">User's Pennkey</label>
             <div class="input-group mb-3">
@@ -73,7 +74,7 @@
     <div class="homepage-container">
         <dl>
             <dt>Site Requests ({{data.site_requests_count}})</dt>
-            <dd> Here are site requests completed by the current user or on their behalf </dd>
+            <dd><em>Requests made by you or on your behalf</em></dd>
         </dl>
         {% if data.site_requests %}
             <table class="striped-table">
@@ -116,7 +117,7 @@
     <div class="homepage-container">
         <dl>
             <dt>Courses ({{data.srs_courses_count}})</dt>
-            <dd>SRS Course Assignments  </dd>
+            <dd><em>SRS Course Assignments</em></dd>
         </dl>
         {% if data.srs_courses %}
             <table class="striped-table">
@@ -159,7 +160,7 @@
     <div class="homepage-container">
         <dl>
             <dt>Canvas Sites ({{data.canvas_sites_count}})</dt>
-            <dd>Existing Canvas Sites (either an instructor or custom permission)</dd>
+            <dd><em>Existing Canvas Sites (either an instructor or custom permission)</em></dd>
         </dl>
         {% if data.canvas_sites %}
             <table class="striped-table">
@@ -188,7 +189,7 @@
                     {% endfor %}
                 </tbody>
             </table>
-            <div class="vertical-center"><a href="{% url 'UI-canvas_site-list' %}">see more </a></div>
+            <div class="vertical-center"><a href="{% url 'UI-canvas_site-list' %}">See more...</a></div>
         {% else %}
             <center><p> No Canvas Sites for this user... </p></center>
         {% endif %}
