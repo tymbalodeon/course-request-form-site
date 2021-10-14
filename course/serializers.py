@@ -7,6 +7,7 @@ from rest_framework.serializers import (
     HyperlinkedModelSerializer,
     ModelSerializer,
     ReadOnlyField,
+    HyperlinkedRelatedField,
     SerializerMethodField,
     SlugRelatedField,
 )
@@ -104,12 +105,12 @@ class CourseSerializer(DynamicFieldsModelSerializer):
             instance.save()
             crosslistings = validated_data.get("crosslisted", instance.crosslisted)
 
-            for ccourse in crosslistings:
-                crosslistings.remove(ccourse)
-                current = ccourse.crosslisted.all()
+            for course in crosslistings:
+                crosslistings.remove(course)
+                current = course.crosslisted.all()
                 new = list(current) + list(crosslistings)
-                ccourse.crosslisted.set(new)
-                ccourse.requested = validated_data.get("requested", instance.requested)
+                course.crosslisted.set(new)
+                course.requested = validated_data.get("requested", instance.requested)
 
             return instance
         else:
@@ -129,12 +130,12 @@ class CourseSerializer(DynamicFieldsModelSerializer):
             instance.save()
             crosslistings = validated_data.get("crosslisted", instance.crosslisted)
 
-            for ccourse in crosslistings:
-                crosslistings.remove(ccourse)
-                current = ccourse.crosslisted.all()
+            for course in crosslistings:
+                crosslistings.remove(course)
+                current = course.crosslisted.all()
                 new = list(current) + list(crosslistings)
-                ccourse.crosslisted.set(new)
-                ccourse.requested = validated_data.get("requested", instance.requested)
+                course.crosslisted.set(new)
+                course.requested = validated_data.get("requested", instance.requested)
 
             return instance
 
