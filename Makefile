@@ -9,19 +9,13 @@ TERM := $(shell if (( $(MONTH) > 8 )); \
 				else echo "A"; \
 				fi)
 
-activate:
-	source /home/django/venv/bin/activate
-
 courses:
 	$(MANAGE) add_courses -t $(YEAR)$(TERM) -o
 
 db:
 	$(MANAGE) dbshell
 
-deploy: activate install restart
-
-dev:
-	ssh reqform-dev.library.upenn.int
+deploy: install restart
 
 freeze:
 	pip freeze > $(REQUIREMENTS)
@@ -33,7 +27,7 @@ live:
 	$(MANAGE) livereload
 
 log:
-	tail /var/log/crf2/crf2_error.log
+	tail -n 100 /var/log/crf2/crf2_error.log
 
 migrate:
 	$(MANAGE) migrate
@@ -44,9 +38,6 @@ migration:
 migrations: migration migrate
 
 populate: migrations schools subjects courses
-
-prod:
-	ssh reqform01.library.upenn.int
 
 pull:
 	cd /home/django/crf2 && git pull

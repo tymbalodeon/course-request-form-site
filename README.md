@@ -121,7 +121,7 @@ Reference: [sqlplus Documentation](https://docs.oracle.com/cd/B19306_01/server.1
 
 To login to the production and development instances, make sure you are connected through the WireGuard VPN and run:
 
-1. `make prod` (production) or `make dev` (development)
+1. `ssh reqform01.library.upenn.int` (production) or `ssh reqform-dev.library.upenn.int` (development)
 2. `sudo su - django`
 
 - To pull changes from GitLab: `make pull`
@@ -130,7 +130,7 @@ To login to the production and development instances, make sure you are connecte
 
 Working with the virtual environment:
 
-- Activation: `make activate`
+- Activation: `source /home/dango/crf2/venv/bin/activate`
 - Deactivation: `exit`
 
 ### Logs
