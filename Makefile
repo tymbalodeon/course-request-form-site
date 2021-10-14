@@ -13,3 +13,6 @@ superuser:
 .PHONY: static
 static:
 	python manage.py collectstatic --no-input
+
+shell:
+	python manage.py shell
