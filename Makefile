@@ -18,6 +18,8 @@ courses:
 db:
 	$(MANAGE) dbshell
 
+deploy: activate install restart
+
 dev:
 	ssh reqform-dev.library.upenn.int
 
@@ -26,6 +28,9 @@ freeze:
 
 install:
 	pip install -r $(REQUIREMENTS)
+
+live:
+	$(MANAGE) livereload
 
 log:
 	tail /var/log/crf2/crf2_error.log

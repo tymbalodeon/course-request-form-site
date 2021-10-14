@@ -427,10 +427,13 @@ def create_canvas_sites(
                 )
 
                 if verbose:
+                    announcements = (
+                        " WITHOUT announcements" if exclude_announcements else ""
+                    )
                     print(
                         "\t* Copying course data from course id"
                         f" {serialized.data['copy_from_course']}"
-                        f"{' WITHOUT announcements' if exclude_announcements else ''}..."
+                        f"{announcements}..."
                     )
 
                 source_course_id = serialized.data["copy_from_course"]

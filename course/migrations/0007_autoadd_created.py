@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('course', '0006_request_exclude_announcements'),
+        ("course", "0006_request_exclude_announcements"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='autoadd',
-            name='created',
+            model_name="autoadd",
+            name="created",
             field=models.DateTimeField(auto_now_add=True, null=True),
         ),
     ]

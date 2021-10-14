@@ -11,6 +11,7 @@ from rest_framework.serializers import (
     ReadOnlyField,
     SerializerMethodField,
     SlugRelatedField,
+    ValidationError,
 )
 
 from course.models import (
