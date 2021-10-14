@@ -56,7 +56,8 @@ class Command(BaseCommand):
                     )[1]
 
                     print(
-                        f"- {'ADDED' if added else 'UPDATED'} activity: {name} ({abbreviation})"
+                        f"- {'ADDED' if added else 'UPDATED'} activity:"
+                        f" {name} ({abbreviation})"
                     )
                 except Exception:
                     print(f"- FAILED to add activity: {name} ({abbreviation})")

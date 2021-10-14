@@ -87,6 +87,7 @@ password = password
 - To populate a local database with real data: `make populate`
   _For more information, see the files in course/management/commands/_
 - To run the application: `make run`
+- To run the application with live reloading (recommended): `make live` in one terminal and `make run` in another
 - If you make changes to your "models.py" file, you will need to run: `make migrations`
   _This is run automatically by `make run`_
 - To run python interactively using your virtual environment's shell: `make shell`

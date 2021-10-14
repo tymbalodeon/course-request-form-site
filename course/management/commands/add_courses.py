@@ -149,7 +149,8 @@ class Command(BaseCommand):
                         course_object, created = course_created
 
                         print(
-                            f"- {'CREATED' if created else 'UPDATED'} {course['section_id']}"
+                            f"- {'CREATED' if created else 'UPDATED'}"
+                            f" {course['section_id']}"
                         )
 
                         if course["is_cancelled"]:
