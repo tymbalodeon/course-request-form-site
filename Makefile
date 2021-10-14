@@ -19,7 +19,7 @@ migrate:
 restart:
 	touch /home/django/crf2/crf2/wsgi.py
 
-run:
+run: migration migrate static
 	$(MANAGE) runserver
 
 shell:
