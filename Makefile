@@ -1,5 +1,25 @@
 REQUIREMENTS = requirements.txt
 MANAGE = python manage.py
+YEAR := $(shell date +%Y)
+MONTH := $(shell date +%m)
+TERM := $(shell if (( $(MONTH) > 8 )); \
+					then echo "C"; \
+				elif (( $(MONTH) -gt 5 )); \
+					then echo "B"; \
+				else echo "A"; \
+				fi)
+
+activate:
+	source /home/django/venv/bin/activate
+
+courses:
+	$(MANAGE) add_courses -t $(YEAR)$(TERM) -o
+
+db:
+	$(MANAGE) dbshell
+
+dev:
+	ssh reqform-dev.library.upenn.int
 
 freeze:
 	pip freeze > $(REQUIREMENTS)
@@ -10,17 +30,30 @@ install:
 log:
 	tail /var/log/crf2/crf2_error.log
 
+migrate:
+	$(MANAGE) migrate
+
 migration:
 	$(MANAGE) makemigrations
 
-migrate:
-	$(MANAGE) migrate
+migrations: migration migrate
+
+populate: migrations schools subjects courses
+
+prod:
+	ssh reqform01.library.upenn.int
+
+pull:
+	cd /home/django/crf2 && git pull
 
 restart:
 	touch /home/django/crf2/crf2/wsgi.py
 
-run: migration migrate static
+run: migrations
 	$(MANAGE) runserver
+
+schools:
+	$(MANAGE) add_schools
 
 shell:
 	$(MANAGE) shell
@@ -28,6 +61,9 @@ shell:
 .PHONY: static
 static:
 	$(MANAGE) collectstatic --no-input
+
+subjects:
+	$(MANAGE) add_subjects -o
 
 superuser:
 	$(MANAGE) createsuperuser
