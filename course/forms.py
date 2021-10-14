@@ -22,7 +22,6 @@ class ContactForm(Form):
 
 class UserForm(ModelForm):
     username = ModelChoiceField(
-        label="user",
         queryset=User.objects.all(),
         widget=ModelSelect2(url="user-autocomplete"),
     )

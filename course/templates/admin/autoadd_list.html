@@ -58,11 +58,11 @@
                         <form action="/autoadds/" method="post" id="auto-add-form">
                             {% csrf_token %}
                             <div class="form-group ">
-                                <label>User</label>
-                                {{ autocomplete_user.username }}
+                                <label>User (pennkey)</label>
+                                {{ user_form.username }}
                             </div>
                             {% render_form serializer %}
-                            {{ autocomplete_user.media }}
+                            {{ user_form.media }}
                             <br>
                             <input type="submit" value="Create" />
                         </form>
