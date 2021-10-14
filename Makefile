@@ -1,18 +1,33 @@
-run:
-	python manage.py runserver
+REQUIREMENTS = requirements.txt
+MANAGE = python manage.py
+
+freeze:
+	pip freeze > $(REQUIREMENTS)
+
+install:
+	pip install -r $(REQUIREMENTS)
+
+log:
+	tail /var/log/crf2/crf2_error.log
 
 migration:
-	python manage.py makemigrations
+	$(MANAGE) makemigrations
 
 migrate:
-	python manage.py migrate
+	$(MANAGE) migrate
 
-superuser:
-	python manage.py createsuperuser
+restart:
+	touch /home/django/crf2/crf2/wsgi.py
+
+run:
+	$(MANAGE) runserver
+
+shell:
+	$(MANAGE) shell
 
 .PHONY: static
 static:
-	python manage.py collectstatic --no-input
+	$(MANAGE) collectstatic --no-input
 
-shell:
-	python manage.py shell
+superuser:
+	$(MANAGE) createsuperuser
