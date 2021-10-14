@@ -460,7 +460,6 @@ class AutoAddSerializer(HyperlinkedModelSerializer):
         many=False,
         queryset=User.objects.all(),
         slug_field="username",
-        style={"base_template": "input.html"},
     )
     school = SlugRelatedField(
         many=False, queryset=School.objects.all(), slug_field="abbreviation"
@@ -469,7 +468,6 @@ class AutoAddSerializer(HyperlinkedModelSerializer):
         many=False,
         queryset=Subject.objects.all(),
         slug_field="abbreviation",
-        style={"base_template": "input.html"},
     )
     id = ReadOnlyField()
 
