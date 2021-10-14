@@ -1188,19 +1188,30 @@ def DWHSE_Proxy(request):
 def my_proxy(request, username):
     print(f"Username: {username}")
 
-    login_id = username
-    user = get_user_by_sis(login_id)
-    courses = user.get_courses(enrollment_type="teacher")
+    user = get_user_by_sis(username)
+    courses = user.get_courses(enrollment_type="teacher") if user else None
     properties = ["id", "name", "sis_course_id", "workflow_state"]
-    courses = [
-        [{key: course.attributes.get(key, "NONE") for key in properties}]
-        for course in courses
-    ]
-    courses = [
-        course_attributes for attributes in courses for course_attributes in attributes
-    ]
-    response = user.attributes
-    response["courses"] = courses
+    courses = (
+        [
+            [{key: course.attributes.get(key, "NONE") for key in properties}]
+            for course in courses
+        ]
+        if courses
+        else None
+    )
+    courses = (
+        [
+            course_attributes
+            for attributes in courses
+            for course_attributes in attributes
+        ]
+        if courses
+        else None
+    )
+    response = user.attributes if user else {}
+
+    if courses:
+        response["courses"] = courses
 
     return JsonResponse(response)
 
