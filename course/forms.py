@@ -63,15 +63,15 @@ class CanvasSiteForm(ModelForm):
 
 class EmailChangeForm(Form):
     error_messages = {
-        "email_mismatch": "The two email addresses fields didn't match.",
-        "not_changed": "The email address is the same as the one already defined.",
+        "email_mismatch": "Confirmation does not match. Please confirm that you input the new email correctly.",
+        "not_changed": "Email is the same as your existing email. Please choose an email different from the one currently set.",
     }
-    new_email_one = EmailField(
+    new_email = EmailField(
         label="New email address",
         widget=EmailInput,
     )
-    new_email_two = EmailField(
-        label="New email address confirmation",
+    new_email_confirmation = EmailField(
+        label="Confirm email",
         widget=EmailInput,
     )
 
@@ -79,9 +79,9 @@ class EmailChangeForm(Form):
         self.user = user
         super(EmailChangeForm, self).__init__(*args, **kwargs)
 
-    def clean_new_email1(self):
+    def clean_new_email(self):
         old_email = self.user.email
-        new_email = self.cleaned_data.get("new_email1")
+        new_email = self.cleaned_data.get("new_email")
 
         if new_email and old_email and new_email == old_email:
             raise ValidationError(
@@ -91,19 +91,20 @@ class EmailChangeForm(Form):
 
         return new_email
 
-    def clean_new_email2(self):
-        new_email_one = self.cleaned_data.get("new_email1")
-        new_email_two = self.cleaned_data.get("new_email2")
-        if new_email_one and new_email_two and new_email_one != new_email_two:
+    def clean_new_email_confirmation(self):
+        new_email = self.cleaned_data.get("new_email")
+        new_email_confirmation = self.cleaned_data.get("new_email_confirmation")
+
+        if new_email and new_email_confirmation and new_email != new_email_confirmation:
             raise ValidationError(
                 self.error_messages["email_mismatch"],
                 code="email_mismatch",
             )
 
-        return new_email_two
+        return new_email_confirmation
 
     def save(self, commit=True):
-        email = self.cleaned_data["new_email1"]
+        email = self.cleaned_data["new_email"]
         self.user.email = email
 
         if commit:
