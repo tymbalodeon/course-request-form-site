@@ -6,110 +6,120 @@
 {% endblock %}
 
 {% block content %}
-    <h1>Canvas User Lookup</h1>
-
+    <h1>User Lookup</h1>
     <p>
-        Does something seem wrong about a User? Lets see if they exist in the CRF and if they exist in Canvas!
-        Canvas Course sites listed are those with teacher enrollment status.
+        Check for a user's info in the CRF and in Canvas.
     </p>
-
+    <em>Only lists Canvas sites where the user has Teacher enrollment status.</em>
+    <br>
+    <br>
     <form id="myForm" action="#" onsubmit="submitForm();return false;">
         <label style="width: 45%;">
-            User
+            User (pennkey)
             <input name="user" type="text" id="pennkey" />
             {{ form2.username }}
         </label>
     </form>
-
+    <br>
     <div>
-        <button class="apireq">Check user</button>
+        <button class="check-user">Check user</button>
     </div>
 
     {{ form2.media }}
 
-    <fieldset id="showresults">
+    <fieldset id="crf-results">
         <legend>CRF Data</legend>
-        <p>Search to load basic data from the CRF</p>
+        <em>Search to load basic data from the CRF</em>
     </fieldset>
 
-    <fieldset id="showresultscanvas">
+    <fieldset id="canvas-results">
         <legend>Canvas Data</legend>
-        <p>Search to load basic user data from canvas</p>
+        <em>Search to load basic user data from canvas</em>
     </fieldset>
+    <br>
 {% endblock %}
 
 {% block template_page_js %}
     <script>
      function submitForm() {
-         $('.apireq').click();
+         $('.check-user').click();
+
          return false;
      }
 
-     $('.apireq').click( function() {
-         var pennkey = $("#pennkey").val();
-         console.log(pennkey);
-         $.ajax({
-             url : `/api/users/${pennkey}`,
-             dataType: "json",
-             success : function (data) {
-                 console.log(data);
-                 var test = data;
-                 $('#showresults').empty().append("<legend>CRF Data</legend>");
-                 for ( const element in data) {
-                     console.log(element, data[element]);
-                     if (Array.isArray(data[element])){
-                         $('#showresults').append(`<p>${element}:</p>`);
-                         var items = data[element];
-                         var ul = document.createElement('ul');
-                         document.getElementById('showresults').appendChild(ul);
-                         items.forEach(function (item) {
-                             var li = document.createElement('li');
-                             ul.appendChild(li);
-                             li.innerHTML += item;
-                         });
-                     }
-                     else {
-                         $('#showresults').append(`<p>${element}: ${data[element]}</p>`);
-                     }
-                 };
-                 console.log(data.username)
-             },
-             error: function (xhr, status) {
-                 $('#showresults').empty().append("<legend>CRF Data</legend><p>Sorry, there was a problem! Check that this user exists in the CRF</p>");
+     const makeCRFListItem = (item, ul) => {
+         const li = document.createElement('li');
+         ul.appendChild(li);
+         li.innerHTML += item;
+     }
+
+     const displayCRFResults = (data) => {
+         $('#crf-results').empty().append("<legend>CRF Data</legend>");
+
+         for (const element in data) {
+             if (Array.isArray(data[element]) && data[element].length){
+                 $('#crf-results').append(`<p><strong>${element}:</strong></p>`);
+                 const items = data[element];
+                 const ul = document.createElement('ul');
+                 document.getElementById('crf-results').appendChild(ul);
+                 items.forEach(item => makeCRFListItem(item, ul));
+             } else {
+                 $('#crf-results').append(`<p><strong>${element}:</strong> ${data[element]}</p>`);
              }
+         };
+     }
+
+     const displayCRFError = (xhr, status) => {
+         $('#crf-results').empty().append("<legend>CRF Data</legend><em>User not found.</em>");
+     }
+
+     const makeCanvasListItem = (item, ol) => {
+         const li = document.createElement('li');
+         ol.appendChild(li);
+         li.innerHTML += JSON.stringify(item);
+     }
+
+     const displayCanvasResults = (data) => {
+         $('#canvas-results').empty().append("<legend>Canvas Data</legend>");
+
+         if (!Object.keys(data).length) {
+            $('#canvas-results').empty().append("<legend>Canvas Data</legend><em>User not found.</em>");
+
+             return;
+         }
+
+         for (const element in data) {
+             if (Array.isArray(data[element]) && data[element].length){
+                 $('#canvas-results').append(`<p><strong>${element}:</strong></p>`);
+                 const items = data[element];
+                 const ol = document.createElement('ol');
+                 document.getElementById('canvas-results').appendChild(ol);
+                 items.forEach(item => makeCanvasListItem(item, ol));
+             } else {
+                 $('#canvas-results').append(`<p><strong>${element}:</strong> ${data[element]}</p>`);
+             }
+         };
+     }
+
+     const displayCanvasError = (xhr, status) => {
+         $('#canvas-results').empty().append("<legend>Canvas Data</legend><em>User not found.</em>");
+     }
+
+     $('.check-user').click(function() {
+         const pennkey = $("#pennkey").val();
+
+         $.ajax({
+             url: `/api/users/${pennkey}`,
+             dataType: "json",
+             success: displayCRFResults,
+             error: displayCRFError
          });
 
          $.ajax({
-             url : `/canvasuser/${pennkey}`,
+             url: `/canvasuser/${pennkey}`,
              dataType: "json",
-
-             success : function (data) {
-                 console.log(data);
-                 var test = data;
-                 $('#showresultscanvas').empty().append("<legend>Canvas Data</legend>");
-                 for ( const element in data) {
-                     console.log(element, data[element]);
-                     if (Array.isArray(data[element])){
-                         $('#showresultscanvas').append(`<p>${element}:</p>`);
-                         var items = data[element];
-                         var ol = document.createElement('ol');
-                         document.getElementById('showresultscanvas').appendChild(ol);
-                         items.forEach(function (item) {
-                             var li = document.createElement('li');
-                             ol.appendChild(li);
-                             li.innerHTML += JSON.stringify(item);
-                         });
-                     }
-                     else {
-                         $('#showresultscanvas').append(`<p>${element}: ${data[element]}</p>`);
-                     }
-                 };
-                 console.log("ok");
-                 console.log(data.username)
-             },
-             error: function (xhr, status) {
-                 $('#showresultscanvas').empty().append("<legend>Canvas Data</legend><p>Sorry, there was a problem! Check that this user exists in Canvas.</p>");
-             }
+             success: displayCanvasResults,
+             error: displayCanvasError
          });
      });
     </script>
