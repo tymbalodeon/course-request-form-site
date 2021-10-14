@@ -62,7 +62,7 @@ class Command(BaseCommand):
                             fails += 1
                     else:
                         print(
-                            f"{index_display} Subject {name} ({abbreviation}) ALREADY EXISTS."
+                            f"{index_display} ALREADY EXISTS: {name} ({abbreviation})."
                         )
 
                 if fails > 0 or len(missing_schools) > 0:

@@ -55,6 +55,14 @@
                         </div>
                     </div>
                     <div class="modal-body">
+                        <em>
+                            <strong>NOTE:</strong>
+                            Please ensure that your School and Subject choices
+                            match. If you choose a subject not associated with
+                            your school selection, the auto-add will not work.
+                        </em>
+                        <br>
+                        <br>
                         <form action="/autoadds/" method="post" id="auto-add-form">
                             {% csrf_token %}
                             <div class="form-group ">
