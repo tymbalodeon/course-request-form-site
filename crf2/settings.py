@@ -84,7 +84,6 @@ INSTALLED_APPS = [
     "rest_framework_swagger",
     "debug_toolbar",
 ]
-
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -195,3 +194,7 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+
+if not DEBUG:
+    INSTALLED_APPS.remove("livereload")
+    MIDDLEWARE.remove("livereload.middleware.LiveReloadScript")
