@@ -1121,7 +1121,7 @@ class AutoAddViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
                     "results": response.data,
                     "paginator": self.paginator,
                     "serializer": AutoAddSerializer,
-                    "autocompleteUser": UserForm(),
+                    "autocomplete_user": UserForm(),
                 }
 
             print(response.data["paginator"].page)
