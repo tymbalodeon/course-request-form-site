@@ -4,7 +4,7 @@
 
 {% block content %}
     <fieldset>
-        <legend>User Info</legend>
+        <legend>User Account Info</legend>
         <dl class="row">
             {% if request.session.on_behalf_of %}
                 {% get_user request.session.on_behalf_of as masq_user %}
@@ -36,14 +36,17 @@
             {% endif %}
         </dl>
         {% if request.session.on_behalf_of %}
-            <p class="vertical-center"> <mark>You cannot edit the info if you are Masquerading as someone.</mark>  </p>
+            <p class="vertical-center">
+                <mark>Editing this info is not allowed while "masquerading" as someone else. Please stop masquerading and try again.</mark>
+            </p>
         {% else %}
             <form role="form" action="" method="POST">
                 {% csrf_token %}
-                {{ form.as_p }}
+                {{ form }}
+                <br>
                 <button type="submit">Update</button>
             </form>
-            <p class="vertical-center"> please contact librarycrf@pobox.upenn.edu to edit any other account info </p>
+            <em><p class="vertical-center">To edit other account info, please <a href="mailto: librarycrf@pobox.upenn.edu" style="padding-left: 0.25em;">email the Courseware Team</a>.</p></em>
         {% endif %}
     </fieldset>
 {% endblock %}
