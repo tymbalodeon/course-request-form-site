@@ -18,78 +18,38 @@ EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
 EMAIL_FILE_PATH = "course/static/emails"
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
-INSTALLED_APPS = (
-    [
-        "dal",
-        "dal_select2",
-        "django.contrib.admin",
-        "django.contrib.admindocs",
-        "django.contrib.auth",
-        "django.contrib.contenttypes",
-        "django.contrib.humanize",
-        "django.contrib.sessions",
-        "django.contrib.messages",
-        "livereload",
-        "django.contrib.staticfiles",
-        "course",
-        "rest_framework",
-        "corsheaders",
-        "django_filters",
-        "admin_auto_filters",
-        "django_celery_beat",
-        "django_extensions",
-        "rest_framework_swagger",
-        "debug_toolbar",
-    ]
-    if DEBUG
-    else [
-        "dal",
-        "dal_select2",
-        "django.contrib.admin",
-        "django.contrib.admindocs",
-        "django.contrib.auth",
-        "django.contrib.contenttypes",
-        "django.contrib.humanize",
-        "django.contrib.sessions",
-        "django.contrib.messages",
-        "django.contrib.staticfiles",
-        "course",
-        "rest_framework",
-        "corsheaders",
-        "django_filters",
-        "admin_auto_filters",
-        "django_celery_beat",
-        "django_extensions",
-        "rest_framework_swagger",
-        "debug_toolbar",
-    ]
-)
-MIDDLEWARE = (
-    [
-        "django.middleware.security.SecurityMiddleware",
-        "django.contrib.sessions.middleware.SessionMiddleware",
-        "django.middleware.common.CommonMiddleware",
-        "django.middleware.csrf.CsrfViewMiddleware",
-        "corsheaders.middleware.CorsMiddleware",
-        "django.contrib.auth.middleware.AuthenticationMiddleware",
-        "debug_toolbar.middleware.DebugToolbarMiddleware",
-        "django.contrib.messages.middleware.MessageMiddleware",
-        "django.middleware.clickjacking.XFrameOptionsMiddleware",
-        "livereload.middleware.LiveReloadScript",
-    ]
-    if DEBUG
-    else [
-        "django.middleware.security.SecurityMiddleware",
-        "django.contrib.sessions.middleware.SessionMiddleware",
-        "django.middleware.common.CommonMiddleware",
-        "django.middleware.csrf.CsrfViewMiddleware",
-        "corsheaders.middleware.CorsMiddleware",
-        "django.contrib.auth.middleware.AuthenticationMiddleware",
-        "debug_toolbar.middleware.DebugToolbarMiddleware",
-        "django.contrib.messages.middleware.MessageMiddleware",
-        "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    ]
-)
+INSTALLED_APPS = [
+    "dal",
+    "dal_select2",
+    "django.contrib.admin",
+    "django.contrib.admindocs",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.humanize",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "course",
+    "rest_framework",
+    "corsheaders",
+    "django_filters",
+    "admin_auto_filters",
+    "django_celery_beat",
+    "django_extensions",
+    "rest_framework_swagger",
+    "debug_toolbar",
+]
+MIDDLEWARE = [
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+]
 ROOT_URLCONF = "crf2.urls"
 TEMPLATES = [
     {
