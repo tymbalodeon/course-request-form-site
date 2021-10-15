@@ -1075,7 +1075,7 @@ class AutoAddViewSet(MixedPermissionModelViewSet, ModelViewSet):
         "retrieve": [IsAdminUser],
         "update": [IsAdminUser],
         "partial_update": [IsAdminUser],
-        "delete": [IsAdminUser],
+        "destroy": [IsAdminUser],
     }
 
     def create(self, request):
