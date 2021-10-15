@@ -16,7 +16,8 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django_celery_beat.models import PeriodicTask
 from django_filters import rest_framework as filters
-from rest_framework import permissions, serializers, status, viewsets
+from rest_framework import permissions, serializers, status
+from rest_framework.viewsets import ModelViewSet
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.renderers import TemplateHTMLRenderer
@@ -119,7 +120,7 @@ class TestUserProfileCreated(UserPassesTestMixin):
                 return False
 
 
-class MixedPermissionModelViewSet(viewsets.ModelViewSet):
+class MixedPermissionModelViewSet(ModelViewSet):
     permission_classes_by_action = {}
     login_url = "/accounts/login/"
 
@@ -177,7 +178,7 @@ class CourseFilter(filters.FilterSet):
         ]
 
 
-class CourseViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
+class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
     current_date = datetime.now()
     month_terms = {
         1: "A",
@@ -364,7 +365,7 @@ class RequestFilter(filters.FilterSet):
         fields = ["status", "requestor", "date", "school", "term"]
 
 
-class RequestViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
+class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
     queryset = Request.objects.all()
     serializer_class = RequestSerializer
     filterset_class = RequestFilter
@@ -758,7 +759,7 @@ def clean_custom_input(adds):
     return final_add
 
 
-class UserViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
+class UserViewSet(MixedPermissionModelViewSet, ModelViewSet):
     permission_classes = (permissions.IsAdminUser,)
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -774,7 +775,7 @@ class UserViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
     }
 
 
-class SchoolViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
+class SchoolViewSet(MixedPermissionModelViewSet, ModelViewSet):
     queryset = School.objects.all()
     serializer_class = SchoolSerializer
     permission_classes_by_action = {
@@ -830,7 +831,7 @@ class SchoolViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         )
 
 
-class SubjectViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
+class SubjectViewSet(MixedPermissionModelViewSet, ModelViewSet):
     queryset = Subject.objects.all()
     serializer_class = SubjectSerializer
     permission_classes_by_action = {
@@ -884,7 +885,7 @@ class SubjectViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         )
 
 
-class NoticeViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
+class NoticeViewSet(MixedPermissionModelViewSet, ModelViewSet):
     queryset = Notice.objects.all()
     serializer_class = NoticeSerializer
     permission_classes_by_action = {
@@ -900,7 +901,7 @@ class NoticeViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
         serializer.save(owner=self.request.user)
 
 
-class CanvasSiteViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
+class CanvasSiteViewSet(MixedPermissionModelViewSet, ModelViewSet):
     queryset = CanvasSite.objects.all()
     serializer_class = CanvasSiteSerializer
     lookup_field = "canvas_id"
@@ -1065,7 +1066,7 @@ class HomePage(APIView, UserPassesTestMixin):
         return redirect(request.META["HTTP_REFERER"])
 
 
-class AutoAddViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
+class AutoAddViewSet(MixedPermissionModelViewSet, ModelViewSet):
     queryset = AutoAdd.objects.all()
     serializer_class = AutoAddSerializer
     permission_classes_by_action = {
@@ -1141,7 +1142,7 @@ class AutoAddViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
             return response
 
 
-class UpdateLogViewSet(MixedPermissionModelViewSet, viewsets.ModelViewSet):
+class UpdateLogViewSet(MixedPermissionModelViewSet, ModelViewSet):
     queryset = UpdateLog.objects.all()
     serializer_class = UpdateLogSerializer
     permission_classes_by_action = {
