@@ -191,3 +191,7 @@ LOGGING = {
         },
     },
 }
+
+if DEBUG:
+    INSTALLED_APPS.append("livereload")
+    MIDDLEWARE.append("livereload.middleware.LiveReloadScript")
