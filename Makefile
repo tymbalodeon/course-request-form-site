@@ -9,57 +9,60 @@ TERM := $(shell if (( $(MONTH) > 8 )); \
 				else echo "A"; \
 				fi)
 
-courses:
+all: help
+
+courses: ## Populate the database with the current term's courses
 	$(MANAGE) add_courses -t $(YEAR)$(TERM) -o
 
-db:
+db: ## Open the database shell
 	$(MANAGE) dbshell
 
-deploy: install restart
-
-freeze:
+freeze: ## Freeze the dependencies to the requirements.txt file
 	pip freeze > $(REQUIREMENTS)
 
-install:
+help: ## Display the help menu
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+
+install: ## Install the dependencies from the requirements.txt file
 	pip install -r $(REQUIREMENTS)
 
-live:
+live: ## Start the livereload server
 	$(MANAGE) livereload
 
-log:
+log: ## View the last 100 lines of the log file
 	tail -n 100 /var/log/crf2/crf2_error.log
 
-migrate:
+migrate: ## Migrate the database
 	$(MANAGE) migrate
 
-migration:
+migration: ## Make the database migrations
 	$(MANAGE) makemigrations
 
-migrations: migration migrate
+migrations: migration migrate ## Make migrations and migrate
 
-populate: migrations schools subjects courses
+populate: migrations schools subjects courses ## Populate the database with schools, subjects, and courses
 
-pull:
+pull: ## Pull changes to the current branch
 	cd /home/django/crf2 && git pull
 
-restart: migrations static
+restart: migrations static ## Restart the app
 	touch /home/django/crf2/crf2/wsgi.py
 
-run: migrations
+run: migrations ## Run the app
 	$(MANAGE) runserver
 
-schools:
+schools: ## Populate the database with schools
 	$(MANAGE) add_schools
 
-shell:
+shell: ## Open an app-aware python shell
 	$(MANAGE) shell
 
 .PHONY: static
-static:
+static: ## Collect static files
 	$(MANAGE) collectstatic --no-input
 
-subjects:
+subjects: ## Populate the database with subjects
 	$(MANAGE) add_subjects -o
 
-superuser:
+superuser: ## Create a user with admin privileges
 	$(MANAGE) createsuperuser
