@@ -2,7 +2,7 @@ import json
 import urllib.parse
 from datetime import datetime
 from logging import getLogger
-from os import listdir, mkdir
+from os import mkdir
 from pathlib import Path
 from re import search
 

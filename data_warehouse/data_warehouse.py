@@ -250,8 +250,7 @@ def inspect_course(section, term=None, verbose=True):
                     ]
                 )
 
-    if not verbose:
-        return results
+    return results
 
 
 def inspect_instructor(pennkey, term):
