@@ -157,8 +157,6 @@ urlpatterns = [
         ),
         name="UI-updatelog-list",
     ),
-    path("emails/", views.temporary_email_list, name="temporary_email"),
-    path("emails/<value>/", views.my_email, name="my_email"),
     path(
         "accounts/login/",
         auth_views.LoginView.as_view(

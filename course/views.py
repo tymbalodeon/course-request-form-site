@@ -1583,15 +1583,3 @@ def contact(request):
             "form": form_class,
         },
     )
-
-
-def temporary_email_list(request):
-    filelist = listdir("course/static/emails/")
-
-    return render(request, "email/email_log.html", {"filelist": filelist})
-
-
-def my_email(request, value):
-    email = open("course/static/emails/" + value, "rb").read()
-
-    return render(request, "email/email_detail.html", {"email": email.decode("utf-8")})
