@@ -136,14 +136,14 @@
                             <li><a class="{% block subjects %}{% endblock %}" href="/subjects">Subjects</a></li>
                             {% if staff %}
                                 <li class="title">Admin</li>
-                                <li><a href="/admin">Admin Portal</a></li>
-                                <li><a href="/autoadds" class="{% block autoadd %}{% endblock %}">Manage Auto-Adds</a></li>
                                 <li><a href="/logs" class="{% block bulkupdates %}{% endblock %}">Run Tasks</a></li>
+                                <li><a href="/quickconfig" class="{% block quickconfig %}{% endblock %}">Quick Config</a></li>
                                 <li><a href="/userlookup" class="{% block userlookup %}{% endblock %}">User Lookup</a></li>
                                 <li><a href="/courselookup" class="{% block courselookup %}{% endblock %}">Course Lookup</a></li>
                                 <li><a href="/dwlookup" class="{% block dwlookup %}{% endblock %}">Check DW for Course</a></li>
-                                <li><a href="/quickconfig" class="{% block quickconfig %}{% endblock %}">Quick Config</a></li>
-                                <li class="title">temporary</li>
+                                <li><a href="/autoadds" class="{% block autoadd %}{% endblock %}">Manage Auto-Adds</a></li>
+                                <li><a href="/admin">Admin Portal</a></li>
+                                <li class="title">Temporary</li>
                                 <li><a href="/emails">Emails</a></li>
                             {% endif %}
                             <li id="side_sign_in">
