@@ -1,52 +1,8 @@
 import os
 
 from celery.schedules import crontab
-
 from helpers.helpers import get_config_value
 
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {
-        "large": {
-            "format": (
-                "%(asctime)s  %(levelname)s  %(process)d  %(pathname)s  %(funcName)s "
-                " %(lineno)d  %(message)s  "
-            )
-        },
-        "tiny": {"format": "%(asctime)s  %(message)s  "},
-    },
-    "handlers": {
-        "errors_file": {
-            "level": "ERROR",
-            "class": "logging.handlers.TimedRotatingFileHandler",
-            "when": "midnight",
-            "interval": 1,
-            "filename": "logs/ErrorLoggers.log",
-            "formatter": "large",
-        },
-        "info_file": {
-            "level": "INFO",
-            "class": "logging.handlers.TimedRotatingFileHandler",
-            "when": "midnight",
-            "interval": 1,
-            "filename": "logs/InfoLoggers.log",
-            "formatter": "large",
-        },
-    },
-    "loggers": {
-        "error_logger": {
-            "handlers": ["errors_file"],
-            "level": "WARNING",
-            "propagate": False,
-        },
-        "info_logger": {
-            "handlers": ["info_file"],
-            "level": "INFO",
-            "propagate": False,
-        },
-    },
-}
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = get_config_value("django", "secret_key", raw=True)
 DEBUG = get_config_value("django", "debug")
@@ -62,40 +18,78 @@ EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
 EMAIL_FILE_PATH = "course/static/emails"
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
-INSTALLED_APPS = [
-    "dal",
-    "dal_select2",
-    "django.contrib.admin",
-    "django.contrib.admindocs",
-    "django.contrib.auth",
-    "django.contrib.contenttypes",
-    "django.contrib.humanize",
-    "django.contrib.sessions",
-    "django.contrib.messages",
-    # "livereload",
-    "django.contrib.staticfiles",
-    "course",
-    "rest_framework",
-    "corsheaders",
-    "django_filters",
-    "admin_auto_filters",
-    "django_celery_beat",
-    "django_extensions",
-    "rest_framework_swagger",
-    "debug_toolbar",
-]
-MIDDLEWARE = [
-    "django.middleware.security.SecurityMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
-    "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
-    "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    # "livereload.middleware.LiveReloadScript",
-]
+INSTALLED_APPS = (
+    [
+        "dal",
+        "dal_select2",
+        "django.contrib.admin",
+        "django.contrib.admindocs",
+        "django.contrib.auth",
+        "django.contrib.contenttypes",
+        "django.contrib.humanize",
+        "django.contrib.sessions",
+        "django.contrib.messages",
+        "livereload",
+        "django.contrib.staticfiles",
+        "course",
+        "rest_framework",
+        "corsheaders",
+        "django_filters",
+        "admin_auto_filters",
+        "django_celery_beat",
+        "django_extensions",
+        "rest_framework_swagger",
+        "debug_toolbar",
+    ]
+    if DEBUG
+    else [
+        "dal",
+        "dal_select2",
+        "django.contrib.admin",
+        "django.contrib.admindocs",
+        "django.contrib.auth",
+        "django.contrib.contenttypes",
+        "django.contrib.humanize",
+        "django.contrib.sessions",
+        "django.contrib.messages",
+        "django.contrib.staticfiles",
+        "course",
+        "rest_framework",
+        "corsheaders",
+        "django_filters",
+        "admin_auto_filters",
+        "django_celery_beat",
+        "django_extensions",
+        "rest_framework_swagger",
+        "debug_toolbar",
+    ]
+)
+MIDDLEWARE = (
+    [
+        "django.middleware.security.SecurityMiddleware",
+        "django.contrib.sessions.middleware.SessionMiddleware",
+        "django.middleware.common.CommonMiddleware",
+        "django.middleware.csrf.CsrfViewMiddleware",
+        "corsheaders.middleware.CorsMiddleware",
+        "django.contrib.auth.middleware.AuthenticationMiddleware",
+        "debug_toolbar.middleware.DebugToolbarMiddleware",
+        "django.contrib.messages.middleware.MessageMiddleware",
+        "django.middleware.clickjacking.XFrameOptionsMiddleware",
+        "livereload.middleware.LiveReloadScript",
+    ]
+    if DEBUG
+    else [
+        "django.middleware.security.SecurityMiddleware",
+        "django.contrib.sessions.middleware.SessionMiddleware",
+        "django.middleware.common.CommonMiddleware",
+        "django.middleware.csrf.CsrfViewMiddleware",
+        "corsheaders.middleware.CorsMiddleware",
+        "django.contrib.auth.middleware.AuthenticationMiddleware",
+        "debug_toolbar.middleware.DebugToolbarMiddleware",
+        "django.contrib.messages.middleware.MessageMiddleware",
+        "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    ]
+)
 ROOT_URLCONF = "crf2.urls"
 TEMPLATES = [
     {
@@ -194,7 +188,46 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
-
-if DEBUG:
-    INSTALLED_APPS.append("livereload")
-    MIDDLEWARE.append("livereload.middleware.LiveReloadScript")
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "large": {
+            "format": (
+                "%(asctime)s  %(levelname)s  %(process)d  %(pathname)s  %(funcName)s "
+                " %(lineno)d  %(message)s  "
+            )
+        },
+        "tiny": {"format": "%(asctime)s  %(message)s  "},
+    },
+    "handlers": {
+        "errors_file": {
+            "level": "ERROR",
+            "class": "logging.handlers.TimedRotatingFileHandler",
+            "when": "midnight",
+            "interval": 1,
+            "filename": "logs/ErrorLoggers.log",
+            "formatter": "large",
+        },
+        "info_file": {
+            "level": "INFO",
+            "class": "logging.handlers.TimedRotatingFileHandler",
+            "when": "midnight",
+            "interval": 1,
+            "filename": "logs/InfoLoggers.log",
+            "formatter": "large",
+        },
+    },
+    "loggers": {
+        "error_logger": {
+            "handlers": ["errors_file"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        "info_logger": {
+            "handlers": ["info_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+}
