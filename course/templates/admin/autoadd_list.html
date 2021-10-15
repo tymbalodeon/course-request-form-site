@@ -105,14 +105,14 @@
 
 {% block template_page_js %}
     <script>
-     var form = document.getElementById("auto-add-form");
-     var field = document.getElementById("id_username");
+     const form = document.getElementById("auto-add-form");
+     const field = document.getElementById("id_username");
      form.removeChild(form.childNodes[5]);
      field.setAttribute("name", "user");
-     $('#delete-modal').on('show.bs.modal', function (event) {
-         var button = $(event.relatedTarget);
-         var id = button.data('autoadd');
-         $('#form-delete').attr("action",'/api/autoadds/' + id + '/');
+     $('#delete-modal').on('show.bs.modal', (event) => {
+         const button = $(event.relatedTarget);
+         const id = button.data('autoadd');
+         $('#form-delete').attr("action", `/api/autoadds/${id}/`);
      });
     </script>
 {% endblock %}

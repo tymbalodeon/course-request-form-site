@@ -105,26 +105,23 @@
 
 {% block template_page_js %}
     <script>
-     $( "#course_name" ).autocomplete({
-         source: function( request, response ) {
-             inp = encodeURI(document.getElementById("course_name").value)
-             console.log("inp",inp);
-             $.ajax( {
-                 url: '/searchcanvas/'+inp+'/',
+     $("#course_name").autocomplete({
+         source: (request, response) => {
+             input = encodeURI(document.getElementById("course_name").value)
+             $.ajax({
+                 url: `/searchcanvas/${input}/`,
                  type: "GET",
-                 success: function( data ) {
-                     console.log("data",data)
-                     response( data );
+                 success: (data) => {
+                     response(data);
                  },
-             } );
+             });
          },
          minLength: 2,
-         select: function( event, ui ) {
-             console.log("ui",ui);
+         select: (event, ui) => {
              event.preventDefault();
              document.getElementById("course_id").value = ui.item.value;
              document.getElementById("course_name").value = ui.item.label;
          }
-     } );
+     });
     </script>
 {% endblock %}
