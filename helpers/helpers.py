@@ -6,6 +6,10 @@ config = ConfigParser()
 config.read("config/config.ini")
 
 
+def get_boolean_value(key, value):
+    return config.getboolean(key, value)
+
+
 def get_config_value(key, value, raw=False):
     return config.get(key, value, raw=raw)
 
