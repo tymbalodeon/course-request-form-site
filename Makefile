@@ -42,9 +42,6 @@ migrations: migration migrate ## Make migrations and migrate
 
 populate: migrations schools subjects courses ## Populate the database with schools, subjects, and courses
 
-pull: ## Pull changes to the current branch
-	cd /home/django/crf2 && git pull
-
 restart: migrations static ## Restart the app
 	touch /home/django/crf2/crf2/wsgi.py
 
