@@ -33,6 +33,13 @@
                         <td>N/A</td>
                         <td> <center><button id="" onclick="deleteCanceledRequests()">Run</button></center></td>
                     </tr>
+                    <tr>
+                        <td scope="row">Check Canceled SRS Courses</td>
+                        <td><a data-toggle="popover" tabindex="0" data-trigger="focus" data-content="Every night the CRF checks if SRS courses with Canvas sites have been canceled. Click 'View Recent' to see the file."><i class="fas fa-info-circle"></i></a></td>
+                        <td><button id="viewRequests"  onclick="viewCanceledSRS()"class="muted-button">View Recent</button></td>
+                        <td>N/A </td>
+                    </tr>
+
                 </tbody>
             </table>
         </fieldset>
