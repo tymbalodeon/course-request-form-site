@@ -997,6 +997,11 @@ textarea.has-error:active {
   display: none;
 }
 
+.errorlist {
+  color: #dc3545;
+  font-style: italic;
+}
+
 #search {
   float: right;
 }

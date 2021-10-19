@@ -52,7 +52,7 @@ schools: ## Populate the database with schools
 	$(MANAGE) add_schools
 
 shell: ## Open an app-aware python shell
-	$(MANAGE) shell
+	$(MANAGE) shell_plus
 
 .PHONY: static
 static: ## Collect static files
