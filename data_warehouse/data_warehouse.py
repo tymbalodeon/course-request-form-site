@@ -395,7 +395,7 @@ def pull_courses(term):
             n_s = course_code[:-5][-6:]
             course_number = n_s[:3]
             section_number = n_s[-3:]
-            title = format_title(title)
+            title = format_title(title) if title else title
             year = term[:4]
 
             created = Course.objects.update_or_create(
