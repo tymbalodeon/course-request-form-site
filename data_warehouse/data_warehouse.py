@@ -295,24 +295,23 @@ def pull_courses(term):
             section.xlist,
             section.xlist_primary,
             section.activity,
-            trim(section.title) srs_title,
+            trim(section.title) srs_title
         FROM
             dwadmin.course_section section
-        WHERE
-            section.activity IN (
-                'LEC',
-                'REC',
-                'LAB',
-                'SEM',
-                'CLN',
-                'CRT',
-                'PRE',
-                'STU',
-                'ONL',
-                'HYB'
-            )
+        WHERE section.activity IN (
+            'LEC',
+            'REC',
+            'LAB',
+            'SEM',
+            'CLN',
+            'CRT',
+            'PRE',
+            'STU',
+            'ONL',
+            'HYB'
+        )
         AND section.tuition_school NOT IN ('WH', 'LW')
-        AND section.status in ('O')
+        AND section.status IN ('O')
         AND section.term = :term
         """,
         term=term,
@@ -482,16 +481,34 @@ def pull_instructors(term):
     cursor.execute(
         """
         SELECT
-            employee.FIRST_NAME,
-            employee.LAST_NAME,
-            employee.PENNKEY,
-            employee.PENN_ID,
-            employee.EMAIL_ADDRESS,
-            instructor.Section_Id
-        FROM dwadmin.course_section_instructor instructor
-        INNER JOIN dwadmin.employee_general_v employee
-        ON instructor.Instructor_Penn_Id=employee.PENN_ID
-        WHERE instructor.TERM= :term
+            employee.first_name,
+            employee.last_name,
+            employee.pennkey,
+            employee.penn_id,
+            employee.email_address,
+            instructor.section_id
+        FROM dwadmin.employee_general_v employee
+        INNER JOIN dwadmin.course_section_instructor instructor
+        ON employee.penn_id = instructor.instructor_penn_id
+        AND instructor.term = :term
+        INNER JOIN dwadmin.course_section section
+        ON instructor.section_id = section.section_id
+        WHERE section.activity
+        IN (
+                'LEC',
+                'REC',
+                'LAB',
+                'SEM',
+                'CLN',
+                'CRT',
+                'PRE',
+                'STU',
+                'ONL',
+                'HYB'
+            )
+        AND section.tuition_school NOT IN ('WH', 'LW')
+        AND section.status in ('O')
+        AND section.term = :term
         """,
         term=term,
     )
