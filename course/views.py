@@ -197,22 +197,13 @@ class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
     current_term = {index + 1: get_term(index + 1) for index in range(12)}.get(
         current_date.month
     )
+    next_term = {SPRING: SUMMER, SUMMER: FALL, FALL: SPRING}.get(current_term)
     lookup_field = "course_code"
-    queryset = (
-        Course.objects.filter(
-            Q(course_term__gte=current_term)
-            & Q(course_term__lte=SUMMER if current_term == SPRING else FALL),
-            year=current_year,
-            course_subject__visible=True,
-            course_schools__visible=True,
-        )
-        if current_term != FALL
-        else Course.objects.filter(
-            course_term__in=[FALL, SPRING],
-            year__in=[current_year, next_year],
-            course_subject__visible=True,
-            course_schools__visible=True,
-        )
+    queryset = Course.objects.filter(
+        course_term__in=[current_term, next_term],
+        year__in=[current_year, next_year] if current_term == FALL else [current_year],
+        course_subject__visible=True,
+        course_schools__visible=True,
     )
     serializer_class = CourseSerializer
     filterset_class = CourseFilter
@@ -234,10 +225,12 @@ class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
 
         current_term = f"{self.current_year}{self.current_term}"
         next_term_letter = (
-            "A" if self.current_term == "C" else chr(ord(str(self.current_term)) + 1)
+            SPRING
+            if self.current_term == FALL
+            else chr(ord(str(self.current_term)) + 1)
         )
         next_term = (
-            f"{self.current_year if self.current_term != 'C' else self.next_year}"
+            f"{self.current_year if self.current_term != FALL else self.next_year}"
             f"{next_term_letter}"
         )
         search_term = get_search_term(request)
