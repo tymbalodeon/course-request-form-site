@@ -193,17 +193,25 @@ class CourseFilter(filters.FilterSet):
 class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
     current_date = datetime.now()
     current_year = current_date.year
+    current_month = current_date.month
     next_year = current_year + 1
-    current_term = {index + 1: get_term(index + 1) for index in range(12)}.get(
-        current_date.month
-    )
-    next_term = {SPRING: SUMMER, SUMMER: FALL, FALL: SPRING}.get(current_term)
+    current_term = {index: get_term(index) for index in range(1, 13)}.get(current_month)
+    next_term = {SPRING: SUMMER, SUMMER: FALL, FALL: SPRING}.get(str(current_term))
     lookup_field = "course_code"
-    queryset = Course.objects.filter(
-        course_term__in=[current_term, next_term],
-        year__in=[current_year, next_year] if current_term == FALL else [current_year],
-        course_subject__visible=True,
-        course_schools__visible=True,
+    queryset = (
+        Course.objects.filter(
+            course_term__in=[current_term, next_term],
+            year=current_year,
+            course_subject__visible=True,
+            course_schools__visible=True,
+        )
+        if current_term != FALL
+        else Course.objects.filter(
+            Q(course_term=next_term, year=next_year)
+            | Q(course_term=current_term, year=current_year),
+            course_subject__visible=True,
+            course_schools__visible=True,
+        )
     )
     serializer_class = CourseSerializer
     filterset_class = CourseFilter
