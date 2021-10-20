@@ -283,6 +283,7 @@ def inspect_instructor(pennkey, term):
 def pull_courses(term):
     print(") Pulling courses...")
 
+    term = term.upper()
     open_data = get_open_data()
     cursor = get_cursor()
     cursor.execute(
@@ -314,7 +315,7 @@ def pull_courses(term):
         AND section.status IN ('O')
         AND section.term = :term
         """,
-        term=term.upper(),
+        term=term,
     )
 
     for (
@@ -478,6 +479,7 @@ def create_instructors(term):
 def pull_instructors(term):
     print(") Pulling instructors...")
 
+    term = term.upper()
     cursor = get_cursor()
     cursor.execute(
         """
@@ -511,7 +513,7 @@ def pull_instructors(term):
         AND section.status in ('O')
         AND section.term = :term
         """,
-        term=term.upper(),
+        term=term,
     )
 
     NEW_INSTRUCTOR_VALUES = dict()
@@ -519,42 +521,45 @@ def pull_instructors(term):
     for first_name, last_name, pennkey, penn_id, email, section_id in cursor:
         course_code = (section_id + term).replace(" ", "")
 
-        try:
-            course = Course.objects.get(course_code=course_code)
-
-            if not course.requested:
-                try:
-                    instructor = User.objects.get(username=pennkey)
-                except Exception:
-                    try:
-                        first_name = first_name.title()
-                        last_name = last_name.title()
-                        instructor = User.objects.create_user(
-                            username=pennkey,
-                            first_name=first_name,
-                            last_name=last_name,
-                            email=email,
-                        )
-                        Profile.objects.create(user=instructor, penn_id=penn_id)
-                    except Exception:
-                        instructor = None
-
-                if instructor:
-                    try:
-                        NEW_INSTRUCTOR_VALUES[course_code].append(instructor)
-                    except Exception:
-                        NEW_INSTRUCTOR_VALUES[course_code] = [instructor]
-                else:
-                    message = (
-                        f"- ERROR: Failed to create account for: {first_name} "
-                        f"{last_name} | {pennkey} | {penn_id} | {email} | {section_id}"
-                    )
-                    getLogger("error_logger").error(message)
-                    print(message)
-        except Exception:
-            message = f"- ERROR: Failed to find course {course_code}"
+        if not pennkey:
+            message = f"- ERROR: (section: {section_id}) Failed to create account for {first_name} {last_name} (missing pennkey)"
             getLogger("error_logger").error(message)
             print(message)
+        else:
+            try:
+                course = Course.objects.get(course_code=course_code)
+
+                if not course.requested:
+                    try:
+                        instructor = User.objects.get(username=pennkey)
+                    except Exception:
+                        try:
+                            first_name = first_name.title()
+                            last_name = last_name.title()
+                            instructor = User.objects.create_user(
+                                username=pennkey,
+                                first_name=first_name,
+                                last_name=last_name,
+                                email=email,
+                            )
+                            Profile.objects.create(user=instructor, penn_id=penn_id)
+                        except Exception as error:
+                            error_message = error
+                            instructor = None
+
+                    if instructor:
+                        try:
+                            NEW_INSTRUCTOR_VALUES[course_code].append(instructor)
+                        except Exception:
+                            NEW_INSTRUCTOR_VALUES[course_code] = [instructor]
+                    else:
+                        message = f"- ERROR: (section: {section_id}) Failed to create account for: {first_name} {last_name} ({error_message})"
+                        getLogger("error_logger").error(message)
+                        print(message)
+            except Exception:
+                message = f"- ERROR: Failed to find course {course_code}"
+                getLogger("error_logger").error(message)
+                print(message)
 
     for course_code, instructors in NEW_INSTRUCTOR_VALUES.items():
         try:
@@ -566,8 +571,9 @@ def pull_instructors(term):
 
             course.save()
 
-            for instructor in instructors:
-                print(f"- Updated {course_code} with instructor: {instructor}")
+            print(
+                f"- Updated {course_code} with instructors: {', '.join([instructor.username for instructor in instructors])}"
+            )
 
         except Exception as error:
             message = f"- ERROR: Failed to add new instructor(s) to course ({error})"
