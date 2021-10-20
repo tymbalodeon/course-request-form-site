@@ -1002,26 +1002,42 @@ textarea.has-error:active {
   font-style: italic;
 }
 
-#search {
-  float: right;
+.list-nav {
+  display: flex;
+  justify-content: space-between;
+  align-itmes: stretch;
+  margin-bottom: 10px;
+  margin-top: 10px;
 }
 
-#search form {
-  display: inherit;
+.search-form {
+  display: flex;
   width: 300px;
-  margin-top: -49px;
-}
-#search .input-group {
-  position: inherit;
 }
 
-#search button {
+.search-group {
+  align-self: flex-start;
+}
+
+.filter-group {
+  display: flex;
+  justify-content: space-between;
+  flex-direction: column;
+}
+
+.filter-button {
+  height: 42px;
+  width: 102px;
+}
+
+.filter-chips {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.search-button {
   border-top-left-radius: 0px;
   border-bottom-left-radius: 0px;
-  margin-left: -1px;
-}
-#search button:before {
-  content: "Search";
 }
 
 @media (max-width: 600px) {
