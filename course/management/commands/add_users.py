@@ -4,7 +4,7 @@ from django.core.management.base import BaseCommand
 from django.utils.crypto import get_random_string
 
 from course.models import Profile
-from helpers.helpers import get_config_values, get_config_username_and_password
+from helpers.helpers import get_config_username_and_password, get_config_values
 
 
 class Command(BaseCommand):

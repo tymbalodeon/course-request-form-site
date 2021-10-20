@@ -63,8 +63,14 @@ class CanvasSiteForm(ModelForm):
 
 class EmailChangeForm(Form):
     error_messages = {
-        "email_mismatch": "Confirmation does not match. Please confirm that you input the new email correctly.",
-        "not_changed": "Email is the same as your existing email. Please choose an email different from the one currently set.",
+        "email_mismatch": (
+            "Confirmation does not match. Please confirm that you input the new email"
+            " correctly."
+        ),
+        "not_changed": (
+            "Email is the same as your existing email. Please choose an email different"
+            " from the one currently set."
+        ),
     }
     new_email = EmailField(
         label="New email address",
