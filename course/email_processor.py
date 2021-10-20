@@ -36,7 +36,9 @@ def course_created_canvas(context):
     content = template.render(context)
     instructor_emails = [get_email(instructor) for instructor in context["instructors"]]
     email = EmailMessage(
-        subject=f"CRF Notification: Course Request Completed ({context['course_code']})",
+        subject=(
+            f"CRF Notification: Course Request Completed ({context['course_code']})"
+        ),
         body=content,
         to=instructor_emails.append(get_email(context["requestor"])),
     )
