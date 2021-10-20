@@ -289,7 +289,7 @@ def should_request(sis_id, test=False):
         return True
 
 
-def request_course(course, reserves, status="APPROVED", verbose=True, school=None):
+def request_course(course, reserves, status="APPROVED", verbose=True):
     try:
         request = Request.objects.update_or_create(
             course_requested=course,
@@ -331,23 +331,29 @@ def enable_tools(canvas_id, tools, label, test):
             else:
                 tool_tab = next((tab for tab in tabs if tab.id == tool), None)
 
-            if tool_tab.visibility != "public":
+            if tool_tab and tool_tab.visibility != "public":
                 tool_tab.update(hidden=False, position=3)
                 print(f"\t* Enabled {tool_tab.label}.")
-            else:
+            elif tool_tab:
                 print(f"\t* {tool_tab.label} already enabled for course.")
         except Exception as error:
             print(f"\t* ERROR: Failed to enable {tool} ({error}).")
 
 
 def publish_site(canvas_id, test):
+    canvas_site = None
+
     try:
         canvas = get_canvas(test)
         canvas_site = canvas.get_course(canvas_id)
         canvas_site.update(course={"event": "offer"})
         print(f"\t* Published {canvas_site}.")
     except Exception as error:
-        print(f"\t* ERROR: Failed to publish {canvas_site}: ({error})")
+        print(
+            f"\t* ERROR: Failed to publish {canvas_site}: ({error})"
+            if canvas_site
+            else "\t* ERROR: Failed to find Canvas site ({error})"
+        )
 
 
 def read_course_list_from_csv(csv_path):
@@ -419,8 +425,11 @@ def bulk_create_canvas_sites(
 
             if creation_error:
                 print("\t> Aborting... (SITE ALREADY EXISTS)")
-                course_request[0].status = "COMPLETED"
-                course_request[0].save = "COMPLETED"
+
+                if course_request:
+                    course_request[0].status = "COMPLETED"
+                    course_request[0].save = "COMPLETED"
+
                 course.save()
 
                 continue
