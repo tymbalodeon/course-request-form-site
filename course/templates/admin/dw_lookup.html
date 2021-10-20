@@ -7,21 +7,25 @@
 
 {% block content %}
     <h1>Check Data Warehouse for Course</h1>
-    <p>If a course is missing that you think should be in the CRF, check to see if
+    <p>
+        If a course is missing that you think should be in the CRF, check to see if
         the course is in the Data Warehouse. If not, there is nothing we can do but
         wait. If it IS in the DW, but missing in the CRF, please
         <a href="https://gitlab.library.upenn.edu/courseware/course-request/CRF2/-/issues">
             report this as a bug
-        </a>.</p>
+        </a>.
+    </p>
     <dl>
         <dt>Course Code</dt>
-        <dd>Subject Code + Course Number + Course Section. You may optionally include
+        <dd>
+            Subject Code + Course Number + Course Section. You may optionally include
             the Year + Term at the end if you wish to limit the results to a specific
             term. If you do not include the Year + Term, it will return courses from all
             periods matching the course subject, number, and section values. To allow for
             easy copy-and-pasting, the course code can be input in any form, whether that
             includes dashes, underscores, or spaces, or includes "SRS_" or not. Example:
-            'SUBJ-100-101' or 'SRS_SUBJ-100-101 2021A'.</dd>
+            'SUBJ-100-101' or 'SRS_SUBJ-100-101 2021A'.
+        </dd>
     </dl>
 
     <fieldset>
