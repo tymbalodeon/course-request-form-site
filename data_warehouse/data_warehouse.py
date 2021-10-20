@@ -314,7 +314,7 @@ def pull_courses(term):
         AND section.status IN ('O')
         AND section.term = :term
         """,
-        term=term,
+        term=term.upper(),
     )
 
     for (
@@ -511,7 +511,7 @@ def pull_instructors(term):
         AND section.status in ('O')
         AND section.term = :term
         """,
-        term=term,
+        term=term.upper(),
     )
 
     NEW_INSTRUCTOR_VALUES = dict()
