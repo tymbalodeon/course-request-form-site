@@ -27,7 +27,7 @@ db: ## Open the database shell
 flake: ## Lint code
 	flake8 $(ROOT_DIR)
 
-format: isort black flake
+format: isort black flake ## Format and lint code
 
 freeze: ## Freeze the dependencies to the requirements.txt file
 	pip freeze > $(REQUIREMENTS)
