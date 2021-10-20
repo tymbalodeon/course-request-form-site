@@ -28,6 +28,10 @@ def create_canvas_user(penn_key, penn_id, email, full_name, test=False):
 
     try:
         account = find_account(96678, test=test)
+
+        if not account:
+            return None
+
         user = account.create_user(pseudonym, user={"name": full_name})
         user.edit(user={"email": email})
 
