@@ -8,12 +8,12 @@
 
 {% block content %}
     <h1>Courses</h1>
-    <em><strong>NOTE: </strong>Courses shown are for the current term and upcoming term only.</em>
+    <em>
+        <strong>NOTE: </strong>Courses shown are for the current term
+        (<strong>"{{ current_term }}"</strong>) and upcoming term (<strong>"{{ next_term }}"</strong>) only.
+    </em>
     <br>
-    <em>Current term is: <strong>"{{  current_term }}"</strong></em>
     <br>
-    <em>Upcoming term is: <strong>"{{ next_term }}"</strong></em>
-    <br><br>
     {% include "bits/filter_content.html" %}
     <table class="striped-table">
         <thead>
