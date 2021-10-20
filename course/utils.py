@@ -1,11 +1,20 @@
 from __future__ import print_function
 
+import logging
+
 import cx_Oracle
 from django.db.models import Q
 
 from canvas.api import create_canvas_user, get_canvas, get_user_by_sis, get_user_courses
 from course.models import CanvasSite, Profile, Request, User
 from helpers.helpers import get_config_values
+
+logging.basicConfig(
+    filename="logs/users.log",
+    format="(%(asctime)s) %(levelname)s - %(message)s",
+    level=logging.DEBUG,
+    datefmt="%m/%d/%Y %I:%M:%S %p",
+)
 
 
 def data_warehouse_lookup(penn_key=None, penn_id=None):

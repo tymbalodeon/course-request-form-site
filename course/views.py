@@ -65,6 +65,18 @@ from helpers.helpers import get_config_values
 from open_data.open_data import OpenData
 
 FIVE_OR_MORE_ALPHABETIC_CHARACTERS = r"[a-z]{5,}"
+SPRING = "A"
+SUMMER = "B"
+FALL = "C"
+
+
+def get_term(index):
+    if index >= 9:
+        return FALL
+    elif index >= 5:
+        return SUMMER
+    else:
+        return SPRING
 
 
 def get_search_term(request):
@@ -180,44 +192,26 @@ class CourseFilter(filters.FilterSet):
 
 class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
     current_date = datetime.now()
-    month_terms = {
-        1: "A",
-        2: "A",
-        3: "A",
-        4: "A",
-        5: "B",
-        6: "B",
-        7: "B",
-        8: "B",
-        9: "C",
-        10: "C",
-        11: "C",
-        12: "C",
-    }
+    current_year = current_date.year
+    next_year = current_year + 1
+    current_term = {index + 1: get_term(index + 1) for index in range(12)}.get(
+        current_date.month
+    )
     lookup_field = "course_code"
     queryset = (
         Course.objects.filter(
+            Q(course_term__gte=current_term)
+            & Q(course_term__lte=SUMMER if current_term == SPRING else FALL),
+            year=current_year,
             course_subject__visible=True,
             course_schools__visible=True,
-            year=current_date.year,
-            course_term__gte=month_terms.get(current_date.month),
         )
-        if current_date.month < 12
-        else list(
-            Course.objects.filter(
-                course_subject__visible=True,
-                course_schools__visible=True,
-                year=current_date.year,
-                course_term__gte=month_terms.get(current_date.month),
-            )
-        )
-        + list(
-            Course.objects.filter(
-                course_subject__visible=True,
-                course_schools__visible=True,
-                year=current_date.year + 1,
-                course_term="A",
-            )
+        if current_term != FALL
+        else Course.objects.filter(
+            course_term__in=[FALL, SPRING],
+            year__in=[current_year, next_year],
+            course_subject__visible=True,
+            course_schools__visible=True,
         )
     )
     serializer_class = CourseSerializer
@@ -238,6 +232,14 @@ class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
     def list(self, request):
         print_log_message(request, "course", "list")
 
+        current_term = f"{self.current_year}{self.current_term}"
+        next_term_letter = (
+            "A" if self.current_term == "C" else chr(ord(str(self.current_term)) + 1)
+        )
+        next_term = (
+            f"{self.current_year if self.current_term != 'C' else self.next_year}"
+            f"{next_term_letter}"
+        )
         search_term = get_search_term(request)
         queryset = (
             self.get_queryset().filter(
@@ -286,6 +288,8 @@ class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
                     "autocompleteSubject": SubjectForm(),
                     "autocompleteCanvasSite": CanvasSiteForm(),
                     "style": {"template_pack": "rest_framework/vertical/"},
+                    "current_term": current_term,
+                    "next_term": next_term,
                 }
 
             print(response.data["paginator"].page)
