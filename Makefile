@@ -11,6 +11,9 @@ TERM := $(shell if (( $(MONTH) > 8 )); \
 
 all: help
 
+check: ## Check for problems
+	$(MANAGE) check
+
 courses: ## Populate the database with the current term's courses
 	$(MANAGE) add_courses -t $(YEAR)$(TERM) -o
 
