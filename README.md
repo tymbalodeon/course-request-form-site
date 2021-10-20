@@ -49,7 +49,7 @@ WHSE.UPENN.EDU=
 ```ini
 [django]
 secret_key = secret-key
-debug = True # for local development and False on the server
+debug = true # for local development and false on the server
 
 [canvas]
 prod_url = https://canvas.upenn.edu
@@ -75,7 +75,7 @@ service = whse.upenn.edu
 ### Commands
 
 - To create a development admin user: `make superuser`
-- To populate a local database with real data: `make populate`
+- To populate a local database with real data: `make populate` (You may get "locked for overuse"--if so, simply wait and try again later.)
   _For more information, see the files in course/management/commands/_
 - To run the application: `make run`
 - To run the application with live reloading (recommended): `make live` in one terminal and `make run` in another
