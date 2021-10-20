@@ -63,33 +63,30 @@
 
 {% block template_page_js %}
     <script>
-     var form = document.getElementById("filterform");
-     var field = document.getElementById("id_username");
-     field.setAttribute("name", "instructor");
-     field.setAttribute("id","id_instructor")
-     field.required = false;
-     var field2 = document.getElementById("id_abbreviation");
-     field2.setAttribute("name", "subject");
-     field2.setAttribute("id","id_subject")
+     const form = document.getElementById('filter-form');
+     const username = document.getElementById('id_username');
+     const subject = document.getElementById('id_abbreviation');
+     username.setAttribute('name', 'instructor');
+     username.setAttribute('id', 'id_instructor')
+     username.required = false;
+     subject.setAttribute('name', 'subject');
+     subject.setAttribute('id', 'id_subject')
 
-     $('#CourseModal').on('show.bs.modal', function (event) {
-         var button = $(event.relatedTarget)
-         var course = button.data('course')
-         var short_course = course.replace(/_/g,'')
-         var modal = $(this)
-         modal.find('.modal-title').text('Quick Request for ' + course)
-         modal.find(".modal-footer input[name='course_requested']").val(short_course)
-         modal.find(".modal-footer a").attr("href", '/courses/'+ short_course +'#RequestForm')
+     $('#CourseModal').on('show.bs.modal', function(event) {
+         const button = $(event.relatedTarget)
+         const course = button.data('course')
+         const short_course = course.replace(/_/g, '')
+         const modal = $(this)
+         modal.find('.modal-title').text(`Quick Request for ${course}`)
+         modal.find('.modal-footer input[name="course_requested"]').val(short_course)
+         modal.find('.modal-footer a').attr('href', `/courses/${short_course}#RequestForm`)
      })
 
-     $('form[method="get"]').submit(function(){
+     $('form[method="get"]').submit(function() {
          $(this).find(':input').each(function() {
-             var inp = $(this);
-             if (!inp.val()) {
-                 inp.remove();
-             }
-             else{
-                 console.log(inp.val);
+             const input = $(this);
+             if (!input.val()) {
+                 input.remove();
              }
          });
      });
