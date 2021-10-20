@@ -17,7 +17,6 @@ from django.shortcuts import redirect, render
 from django_celery_beat.models import PeriodicTask
 from django_filters import rest_framework as filters
 from rest_framework import permissions, serializers, status
-from rest_framework.viewsets import ModelViewSet
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.renderers import TemplateHTMLRenderer
@@ -25,6 +24,7 @@ from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.utils import html
 from rest_framework.views import APIView
+from rest_framework.viewsets import ModelViewSet
 
 from canvas.api import CanvasException, create_canvas_user, get_canvas, get_user_by_sis
 from course import email_processor

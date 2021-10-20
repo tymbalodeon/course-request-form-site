@@ -7,8 +7,8 @@ from canvas.api import get_canvas
 from course.models import Course, Request, School, User
 from course.tasks import create_canvas_sites
 from helpers.helpers import (
-    get_data_directory,
     get_config_username,
+    get_data_directory,
     separate_year_and_term,
 )
 

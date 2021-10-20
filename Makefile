@@ -1,3 +1,4 @@
+ROOT_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 REQUIREMENTS = requirements.txt
 MANAGE = python manage.py
 YEAR := $(shell date +%Y)
@@ -11,6 +12,9 @@ TERM := $(shell if (( $(MONTH) > 8 )); \
 
 all: help
 
+black: ## Format code
+	black --experimental-string-processing $(ROOT_DIR)
+
 check: ## Check for problems
 	$(MANAGE) check
 
@@ -20,6 +24,11 @@ courses: ## Populate the database with the current term's courses
 db: ## Open the database shell
 	$(MANAGE) dbshell
 
+flake: ## Lint code
+	flake8 $(ROOT_DIR)
+
+format: isort black flake
+
 freeze: ## Freeze the dependencies to the requirements.txt file
 	pip freeze > $(REQUIREMENTS)
 
@@ -28,6 +37,9 @@ help: ## Display the help menu
 
 install: ## Install the dependencies from the requirements.txt file
 	pip install -r $(REQUIREMENTS)
+
+isort: ## Sort imports
+	isort $(ROOT_DIR)
 
 live: ## Start the livereload server
 	$(MANAGE) livereload
