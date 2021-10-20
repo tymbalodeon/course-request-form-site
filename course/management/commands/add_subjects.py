@@ -23,7 +23,7 @@ class Command(BaseCommand):
 
         missing_schools = list()
         fails = 0
-        open_data_id, key, domain = get_config_values("opendata")[:3]
+        open_data_id, key, domain = get_config_values("opendata")
         Open_Data = OpenData(base_url=domain, id=open_data_id, key=key)
         subjects = Open_Data.get_available_subj()
 

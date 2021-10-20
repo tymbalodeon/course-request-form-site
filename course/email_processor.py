@@ -34,13 +34,11 @@ def feedback(context):
 def course_created_canvas(context):
     template = get_template("email/course_created_canvas.txt")
     content = template.render(context)
+    instructor_emails = [get_email(instructor) for instructor in context["instructors"]]
     email = EmailMessage(
-        subject="CRF Notification: Course Request Completed ("
-        + context["course_code"]
-        + ")",
+        subject=f"CRF Notification: Course Request Completed ({context['course_code']})",
         body=content,
-        to=list(map(lambda x: get_email(x), context["instructors"]))
-        + get_email(context["requestor"]),
+        to=instructor_emails.append(get_email(context["requestor"])),
     )
     email.send()
 

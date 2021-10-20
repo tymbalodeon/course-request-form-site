@@ -7,7 +7,7 @@ from open_data.open_data import OpenData
 
 
 def find_crosslistings(year_term):
-    open_data_id, key, domain = get_config_values("opendata")[:3]
+    open_data_id, key, domain = get_config_values("opendata")
     Open_Data = OpenData(base_url=domain, id=open_data_id, key=key)
     courses = Open_Data.get_courses_by_term(year_term)
     page = 1

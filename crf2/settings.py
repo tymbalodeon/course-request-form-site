@@ -1,11 +1,11 @@
 import os
 
 from celery.schedules import crontab
-from helpers.helpers import get_boolean_value, get_config_value
+from helpers.helpers import get_config_boolean_value, get_config_value
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = get_config_value("django", "secret_key", raw=True)
-DEBUG = get_boolean_value("django", "debug")
+DEBUG = get_config_boolean_value("django", "debug")
 CANVAS_ENVIRONMENT = "PRODUCTION"
 ALLOWED_HOSTS = ["*", "localhost"]
 INTERNAL_IPS = ["127.0.0.1"]
