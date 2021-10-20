@@ -3,16 +3,15 @@ from __future__ import print_function
 import logging
 
 import cx_Oracle
-from django.db.models import Q
-
 from canvas.api import create_canvas_user, get_canvas, get_user_by_sis, get_user_courses
-from course.models import CanvasSite, Profile, Request, User
+from django.db.models import Q
 from helpers.helpers import get_config_values
 
-LOG_FILENAME = "users.log"
+from course.models import CanvasSite, Profile, Request, User
+
 logging.basicConfig(
-    filename=LOG_FILENAME,
-    format="(%(asctime)s) %(levelname)s:%(message)s",
+    filename="logs/users.log",
+    format="(%(asctime)s) %(levelname)s - %(message)s",
     level=logging.DEBUG,
     datefmt="%m/%d/%Y %I:%M:%S %p",
 )
@@ -91,7 +90,6 @@ def validate_pennkey(pennkey):
         user = User.objects.get(username=pennkey)
     except User.DoesNotExist:
         userdata = data_warehouse_lookup(penn_key=pennkey)
-        logging.warning(userdata)
 
         if userdata:
             first_name = userdata["first_name"].title()
