@@ -6,9 +6,13 @@ from django.utils import timezone
 from canvas.api import get_canvas
 from course.models import Course, Request, School, User
 from course.tasks import create_canvas_sites
-from helpers.helpers import get_data_directory, get_username, separate_year_and_term
+from helpers.helpers import (
+    get_data_directory,
+    get_config_username,
+    separate_year_and_term,
+)
 
-username = get_username()
+username = get_config_username()
 OWNER = User.objects.get(username=username)
 LOG_PATH = "/home/django/crf2/data/bulk_creation_log.csv"
 
