@@ -224,14 +224,9 @@ class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
         print_log_message(request, "course", "list")
 
         current_term = f"{self.current_year}{self.current_term}"
-        next_term_letter = (
-            SPRING
-            if self.current_term == FALL
-            else chr(ord(str(self.current_term)) + 1)
-        )
         next_term = (
             f"{self.current_year if self.current_term != FALL else self.next_year}"
-            f"{next_term_letter}"
+            f"{self.next_term}"
         )
         search_term = get_search_term(request)
         queryset = (
