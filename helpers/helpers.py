@@ -6,7 +6,7 @@ config = ConfigParser()
 config.read("config/config.ini")
 
 
-def get_boolean_value(key, value):
+def get_config_boolean_value(key, value):
     return config.getboolean(key, value)
 
 
@@ -18,15 +18,15 @@ def get_config_values(key):
     return [value[1] for value in config.items(key)]
 
 
-def get_username_and_password():
-    username = [name for name in config["users"]][0]
+def get_config_username_and_password():
+    username = next((name for name in config["users"]))
     password = config.get("users", username)
 
     return username, password
 
 
-def get_username():
-    return get_username_and_password()[0]
+def get_config_username():
+    return get_config_username_and_password()[0]
 
 
 def separate_year_and_term(year_and_term):

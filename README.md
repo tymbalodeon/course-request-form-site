@@ -48,32 +48,23 @@ WHSE.UPENN.EDU=
 
 ```ini
 [django]
-password = password
-username = username
 secret_key = secret-key
 debug = True # for local development and False on the server
 
-[email]
-password = password
-emailhost = smtp.office365.com
-emailhostuser = librarycanvas@pobox.upenn.edu
-defaultfromemail = librarycrf@pobox.upenn.edu
-
 [canvas]
-prod_env = https://canvas.upenn.edu
+prod_url = https://canvas.upenn.edu
 prod_key = secret-key
-test_env = https://upenn.test.instructure.com
+test_url = https://upenn.test.instructure.com
 test_key = secret-key
 
 [opendata]
 id = opendata-id
 key = secret-key
 domain = https://esb.isc-seo.upenn.edu/8091/open_data/
-id_directory = opendata-id-directory
-key_directory = secret-key
 
 [users]
 username = password
+email = pennkey@upenn.edu
 
 [datawarehouse]
 user = LIBCANVAS
