@@ -391,12 +391,13 @@ def pull_courses(term):
                 activity = ""
                 print(f"{course_code}: Activity not found")
 
+        course_number_and_section = course_code[:-5][-6:]
+        course_number = course_number_and_section[:3]
+        section_number = course_number_and_section[-3:]
+        year = term[:4]
+
         try:
-            n_s = course_code[:-5][-6:]
-            course_number = n_s[:3]
-            section_number = n_s[-3:]
             title = format_title(title) if title else title
-            year = term[:4]
 
             created = Course.objects.update_or_create(
                 course_code=course_code,
