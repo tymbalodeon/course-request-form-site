@@ -1,38 +1,63 @@
 from django.conf import settings
 from django.conf.urls import include, url
-from django.contrib.auth import views as auth_views
+from django.generic.base import TemplateView
 from django.urls import path
-from django.views.generic.base import TemplateView
-from rest_framework import renderers
+from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.routers import DefaultRouter
 from rest_framework_swagger.views import get_swagger_view
 
-from course import views
 from course.auto_complete import (
     CanvasSiteAutocomplete,
     SubjectAutocomplete,
     UserAutocomplete,
 )
+from course.views import (
+    AutoAddViewSet,
+    CanvasSiteViewSet,
+    CourseViewSet,
+    HomePage,
+    NoticeViewSet,
+    RequestViewSet,
+    SchoolViewSet,
+    SubjectViewSet,
+    UpdateLogViewSet,
+    UserViewSet,
+    auth_LoginView,
+    auth_LogoutView,
+    auto_complete_canvas_course,
+    check_data_warehouse_for_course,
+    contact,
+    emergency_redirect,
+    google_form,
+    my_proxy,
+    open_data_proxy,
+    process_requests,
+    quick_config,
+    remove_canceled_requests,
+    user_info,
+    view_canceled_SRS,
+    view_requests,
+)
 
 schema_view = get_swagger_view(title="Pastebin API")
 
 router = DefaultRouter()
-router.register(r"courses", views.CourseViewSet)
-router.register(r"users", views.UserViewSet)
-router.register(r"notices", views.NoticeViewSet)
-router.register(r"requests", views.RequestViewSet)
-router.register(r"schools", views.SchoolViewSet)
-router.register(r"subjects", views.SubjectViewSet)
-router.register(r"autoadds", views.AutoAddViewSet)
-router.register(r"canvassites", views.CanvasSiteViewSet)
+router.register(r"courses", CourseViewSet)
+router.register(r"users", UserViewSet)
+router.register(r"notices", NoticeViewSet)
+router.register(r"requests", RequestViewSet)
+router.register(r"schools", SchoolViewSet)
+router.register(r"subjects", SubjectViewSet)
+router.register(r"autoadds", AutoAddViewSet)
+router.register(r"canvassites", CanvasSiteViewSet)
 urlpatterns = [
-    path("siterequest/", views.emergency_redirect),
-    path("contact/googleform/", views.google_form),
-    url("admin/process_requests/", views.process_requests, name="process_requests"),
-    url("admin/view_requests/", views.view_requests, name="view_requests"),
-    url("admin/view_canceled_SRS/", views.view_canceled_SRS),
-    url("admin/delete_canceled_requests/", views.remove_canceled_requests),
-    url("quickconfig/", views.quick_config),
+    path("siterequest/", emergency_redirect),
+    path("contact/googleform/", google_form),
+    url("admin/process_requests/", process_requests, name="process_requests"),
+    url("admin/view_requests/", view_requests, name="view_requests"),
+    url("admin/view_canceled_SRS/", view_canceled_SRS),
+    url("admin/delete_canceled_requests/", remove_canceled_requests),
+    url("quickconfig/", quick_config),
     path(
         "documentation/",
         TemplateView.as_view(template_name="documentation.html"),
@@ -43,123 +68,121 @@ urlpatterns = [
         TemplateView.as_view(template_name="admin/user_lookup.html"),
         name="user_lookup",
     ),
-    url("courselookup/", views.open_data_proxy),
-    url("dwlookup/", views.check_data_warehouse_for_course),
+    url("courselookup/", open_data_proxy),
+    url("dwlookup/", check_data_warehouse_for_course),
     url(r"^api/", include(router.urls)),
     url(r"^api_doc/", schema_view),
     path(
         "courses/",
-        views.CourseViewSet.as_view(
-            {"get": "list"}, renderer_classes=[renderers.TemplateHTMLRenderer]
-        ),
+        CourseViewSet.as_view({"get": "list"}, renderer_classes=[TemplateHTMLRenderer]),
         name="UI-course-list",
     ),
     path(
         "courses/<course_code>/",
-        views.CourseViewSet.as_view(
-            {"get": "retrieve"}, renderer_classes=[renderers.TemplateHTMLRenderer]
+        CourseViewSet.as_view(
+            {"get": "retrieve"}, renderer_classes=[TemplateHTMLRenderer]
         ),
         name="UI-course-detail",
     ),
     path(
         "canvassites/",
-        views.CanvasSiteViewSet.as_view(
-            {"get": "list"}, renderer_classes=[renderers.TemplateHTMLRenderer]
+        CanvasSiteViewSet.as_view(
+            {"get": "list"}, renderer_classes=[TemplateHTMLRenderer]
         ),
         name="UI-canvas_site-list",
     ),
     path(
         "canvassites/<canvas_id>/",
-        views.CanvasSiteViewSet.as_view(
+        CanvasSiteViewSet.as_view(
             {"get": "retrieve", "put": "update"},
-            renderer_classes=[renderers.TemplateHTMLRenderer],
+            renderer_classes=[TemplateHTMLRenderer],
         ),
         name="UI-canvas_site-detail",
     ),
     path(
         "requests/",
-        views.RequestViewSet.as_view(
+        RequestViewSet.as_view(
             {"get": "list", "post": "create"},
-            renderer_classes=[renderers.TemplateHTMLRenderer],
+            renderer_classes=[TemplateHTMLRenderer],
         ),
         name="UI-request-list",
     ),
     path(
         "requests/<str:pk>/",
-        views.RequestViewSet.as_view(
+        RequestViewSet.as_view(
             {"get": "retrieve", "put": "update"},
-            renderer_classes=[renderers.TemplateHTMLRenderer],
+            renderer_classes=[TemplateHTMLRenderer],
         ),
         name="UI-request-detail",
     ),
     path(
         "requests/<str:pk>/edit/",
-        views.RequestViewSet.as_view(
-            {"get": "retrieve"}, renderer_classes=[renderers.TemplateHTMLRenderer]
+        RequestViewSet.as_view(
+            {"get": "retrieve"}, renderer_classes=[TemplateHTMLRenderer]
         ),
         name="UI-request-detail-edit",
     ),
     path(
         "requests/<str:pk>/success/",
-        views.RequestViewSet.as_view(
-            {"get": "retrieve"}, renderer_classes=[renderers.TemplateHTMLRenderer]
+        RequestViewSet.as_view(
+            {"get": "retrieve"}, renderer_classes=[TemplateHTMLRenderer]
         ),
         name="UI-request-detail-success",
     ),
     path(
         "schools/",
-        views.SchoolViewSet.as_view(
+        SchoolViewSet.as_view(
             {
                 "get": "list",
             },
-            renderer_classes=[renderers.TemplateHTMLRenderer],
+            renderer_classes=[TemplateHTMLRenderer],
         ),
         name="UI-school-list",
     ),
     path(
         "schools/<str:pk>/",
-        views.SchoolViewSet.as_view(
+        SchoolViewSet.as_view(
             {"get": "retrieve", "put": "update"},
-            renderer_classes=[renderers.TemplateHTMLRenderer],
+            renderer_classes=[TemplateHTMLRenderer],
         ),
         name="UI-school-detail",
     ),
     path(
         "subjects/",
-        views.SubjectViewSet.as_view(
-            {"get": "list"}, renderer_classes=[renderers.TemplateHTMLRenderer]
+        SubjectViewSet.as_view(
+            {"get": "list"}, renderer_classes=[TemplateHTMLRenderer]
         ),
         name="UI-subject-list",
     ),
     path(
         "subjects/<str:pk>/",
-        views.SubjectViewSet.as_view(
+        SubjectViewSet.as_view(
             {"get": "retrieve", "put": "update"},
-            renderer_classes=[renderers.TemplateHTMLRenderer],
+            renderer_classes=[TemplateHTMLRenderer],
         ),
         name="UI-subject-detail",
     ),
     path(
         "autoadds/",
-        views.AutoAddViewSet.as_view(
+        AutoAddViewSet.as_view(
             {"get": "list", "post": "create", "delete": "list"},
-            renderer_classes=[renderers.TemplateHTMLRenderer],
+            renderer_classes=[TemplateHTMLRenderer],
         ),
         name="UI-autoadd-list",
     ),
-    path("", views.HomePage.as_view(), name="home"),
-    path("contact/", views.contact, name="contact"),
-    path("accounts/userinfo/", views.user_info, name="userinfo"),
+    path("", HomePage.as_view(), name="home"),
+    path("contact/", contact, name="contact"),
+    path("accounts/userinfo/", user_info, name="userinfo"),
     path(
         "logs/",
-        views.UpdateLogViewSet.as_view(
-            {"get": "list"}, renderer_classes=[renderers.TemplateHTMLRenderer]
+        UpdateLogViewSet.as_view(
+            {"get": "list"}, renderer_classes=[TemplateHTMLRenderer]
         ),
         name="UI-updatelog-list",
     ),
     path(
         "accounts/login/",
-        auth_views.LoginView.as_view(
+        auth_LoginView.as_view(
             template_name="login.html",
             extra_context={
                 "next": "/",
@@ -169,14 +192,14 @@ urlpatterns = [
     ),
     path(
         "accounts/logout/",
-        auth_views.LogoutView.as_view(
+        auth_LogoutView.as_view(
             next_page=settings.LOGOUT_REDIRECT_URL,
             template_name="logout.html",
         ),
         name="logout",
     ),
-    url(r"^canvasuser/(?P<username>\w+)/$", views.my_proxy),
-    path("searchcanvas/<search>/", views.auto_complete_canvas_course),
+    url(r"^canvasuser/(?P<username>\w+)/$", my_proxy),
+    path("searchcanvas/<search>/", auto_complete_canvas_course),
     url(
         r"^user-autocomplete/$",
         UserAutocomplete.as_view(),

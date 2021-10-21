@@ -1,19 +1,32 @@
 from django.contrib.auth.models import User
-from django.db import models
-from django.db.models import Q
+from django.db.models import (
+    CASCADE,
+    SET_NULL,
+    BooleanField,
+    CharField,
+    DateTimeField,
+    ForeignKey,
+    IntegerField,
+    Manager,
+    ManyToManyField,
+    Model,
+    OneToOneField,
+    Q,
+    TextField,
+)
 from django.utils.html import mark_safe
 from markdown import markdown
 
 
-class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    penn_id = models.CharField(max_length=10, unique=True)
-    canvas_id = models.CharField(max_length=10, unique=True, null=True)
+class Profile(Model):
+    user = OneToOneField(User, on_delete=CASCADE)
+    penn_id = CharField(max_length=10, unique=True)
+    canvas_id = CharField(max_length=10, unique=True, null=True)
 
 
-class Activity(models.Model):
-    name = models.CharField(max_length=40)
-    abbr = models.CharField(max_length=3, unique=True, primary_key=True)
+class Activity(Model):
+    name = CharField(max_length=40)
+    abbr = CharField(max_length=3, unique=True, primary_key=True)
 
     def __str__(self):
         return self.abbr
@@ -30,13 +43,13 @@ class Activity(models.Model):
         ordering = ("abbr",)
 
 
-class School(models.Model):
-    name = models.CharField(max_length=50, unique=True)
-    abbreviation = models.CharField(max_length=10, unique=True, primary_key=True)
-    visible = models.BooleanField(default=True)
-    opendata_abbr = models.CharField(max_length=2)
-    canvas_subaccount = models.IntegerField(null=True)
-    form_additional_enrollments = models.BooleanField(
+class School(Model):
+    name = CharField(max_length=50, unique=True)
+    abbreviation = CharField(max_length=10, unique=True, primary_key=True)
+    visible = BooleanField(default=True)
+    opendata_abbr = CharField(max_length=2)
+    canvas_subaccount = IntegerField(null=True)
+    form_additional_enrollments = BooleanField(
         default=True, verbose_name="Additional Enrollments Form Field"
     )
 
@@ -66,12 +79,12 @@ class School(models.Model):
         verbose_name_plural = "Schools // Sub Accounts"
 
 
-class Subject(models.Model):
-    name = models.CharField(max_length=50)
-    abbreviation = models.CharField(max_length=10, unique=True, primary_key=True)
-    visible = models.BooleanField(default=True)
-    schools = models.ForeignKey(
-        School, related_name="subjects", on_delete=models.CASCADE, blank=True, null=True
+class Subject(Model):
+    name = CharField(max_length=50)
+    abbreviation = CharField(max_length=10, unique=True, primary_key=True)
+    visible = BooleanField(default=True)
+    schools = ForeignKey(
+        School, related_name="subjects", on_delete=CASCADE, blank=True, null=True
     )
 
     def __str__(self):
@@ -83,20 +96,18 @@ class Subject(models.Model):
         verbose_name_plural = "Subjects // Departments"
 
 
-class CanvasSite(models.Model):
-    canvas_id = models.CharField(
-        max_length=10, blank=False, default=None, primary_key=True
+class CanvasSite(Model):
+    canvas_id = CharField(max_length=10, blank=False, default=None, primary_key=True)
+    request_instance = ForeignKey(
+        "Request", on_delete=SET_NULL, null=True, default=None, blank=True
     )
-    request_instance = models.ForeignKey(
-        "Request", on_delete=models.SET_NULL, null=True, default=None, blank=True
-    )
-    owners = models.ManyToManyField(User, related_name="canvas_sites", blank=True)
-    added_permissions = models.ManyToManyField(
+    owners = ManyToManyField(User, related_name="canvas_sites", blank=True)
+    added_permissions = ManyToManyField(
         User, related_name="added_permissions", blank=True, default=None
     )
-    name = models.CharField(max_length=50, blank=False, default=None)
-    sis_course_id = models.CharField(max_length=50, blank=True, default=None, null=True)
-    workflow_state = models.CharField(max_length=15, blank=False, default=None)
+    name = CharField(max_length=50, blank=False, default=None)
+    sis_course_id = CharField(max_length=50, blank=True, default=None, null=True)
+    workflow_state = CharField(max_length=15, blank=False, default=None)
 
     def get_owners(self):
         return "\n".join([p.username for p in self.owners.all()])
@@ -113,70 +124,58 @@ class CanvasSite(models.Model):
         verbose_name_plural = "Canvas Sites"
 
 
-class CourseManager(models.Manager):
+class CourseManager(Manager):
     def has_request(self):
         return super().get_queryset().filter(requested=True)
 
 
-class Course(models.Model):
+class Course(Model):
     SPRING = "A"
     SUMMER = "B"
     FALL = "C"
 
     TERM_CHOICES = ((SPRING, "Spring"), (SUMMER, "Summer"), (FALL, "Fall"))
 
-    course_activity = models.ForeignKey(
-        Activity, related_name="courses", on_delete=models.CASCADE
-    )
-    course_code = models.CharField(
+    course_activity = ForeignKey(Activity, related_name="courses", on_delete=CASCADE)
+    course_code = CharField(
         max_length=150, unique=True, primary_key=True, editable=False
     )
-    course_name = models.CharField(max_length=250)
-    course_number = models.CharField(max_length=4, blank=False)
-    course_primary_subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
-    course_schools = models.ForeignKey(
-        School, related_name="courses", on_delete=models.CASCADE
-    )
-    course_section = models.CharField(max_length=4, blank=False)
-    course_subject = models.ForeignKey(
-        Subject, on_delete=models.CASCADE, related_name="courses"
-    )
-    course_term = models.CharField(
+    course_name = CharField(max_length=250)
+    course_number = CharField(max_length=4, blank=False)
+    course_primary_subject = ForeignKey(Subject, on_delete=CASCADE)
+    course_schools = ForeignKey(School, related_name="courses", on_delete=CASCADE)
+    course_section = CharField(max_length=4, blank=False)
+    course_subject = ForeignKey(Subject, on_delete=CASCADE, related_name="courses")
+    course_term = CharField(
         max_length=1,
         choices=TERM_CHOICES,
     )
-    created = models.DateTimeField(auto_now_add=True)
-    crosslisted = models.ManyToManyField(
-        "self", blank=True, symmetrical=True, default=None
-    )
-    crosslisted_request = models.ForeignKey(
+    created = DateTimeField(auto_now_add=True)
+    crosslisted = ManyToManyField("self", blank=True, symmetrical=True, default=None)
+    crosslisted_request = ForeignKey(
         "course.Request",
-        on_delete=models.SET_NULL,
+        on_delete=SET_NULL,
         related_name="tied_course",
         default=None,
         blank=True,
         null=True,
     )
-    instructors = models.ManyToManyField(User, related_name="courses", blank=True)
-    multisection_request = models.ForeignKey(
+    instructors = ManyToManyField(User, related_name="courses", blank=True)
+    multisection_request = ForeignKey(
         "course.Request",
-        on_delete=models.SET_NULL,
+        on_delete=SET_NULL,
         related_name="additional_sections",
         default=None,
         blank=True,
         null=True,
     )
-    owner = models.ForeignKey(
-        "auth.User", related_name="created", on_delete=models.CASCADE
-    )
-    primary_crosslist = models.CharField(max_length=20, default="", blank=True)
-    requested = models.BooleanField(default=False)
-    requested_override = models.BooleanField(default=False)
-    sections = models.ManyToManyField(
-        "self", blank=True, symmetrical=True, default=None
-    )
-    updated = models.DateTimeField(auto_now=True)
-    year = models.CharField(max_length=4, blank=False)
+    owner = ForeignKey("auth.User", related_name="created", on_delete=CASCADE)
+    primary_crosslist = CharField(max_length=20, default="", blank=True)
+    requested = BooleanField(default=False)
+    requested_override = BooleanField(default=False)
+    sections = ManyToManyField("self", blank=True, symmetrical=True, default=None)
+    updated = DateTimeField(auto_now=True)
+    year = CharField(max_length=4, blank=False)
 
     class Meta:
         ordering = (
@@ -359,18 +358,16 @@ class Course(models.Model):
             ]
         )
 
-    objects = models.Manager()
+    objects = Manager()
     CourseManager = CourseManager()
 
 
-class Notice(models.Model):
-    creation_date = models.DateTimeField(auto_now_add=True)
-    notice_heading = models.CharField(max_length=100)
-    notice_text = models.TextField(max_length=1000)
-    owner = models.ForeignKey(
-        "auth.User", related_name="notices", on_delete=models.CASCADE
-    )
-    updated_date = models.DateTimeField(auto_now=True)
+class Notice(Model):
+    creation_date = DateTimeField(auto_now_add=True)
+    notice_heading = CharField(max_length=100)
+    notice_text = TextField(max_length=1000)
+    owner = ForeignKey("auth.User", related_name="notices", on_delete=CASCADE)
+    updated_date = DateTimeField(auto_now=True)
 
     class Meta:
         get_latest_by = "updated_date"
@@ -392,7 +389,7 @@ class Notice(models.Model):
         )
 
 
-class Request(models.Model):
+class Request(Model):
     REQUEST_PROCESS_CHOICES = (
         ("COMPLETED", "Completed"),
         ("IN_PROCESS", "In Process"),
@@ -401,39 +398,29 @@ class Request(models.Model):
         ("SUBMITTED", "Submitted"),
         ("LOCKED", "Locked"),
     )
-    course_requested = models.OneToOneField(
-        Course, on_delete=models.CASCADE, primary_key=True
-    )
-    copy_from_course = models.CharField(
-        max_length=100, null=True, default=None, blank=True
-    )
-    title_override = models.CharField(
-        max_length=100, null=True, default=None, blank=True
-    )
-    lps_online = models.BooleanField(default=False)
-    exclude_announcements = models.BooleanField(default=False)
-    additional_instructions = models.TextField(blank=True, default=None, null=True)
-    admin_additional_instructions = models.TextField(
-        blank=True, default=None, null=True
-    )
-    reserves = models.BooleanField(default=False)
-    process_notes = models.TextField(blank=True, default="")
-    canvas_instance = models.ForeignKey(
+    course_requested = OneToOneField(Course, on_delete=CASCADE, primary_key=True)
+    copy_from_course = CharField(max_length=100, null=True, default=None, blank=True)
+    title_override = CharField(max_length=100, null=True, default=None, blank=True)
+    lps_online = BooleanField(default=False)
+    exclude_announcements = BooleanField(default=False)
+    additional_instructions = TextField(blank=True, default=None, null=True)
+    admin_additional_instructions = TextField(blank=True, default=None, null=True)
+    reserves = BooleanField(default=False)
+    process_notes = TextField(blank=True, default="")
+    canvas_instance = ForeignKey(
         CanvasSite,
         related_name="canvas",
-        on_delete=models.CASCADE,
+        on_delete=CASCADE,
         null=True,
         blank=True,
     )
-    status = models.CharField(
+    status = CharField(
         max_length=20, choices=REQUEST_PROCESS_CHOICES, default="SUBMITTED"
     )
-    created = models.DateTimeField(auto_now_add=True)
-    updated = models.DateTimeField(auto_now=True)
-    owner = models.ForeignKey(
-        "auth.User", related_name="requests", on_delete=models.CASCADE
-    )
-    masquerade = models.CharField(max_length=20, null=True)
+    created = DateTimeField(auto_now_add=True)
+    updated = DateTimeField(auto_now=True)
+    owner = ForeignKey("auth.User", related_name="requests", on_delete=CASCADE)
+    masquerade = CharField(max_length=20, null=True)
 
     class Meta:
         ordering = ["-status", "-created"]
@@ -478,7 +465,7 @@ class Request(models.Model):
                 multi_section_course.save()
 
 
-class AdditionalEnrollment(models.Model):
+class AdditionalEnrollment(Model):
     ENROLLMENT_TYPE = (
         ("TA", "TA"),
         ("INST", "Instructor"),
@@ -486,17 +473,17 @@ class AdditionalEnrollment(models.Model):
         ("LIB", "Librarian"),
         ("OBS", "Observer"),
     )
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    role = models.CharField(max_length=4, choices=ENROLLMENT_TYPE, default="TA")
-    course_request = models.ForeignKey(
+    user = ForeignKey(User, on_delete=CASCADE)
+    role = CharField(max_length=4, choices=ENROLLMENT_TYPE, default="TA")
+    course_request = ForeignKey(
         Request,
         related_name="additional_enrollments",
-        on_delete=models.CASCADE,
+        on_delete=CASCADE,
         default=None,
     )
 
 
-class AutoAdd(models.Model):
+class AutoAdd(Model):
     ROLE_CHOICES = (
         ("TA", "TA"),
         ("INST", "Instructor"),
@@ -504,34 +491,34 @@ class AutoAdd(models.Model):
         ("LIB", "Librarian"),
         ("OBS", "Observer"),
     )
-    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=False)
-    school = models.ForeignKey(School, on_delete=models.CASCADE, blank=False)
-    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, blank=False)
-    role = models.CharField(
+    user = ForeignKey(User, on_delete=CASCADE, blank=False)
+    school = ForeignKey(School, on_delete=CASCADE, blank=False)
+    subject = ForeignKey(Subject, on_delete=CASCADE, blank=False)
+    role = CharField(
         max_length=10,
         choices=ROLE_CHOICES,
     )
-    created = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    created = DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         ordering = ("user__username",)
 
 
-class UpdateLog(models.Model):
+class UpdateLog(Model):
     MANAGER_CHOICES = (
         ("a", "A"),
         ("b", "B"),
         ("c", "C"),
     )
-    created = models.DateTimeField(auto_now_add=True, null=True, blank=True)
-    finished = models.DateTimeField(null=True, blank=True)
-    process = models.CharField(max_length=10, choices=MANAGER_CHOICES)
+    created = DateTimeField(auto_now_add=True, null=True, blank=True)
+    finished = DateTimeField(null=True, blank=True)
+    process = CharField(max_length=10, choices=MANAGER_CHOICES)
 
 
-class PageContent(models.Model):
-    location = models.CharField(max_length=100)
-    markdown_text = models.TextField(max_length=4000)
-    updated_date = models.DateTimeField(auto_now=True)
+class PageContent(Model):
+    location = CharField(max_length=100)
+    markdown_text = TextField(max_length=4000)
+    updated_date = DateTimeField(auto_now=True)
 
     def get_page_as_markdown(self):
         return mark_safe(markdown(self.markdown_text, safe_mode="escape"))
