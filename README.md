@@ -67,7 +67,7 @@ username = password
 email = pennkey@upenn.edu
 
 [datawarehouse]
-
+user = user
 password = password
 
 ```
