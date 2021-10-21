@@ -23,7 +23,7 @@ if platform.system() == "Darwin":
     )
 
 ROMAN_NUMERAL_REGEX = (
-    r"(?=[MDCLXVI])M*(C[MD]|D?C{0,3})(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})\)?$"
+    r"(?=[MDCLXVI].)M*(C[MD]|D?C{0,3})(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})\)?$"
 )
 ERA_REGEX = r"\s((B?C{1}E?)|(AD))(\s|$)"
 
@@ -70,8 +70,14 @@ def format_title(title):
 
         return divider.join(titles)
 
-    for divider in ["/", "-"]:
-        title = capwords_with_divider(title, divider)
+    dividers = ["/", "-", ":"]
+
+    for divider in dividers:
+        if divider in title:
+            title = capwords_with_divider(title, divider)
+
+            if divider == ":" and findall(r":[^ ]", title):
+                title = sub(r":", ": ", title)
 
     if roman_numeral:
         roman_numeral_string = "".join([str(value) for value in roman_numeral[0]])
