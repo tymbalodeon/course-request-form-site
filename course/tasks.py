@@ -521,6 +521,7 @@ def create_canvas_sites(
                 pass
 
         request.status = "COMPLETED"
+        request.process_notes = f"SUCCESSFULLY COMPLETED, {request.process_notes}"
         request.save()
 
         if verbose:
