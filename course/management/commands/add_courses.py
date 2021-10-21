@@ -35,7 +35,7 @@ class Command(BaseCommand):
         print(") Adding courses...")
 
         opendata = kwargs["open_data"]
-        year_and_term = kwargs["term"]
+        year_and_term = kwargs["term"].upper()
         year = year_and_term[:-1]
         term = year_and_term[-1]
 
