@@ -525,7 +525,10 @@ def pull_instructors(term):
         course_code = (section_id + term).replace(" ", "")
 
         if not pennkey:
-            message = f"- ERROR: (section: {section_id}) Failed to create account for {first_name} {last_name} (missing pennkey)"
+            message = (
+                f"- ERROR: (section: {section_id}) Failed to create account for"
+                f" {first_name} {last_name} (missing pennkey)"
+            )
             getLogger("error_logger").error(message)
             print(message)
         else:
@@ -556,7 +559,10 @@ def pull_instructors(term):
                         except Exception:
                             NEW_INSTRUCTOR_VALUES[course_code] = [instructor]
                     else:
-                        message = f"- ERROR: (section: {section_id}) Failed to create account for: {first_name} {last_name} ({error_message})"
+                        message = (
+                            f"- ERROR: (section: {section_id}) Failed to create account"
+                            f" for: {first_name} {last_name} ({error_message})"
+                        )
                         getLogger("error_logger").error(message)
                         print(message)
             except Exception:
@@ -575,7 +581,8 @@ def pull_instructors(term):
             course.save()
 
             print(
-                f"- Updated {course_code} with instructors: {', '.join([instructor.username for instructor in instructors])}"
+                f"- Updated {course_code} with instructors:"
+                f" {', '.join([instructor.username for instructor in instructors])}"
             )
 
         except Exception as error:
