@@ -5,7 +5,7 @@
 venv/
 
 .env
-config/
+config/config.ini
 
 ACP/data/
 data/

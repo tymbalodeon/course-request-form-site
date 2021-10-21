@@ -40,7 +40,7 @@ class Command(BaseCommand):
         opendata = kwargs["open_data"]
 
         if opendata:
-            open_data_id, key, domain = get_config_values("opendata")
+            open_data_id, key, domain = get_config_values("open_data")
             Open_Data = OpenData(base_url=domain, id=open_data_id, key=key)
             activities = Open_Data.get_available_activity().items()
         else:

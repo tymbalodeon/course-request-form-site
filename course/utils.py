@@ -18,7 +18,7 @@ logging.basicConfig(
 
 
 def data_warehouse_lookup(penn_key=None, penn_id=None):
-    user, password, service = get_config_values("datawarehouse")
+    user, password, service = get_config_values("data_warehouse")
     connection = cx_Oracle.connect(user, password, service)
     cursor = connection.cursor()
 
