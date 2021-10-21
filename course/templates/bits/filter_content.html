@@ -8,8 +8,8 @@
                 <i class="fas fa-filter"  data-toggle="tooltip" data-placement="right" title="" data-original-title="click to filter results"></i>
             </button>
             <div class="filter-chips">
-                {% for filter,value in request.query_params.items %}
-                    {% if filter != "page" %}
+                {% for filter, value in request.query_params.items %}
+                    {% if value and filter != "page" %}
                         <span class="badge" > {{ filter }}: {{ value }}
                             <span aria-hidden="true">
                                 <a href="{% delete_query_param request filter %}">
