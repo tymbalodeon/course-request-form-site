@@ -167,7 +167,7 @@ title = "gitlab gitleaks config"
             '''(?i)(password\s*?=\s*?(\"123\"))''',
             '''(?i)(password\s*?=\s*?(\'mypassword\'|\'123\'))''',
             '''(?i)(password\s*?=\s*?(none|password|passwrd|value|config.get))''',
-            '''(?i)(pennkey\\u003e\/)''',
+            '''(?i)(pennkey\u003e\/)''',
             '''(?i)(token\s*?=\s*?r.json)'''
             '''(?i)(token\s*?=\s*?r.json)'''
             '''get_config_username_and_password'''
