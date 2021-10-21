@@ -76,5 +76,5 @@ static: ## Collect static files
 subjects: ## Populate the database with subjects
 	$(MANAGE) add_subjects -o
 
-superuser: ## Create a user with admin privileges
+superuser: migrations ## Create a user with admin privileges
 	$(MANAGE) createsuperuser

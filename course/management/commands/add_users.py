@@ -77,7 +77,7 @@ class Command(BaseCommand):
                 print(f"- FAILED to add user: {username}")
 
         if department:
-            user, password, service = get_config_values("datawarehouse")
+            user, password, service = get_config_values("data_warehouse")
             connection = cx_Oracle.connect(user, password, service)
             cursor = connection.cursor()
             cursor.execute(
