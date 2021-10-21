@@ -1035,9 +1035,17 @@ textarea.has-error:active {
   margin-bottom: 5px;
 }
 
-.search-button {
-  border-top-left-radius: 0px;
-  border-bottom-left-radius: 0px;
+#search-button {
+  border-top-left-radius: unset;
+  border-bottom-left-radius: unset;
+}
+
+#search-button:focus {
+  outline: unset;
+}
+
+#search-input {
+  border-radius: unset;
 }
 
 @media (max-width: 600px) {
