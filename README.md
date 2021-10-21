@@ -67,7 +67,7 @@ username = password
 email = pennkey@upenn.edu
 
 [datawarehouse]
-user = LIBCANVAS
+user = user
 password = password
 service = whse.upenn.edu
 ```
