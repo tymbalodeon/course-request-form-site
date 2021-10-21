@@ -348,10 +348,7 @@ def pull_courses(term):
                     f"couldnt find subject {subject_area}: {error}"
                 )
                 subject = ""
-                print(
-                    f"{course_code}: Subject {subject_area} not found (found"
-                    f" {school_code} in Open Data.)"
-                )
+                print(f"{course_code}: Subject {subject_area} not found ({error})")
 
         if xc:
             if xc == "S":
