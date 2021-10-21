@@ -31,7 +31,7 @@ ERA_REGEX = r"\s((B?C{1}E?)|(AD))(\s|$)"
 def get_cursor():
     config = ConfigParser()
     config.read("config/config.ini")
-    values = dict(config.items("datawarehouse"))
+    values = dict(config.items("data_warehouse"))
     connection = cx_Oracle.connect(
         values["user"], values["password"], values["service"]
     )
@@ -42,7 +42,7 @@ def get_cursor():
 def get_open_data():
     config = ConfigParser()
     config.read("config/config.ini")
-    values = dict(config.items("opendata"))
+    values = dict(config.items("open_data"))
 
     return OpenData(base_url=values["domain"], id=values["id"], key=values["key"])
 

@@ -1,0 +1,23 @@
+[django]
+secret_key = # key
+debug = # true for development and false for production
+
+[canvas]
+prod_url = # url
+prod_key = # key
+test_url = # url
+test_key = # key
+
+[open_data]
+id = # id
+key = # key
+domain = # domain
+
+[users]
+# username = password
+email = # pennkey@upenn.edu
+
+[data_warehouse]
+user = # user
+password = # password
+service = # service name from your tnsnames.ora file

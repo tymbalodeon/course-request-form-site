@@ -1449,7 +1449,7 @@ def open_data_proxy(request):
             course_id = request.GET.get("course_id", None)
             term = request.GET.get("term", None)
             instructor = request.GET.get("instructor", None)
-            open_data_id, key, domain = get_config_values("opendata")
+            open_data_id, key, domain = get_config_values("open_data")
             open_data = OpenData(domain, open_data_id, key)
             open_data.set_uri("course_section_search")
             open_data.add_param("course_id", course_id)

@@ -26,51 +26,8 @@ _This README uses these aliases. Actual commands can be seen in the Makefile its
 2. Create a [virtual environment](https://docs.python.org/3/tutorial/venv.html) via your preferred method
 3. Install project dependencies: `make install`
 4. Install [Oracle Instant Client](https://www.oracle.com/database/technologies/instant-client/downloads.html) for your platform
-5. Create a "tnsnames.ora" file in your Oracle Instant Client's "network/admin" directory, using the following values:
-
-```
-WHSE.UPENN.EDU=
- 
-   
-     
-     
-     
-     
-    )
-   
-     
-     
-    )
-  )
-```
-
-6. Create a config file at "config/config.ini" (you will need to create the "config" directory) and add the appropriate values. Here is a sample config file:
-
-```ini
-[django]
-secret_key = secret-key
-debug = true # for local development and false on the server
-
-[canvas]
-prod_url = https://canvas.upenn.edu
-prod_key = secret-key
-test_url = https://upenn.test.instructure.com
-test_key = secret-key
-
-[opendata]
-id = opendata-id
-key = secret-key
-domain = https://esb.isc-seo.upenn.edu/8091/open_data/
-
-[users]
-username = password
-email = pennkey@upenn.edu
-
-[datawarehouse]
-user = user
-password = password
-service = whse.upenn.edu
-```
+5. Create a "tnsnames.ora" file in your Oracle Instant Client's "network/admin" directory, using the appropriate values for Penn's Data Warehouse.
+6. Create a config file at "config/config.ini" using "config/config.ini.sample" as a guide and add the appropriate values.
 
 ### Commands
 
@@ -78,10 +35,10 @@ service = whse.upenn.edu
 - To populate a local database with real data: `make populate` (You may get "locked for overuse"--if so, simply wait and try again later.)
   _For more information, see the files in course/management/commands/_
 - To run the application: `make run`
-- To run the application with live reloading (recommended): `make live` in one terminal and `make run` in another
+  - To run the application with live reloading (recommended): `make live` in one terminal and `make run` in another
 - If you make changes to your "models.py" file, you will need to run: `make migrations`
-  _This is run automatically by `make run`_
-- To run python interactively using your virtual environment's shell: `make shell`
+  _This is run automatically by `make run` and `make superuser`_
+- To run a project-aware interactive python shell: `make shell`
 - To interactively query the sqlite3 database, run `make db`
   - To view tables: `.tables`
   - To inspect tables:
@@ -91,14 +48,6 @@ service = whse.upenn.edu
 
 To log in as an admin: [http://localhost:8000/admin/](http://localhost:8000/admin/)  
 To log in as a user: [http://localhost:8000/accounts/login/](http://localhost:8000/accounts/login/)
-
-### Data Warehouse
-
-To query the Data Warehouse directly, make sure you are connected through the GlobalProtect VPN and run:
-
-`***REMOVED***` (recommend storing this as a [shell alias](https://shapeshed.com/unix-alias/))
-
-Reference: [sqlplus Documentation](https://docs.oracle.com/cd/B19306_01/server.102/b14357/toc.htm)
 
 ## Server
 
@@ -115,7 +64,7 @@ To login to the production and development instances, make sure you are connecte
 1. `ssh reqform01.library.upenn.int` (production) or `ssh reqform-dev.library.upenn.int` (development)
 2. `sudo su - django`
 
-- To pull changes from GitLab: `make pull`
+- To pull changes from GitLab: `cd /home/django/crf2 && git pull`
 - To restart the app (run this after pulling changes): `make restart`
   _This automatically runs `make migrations` and `make static` as well_
 
@@ -137,7 +86,7 @@ To quickly check the most recent activity in the "crf2_error.log": `make log`
 
 ## Workflow
 
-1. Create a new [issue](https://gitlab.library.upenn.edu/course-request/CRF2/-/issues) explaining the bug or enhancement (use the templates and appropriate tags when possible).
+1. Create a new [issue](https://gitlab.library.upenn.edu/courseware/course-request/course-request-form-site/-/issues) explaining the bug or enhancement (use the templates and appropriate tags when possible).
 2. Create a branch for the issue.
 3. Commit code changes to the issue branch.
 4. Push changes from the issue branch to the "develop" branch.
