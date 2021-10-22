@@ -381,8 +381,6 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
     }
 
     def create(self, request):
-        print(request.data)
-
         def update_course(course):
             course.save()
 
