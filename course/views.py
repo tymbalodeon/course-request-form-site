@@ -389,11 +389,9 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
                     crosslisted.request = course.request
                     crosslisted.save()
 
-        try:
-            masquerade = request.session["on_behalf_of"]
-        except KeyError:
-            masquerade = ""
-
+        masquerade = (
+            request.session["on_behalf_of"] if "on_behalf_of" in request.session else ""
+        )
         course = Course.objects.get(course_code=request.data["course_requested"])
         instructors = course.get_instructors()
 
@@ -464,19 +462,17 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
         if "view_type" in request.data:
             if request.data["view_type"] == "UI-course-list":
                 return redirect("UI-course-list")
-
-            if request.data["view_type"] == "home":
+            elif request.data["view_type"] == "home":
                 return redirect("home")
-
-            if request.data["view_type"] == "UI-request-detail":
+            elif request.data["view_type"] == "UI-request-detail":
                 return redirect(
                     "UI-request-detail-success",
                     pk=course.course_code,
                 )
-
-        return Response(
-            serializer.data, status=status.HTTP_201_CREATED, headers=headers
-        )
+        else:
+            return Response(
+                serializer.data, status=status.HTTP_201_CREATED, headers=headers
+            )
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
