@@ -17,5 +17,6 @@ data/
 **/.DS_Store
 
 .flake8
+.isort.cfg
 
 course/static/log
