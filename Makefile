@@ -27,7 +27,7 @@ db: ## Open the database shell
 flake: ## Lint code
 	flake8 $(ROOT_DIR)
 
-format: isort black flake ## Format and lint code
+format: isort black flake mypy ## Format and lint code
 
 freeze: ## Freeze the dependencies to the requirements.txt file
 	pip freeze > $(REQUIREMENTS)
@@ -54,6 +54,9 @@ migration: ## Make the database migrations
 	$(MANAGE) makemigrations
 
 migrations: migration migrate ## Make migrations and migrate
+
+mypy: ## Type-check code
+	pre-commit install && pre-commit run mypy -a
 
 populate: migrations schools subjects courses ## Populate the database with schools, subjects, and courses
 
