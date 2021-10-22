@@ -22,7 +22,7 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
-from rest_framework.utils import html
+from rest_framework.utils.html import parse_html_list
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
@@ -400,56 +400,52 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
             instructors = None
 
         self.custom_permissions(None, masquerade, instructors)
-        additional_enrollments_partial = html.parse_html_list(
+        additional_enrollments_partial = parse_html_list(
             request.data, prefix="additional_enrollments"
         )
-        additional_sections_partial = html.parse_html_list(
+        additional_sections_partial = parse_html_list(
             request.data, prefix="additional_sections"
         )
-        data_dict = request.data.dict()
+        request_data = request.data.dict()
+        request_data["additional_enrollments"] = (
+            clean_custom_input(additional_enrollments_partial)
+            if additional_enrollments_partial
+            else []
+        )
+        request_data["additional_sections"] = (
+            [
+                data_dict["course_code"]
+                for data_dict in clean_custom_input(additional_sections_partial)
+            ]
+            if additional_sections_partial
+            else []
+        )
+        request_data["reserves"] = (
+            course.course_schools.abbreviation
+            in [
+                "SAS",
+                "SEAS",
+                "FA",
+                "PSOM",
+                "SP2",
+            ]
+            if "view_type" in request.data
+            and request.data["view_type"] == "UI-course-list"
+            else request.data["reserves"]
+        )
 
-        if additional_enrollments_partial or additional_sections_partial:
-            if additional_enrollments_partial:
-                final_add_enroll = clean_custom_input(additional_enrollments_partial)
-                data_dict["additional_enrollments"] = final_add_enroll
-            else:
-                data_dict["additional_enrollments"] = []
+        request_data["copy_from_course"] = (
+            request.data["name"] if "name" in request.data else None
+        )
+        request_data["exclude_announcements"] = (
+            (request.data["exclude_announcements"] == "on" or False)
+            if "exclude_announcements" in request.data
+            else False
+        )
+        serializer = self.get_serializer(data=request_data)
+        is_valid = serializer.is_valid()
 
-            if additional_sections_partial:
-                final_add_sects = clean_custom_input(additional_sections_partial)
-                data_dict["additional_sections"] = [
-                    data_dict["course_code"] for data_dict in final_add_sects
-                ]
-            else:
-                data_dict["additional_sections"] = []
-            serializer = self.get_serializer(data=data_dict)
-        else:
-            data = dict(
-                [
-                    (x, y)
-                    for x, y in data_dict.items()
-                    if not x.startswith("additional_enrollments")
-                    or x.startswith("additional_sections")
-                ]
-            )
-            data["additional_enrollments"] = []
-            data["additional_sections"] = []
-
-            if "view_type" in request.data:
-                if request.data["view_type"] == "UI-course-list":
-                    data["reserves"] = course.course_schools.abbreviation in [
-                        "SAS",
-                        "SEAS",
-                        "FA",
-                        "PSOM",
-                        "SP2",
-                    ]
-
-            serializer = self.get_serializer(data=data)
-
-        serializer.is_valid()
-
-        if not serializer.is_valid():
+        if not is_valid:
             messages.add_message(request, messages.ERROR, serializer.errors)
 
             raise serializers.ValidationError(serializer.errors)
@@ -655,10 +651,10 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop("partial", False)
         instance = self.get_object()
-        additional_enrollments_partial = html.parse_html_list(
+        additional_enrollments_partial = parse_html_list(
             request.data, prefix="additional_enrollments"
         )
-        additional_sections_partial = html.parse_html_list(
+        additional_sections_partial = parse_html_list(
             request.data, prefix="additional_sections"
         )
         data_dict = request.data.dict()
