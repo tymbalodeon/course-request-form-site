@@ -1,5 +1,3 @@
-from csv import writer
-
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
@@ -15,7 +13,6 @@ from django.db.models import (
     Sum,
 )
 from django.db.models.functions import Trunc
-from django.http import HttpResponse
 
 from .models import (
     Activity,
@@ -32,23 +29,6 @@ from .models import (
     Subject,
     UpdateLog,
 )
-
-
-class ExportCsvMixin:
-    def export_as_csv(self, request, queryset):
-        meta = self.model._meta
-        field_names = [field.name for field in meta.fields]
-        response = HttpResponse(content_type="text/csv")
-        response["Content-Disposition"] = "attachment; filename={}.csv".format(meta)
-        csv_writer = writer(response)
-        csv_writer.writerow(field_names)
-
-        for query_object in queryset:
-            csv_writer.writerow([getattr(query_object, field) for field in field_names])
-
-        return response
-
-    export_as_csv.short_description = "Export Selected"
 
 
 class AdditionalEnrollmentInline(admin.StackedInline):
