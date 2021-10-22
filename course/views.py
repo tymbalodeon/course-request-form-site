@@ -380,6 +380,8 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
     }
 
     def create(self, request):
+        print(request.data)
+
         def update_course(course):
             course.save()
 
@@ -438,7 +440,11 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
             request.data["name"] if "name" in request.data else None
         )
         request_data["exclude_announcements"] = (
-            (request.data["exclude_announcements"] == "on" or False)
+            (
+                request.data["exclude_announcements"] == "on"
+                or request.data["exclude_announcements"] == "true"
+                or False
+            )
             if "exclude_announcements" in request.data
             else False
         )
