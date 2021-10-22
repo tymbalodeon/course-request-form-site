@@ -5,6 +5,7 @@ from logging import getLogger
 from os import mkdir
 from pathlib import Path
 from re import search
+from typing import Dict
 
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
@@ -133,7 +134,7 @@ class TestUserProfileCreated(UserPassesTestMixin):
 
 
 class MixedPermissionModelViewSet(ModelViewSet):
-    permission_classes_by_action = {}
+    permission_classes_by_action: Dict[str, list] = {}
     login_url = "/accounts/login/"
 
     def get_permissions(self):
@@ -216,7 +217,7 @@ class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
     serializer_class = CourseSerializer
     filterset_class = CourseFilter
     search_fields = ("$course_name", "$course_code")
-    permission_classes_by_action = {
+    permission_classes_by_action: Dict[str, list] = {
         "create": [IsAdminUser],
         "list": [IsAuthenticated],
         "retrieve": [IsAuthenticated],
@@ -370,7 +371,7 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
     serializer_class = RequestSerializer
     filterset_class = RequestFilter
     permission_classes = (permissions.IsAuthenticated,)
-    permission_classes_by_action = {
+    permission_classes_by_action: Dict[str, list] = {
         "create": [IsAuthenticated],
         "list": [IsAuthenticated],
         "retrieve": [IsAuthenticated],
@@ -767,7 +768,7 @@ class UserViewSet(MixedPermissionModelViewSet, ModelViewSet):
     serializer_class = UserSerializer
     lookup_field = "username"
     filterset_fields = ("profile__penn_id",)
-    permission_classes_by_action = {
+    permission_classes_by_action: Dict[str, list] = {
         "create": [],
         "list": [],
         "retrieve": [],
@@ -780,7 +781,7 @@ class UserViewSet(MixedPermissionModelViewSet, ModelViewSet):
 class SchoolViewSet(MixedPermissionModelViewSet, ModelViewSet):
     queryset = School.objects.all()
     serializer_class = SchoolSerializer
-    permission_classes_by_action = {
+    permission_classes_by_action: Dict[str, list] = {
         "create": [],
         "list": [],
         "retrieve": [],
@@ -836,7 +837,7 @@ class SchoolViewSet(MixedPermissionModelViewSet, ModelViewSet):
 class SubjectViewSet(MixedPermissionModelViewSet, ModelViewSet):
     queryset = Subject.objects.all()
     serializer_class = SubjectSerializer
-    permission_classes_by_action = {
+    permission_classes_by_action: Dict[str, list] = {
         "create": [],
         "list": [],
         "retrieve": [],
@@ -890,7 +891,7 @@ class SubjectViewSet(MixedPermissionModelViewSet, ModelViewSet):
 class NoticeViewSet(MixedPermissionModelViewSet, ModelViewSet):
     queryset = Notice.objects.all()
     serializer_class = NoticeSerializer
-    permission_classes_by_action = {
+    permission_classes_by_action: Dict[str, list] = {
         "create": [],
         "list": [],
         "retrieve": [],
@@ -907,7 +908,7 @@ class CanvasSiteViewSet(MixedPermissionModelViewSet, ModelViewSet):
     queryset = CanvasSite.objects.all()
     serializer_class = CanvasSiteSerializer
     lookup_field = "canvas_id"
-    permission_classes_by_action = {
+    permission_classes_by_action: Dict[str, list] = {
         "create": [],
         "list": [],
         "retrieve": [],
@@ -964,7 +965,7 @@ class HomePage(APIView, UserPassesTestMixin):
     renderer_classes = [TemplateHTMLRenderer]
     template_name = "home_content.html"
     login_url = "/accounts/login/"
-    permission_classes_by_action = {
+    permission_classes_by_action: Dict[str, list] = {
         "create": [],
         "list": [],
         "retrieve": [],
@@ -1442,7 +1443,7 @@ def quick_config(request):
 
 
 def open_data_proxy(request):
-    data = {"data": "none"}
+    data = {}
     size = 0
     print(f"Course lookup failed: {request}")
 
@@ -1477,7 +1478,7 @@ def open_data_proxy(request):
 
 
 def check_data_warehouse_for_course(request):
-    data = {"data": {}, "results": list()}
+    data = {}
     size = 0
 
     if request.GET:
@@ -1497,22 +1498,20 @@ def check_data_warehouse_for_course(request):
                 "revision",
                 "instructors",
             ]
-            course_code = request.GET.get("course_code", None)
+            course_code = request.GET.get("course_code")
             results = inspect_course(course_code, verbose=False)
-            size = len(results)
-            data["results"] = results
 
-            if not data["results"]:
+            if results:
+                size = len(results)
+
+                for course in results:
+                    course_code = course[0]
+                    data["data"][course_code] = dict()
+
+                    for index, item in enumerate(course[1:]):
+                        data["data"][course_code][headers[index]] = item
+            else:
                 data["data"] = "COURSE NOT FOUND"
-
-            for course in data["results"]:
-                course_code = course[0]
-                data["data"][course_code] = dict()
-
-                for index, item in enumerate(course[1:]):
-                    data["data"][course_code][headers[index]] = item
-
-            data.pop("results", None)
         except Exception as error:
             print(f"ERROR (Data Warehouse): {error}")
 
