@@ -1,7 +1,8 @@
 from django.conf import settings
 from django.conf.urls import include, url
-from django.generic.base import TemplateView
+from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import path
+from django.views.generic.base import TemplateView
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.routers import DefaultRouter
 from rest_framework_swagger.views import get_swagger_view
@@ -22,8 +23,6 @@ from course.views import (
     SubjectViewSet,
     UpdateLogViewSet,
     UserViewSet,
-    auth_LoginView,
-    auth_LogoutView,
     auto_complete_canvas_course,
     check_data_warehouse_for_course,
     contact,
@@ -182,7 +181,7 @@ urlpatterns = [
     ),
     path(
         "accounts/login/",
-        auth_LoginView.as_view(
+        LoginView.as_view(
             template_name="login.html",
             extra_context={
                 "next": "/",
@@ -192,7 +191,7 @@ urlpatterns = [
     ),
     path(
         "accounts/logout/",
-        auth_LogoutView.as_view(
+        LogoutView.as_view(
             next_page=settings.LOGOUT_REDIRECT_URL,
             template_name="logout.html",
         ),
