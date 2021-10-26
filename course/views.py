@@ -430,7 +430,7 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
             ]
             if "view_type" in request.data
             and request.data["view_type"] == "UI-course-list"
-            else request.data["reserves"]
+            else None
         )
 
         request_data["copy_from_course"] = (
