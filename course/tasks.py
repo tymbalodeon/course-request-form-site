@@ -30,13 +30,13 @@ MIGRATION_CATEGORIES = [
     "attachments",
     "quizzes",
     "assignments",
-    "announcements",
     "calendar_events",
     "discussion_topics",
     "modules",
     "module_items",
     "pages",
     "rubrics",
+    "announcements",
 ]
 
 
@@ -437,13 +437,14 @@ def create_canvas_sites(
                     )
 
                 source_course_id = serialized.data["copy_from_course"]
-                migration_categories = MIGRATION_CATEGORIES[:]
-
-                if exclude_announcements:
-                    migration_categories.remove("announcements")
-                    migration_categories = {
-                        category: category for category in migration_categories
-                    }
+                migration_categories = (
+                    MIGRATION_CATEGORIES[:-1]
+                    if exclude_announcements
+                    else MIGRATION_CATEGORIES[:]
+                )
+                migration_categories = {
+                    category: category for category in migration_categories
+                }
 
                 content_migration = canvas_course.create_content_migration(
                     migration_type="course_copy_importer",
