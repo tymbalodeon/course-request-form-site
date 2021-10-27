@@ -282,12 +282,10 @@ def enroll_user(request, canvas_course, user, role, course_section_id, test):
                 test=test,
             )
 
-            add_request_process_notes(
-                f"created account for user: {user.username}", request
-            )
+            add_request_process_notes(f"created account for user: {username}", request)
         except Exception:
             add_request_process_notes(
-                f"failed to create account for user: {user.username}",
+                f"failed to create account for user: {username}",
                 request,
             )
     elif role == "LIB" or role == "librarian":
@@ -314,7 +312,7 @@ def enroll_user(request, canvas_course, user, role, course_section_id, test):
                 },
             )
         except Exception:
-            add_request_process_notes(f"failed to add user: {user.username}", request)
+            add_request_process_notes(f"failed to add user: {username}", request)
 
 
 def set_reserves(request, canvas_course, verbose):
