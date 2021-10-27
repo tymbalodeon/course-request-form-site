@@ -259,29 +259,28 @@ def handle_sections(
 
 def enroll_user(request, canvas_course, user, role, course_section_id, test):
     try:
-        canvas_user = get_user_by_sis(user.username, test=test)
+        username = user.username
+        penn_id = user.profile.penn_id
+        email = user.email
+        full_name = (f"{user.first_name} {user.last_name}",)
     except Exception:
-        canvas_user = get_user_by_sis(user, test=test)
+        crf_user = User.objects.get(username=user)
+        username = user
+        penn_id = crf_user.profile.penn_id
+        email = crf_user.email
+        full_name = f"{crf_user.first_name} {crf_user.last_name}"
+
+    canvas_user = get_user_by_sis(username, test=test)
 
     if canvas_user is None:
         try:
-            try:
-                canvas_user = create_canvas_user(
-                    user.username,
-                    user.profile.penn_id,
-                    user.email,
-                    f"{user.first_name} {user.last_name}",
-                    test=test,
-                )
-            except Exception:
-                crf_user = User.objects.get(username=user)
-                canvas_user = create_canvas_user(
-                    user,
-                    crf_user.profile.penn_id,
-                    crf_user.email,
-                    f"{crf_user.first_name} {crf_user.last_name}",
-                    test=test,
-                )
+            canvas_user = create_canvas_user(
+                username,
+                penn_id,
+                email,
+                full_name,
+                test=test,
+            )
 
             add_request_process_notes(
                 f"created account for user: {user.username}", request
