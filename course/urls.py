@@ -53,8 +53,8 @@ router.register(r"canvassites", CanvasSiteViewSet)
 urlpatterns = [
     path("siterequest/", emergency_redirect),
     path("contact/googleform/", google_form),
-    url("admin/process_requests/", process_requests, name="process_requests"),
-    url("admin/view_requests/", view_requests, name="view_requests"),
+    url("admin/process_requests/", process_requests),
+    url("admin/view_requests/", view_requests),
     url("admin/view_canceled_SRS/", view_canceled_SRS),
     url("admin/delete_canceled_requests/", delete_canceled_requests),
     url("admin/view_deleted_requests/", view_deleted_requests),
