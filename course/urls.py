@@ -26,15 +26,16 @@ from course.views import (
     auto_complete_canvas_course,
     check_data_warehouse_for_course,
     contact,
+    delete_canceled_requests,
     emergency_redirect,
     google_form,
     my_proxy,
     open_data_proxy,
     process_requests,
     quick_config,
-    remove_canceled_requests,
     user_info,
     view_canceled_SRS,
+    view_deleted_requests,
     view_requests,
 )
 
@@ -55,7 +56,8 @@ urlpatterns = [
     url("admin/process_requests/", process_requests, name="process_requests"),
     url("admin/view_requests/", view_requests, name="view_requests"),
     url("admin/view_canceled_SRS/", view_canceled_SRS),
-    url("admin/delete_canceled_requests/", remove_canceled_requests),
+    url("admin/delete_canceled_requests/", delete_canceled_requests),
+    url("admin/view_deleted_requests/", view_deleted_requests),
     url("quickconfig/", quick_config),
     path(
         "documentation/",

@@ -69,6 +69,10 @@ FIVE_OR_MORE_ALPHABETIC_CHARACTERS = r"[a-z]{5,}"
 SPRING = "A"
 SUMMER = "B"
 FALL = "C"
+TASKS_LOG_PATH = Path("course/static/log")
+PROCESS_REQUESTS_LOG = TASKS_LOG_PATH / "processed-requests.json"
+DELETE_REQUESTS_LOG = TASKS_LOG_PATH / "deleted-courses.json"
+CHECK_CANCELED_LOG = TASKS_LOG_PATH / "canceled-courses.json"
 
 
 def get_term(index):
@@ -1235,17 +1239,26 @@ def auto_complete_canvas_course(request, search_results):
 
 @staff_member_required
 def process_requests(request):
-    response = {"response": "response", "processed": []}
+    response = {}
     approved_requests = Request.objects.filter(status="APPROVED")
 
-    if approved_requests.exists():
+    if approved_requests:
+        requests = [
+            (
+                Request.objects.get(
+                    course_requested=request.course_requested.course_code
+                ),
+                request.course_requested.course_code,
+            )
+            for request in approved_requests
+        ]
         response["processed"] = [
             {
-                "course_code": approved_request.course_requested.course_code,
-                "status": "",
-                "notes": "",
+                "course_code": course_code,
+                "status": request.status,
+                "notes": request.process_notes,
             }
-            for approved_request in approved_requests
+            for request, course_code in requests
         ]
 
         try:
@@ -1255,23 +1268,15 @@ def process_requests(request):
             response["error"] = error
             getLogger("error_logger").error(error)
 
-        for processed_request in response["processed"]:
-            request_object = Request.objects.get(
-                course_requested=processed_request["course_code"]
-            )
-            processed_request["status"] = request_object.status
-            processed_request["notes"] = request_object.process_notes
+        response["time"] = datetime.now().strftime("%m/%d/%y %I:%M%p")
 
-        response["response"] = datetime.now().strftime("%m/%d/%y %I:%M%p")
-        log_path = Path("course/static/log")
+        if not TASKS_LOG_PATH.exists():
+            mkdir(TASKS_LOG_PATH)
 
-        if not log_path.exists():
-            mkdir(log_path)
-
-        with open("course/static/log/result.json", "w+") as fp:
-            json.dump(response, fp)
+        with open(PROCESS_REQUESTS_LOG, "w+") as writer:
+            json.dump(response, writer)
     else:
-        response["processed"] = "No Approved Requests to Process"
+        response["processed"] = "No approved requests to process"
 
     return JsonResponse(response)
 
@@ -1279,31 +1284,52 @@ def process_requests(request):
 @staff_member_required
 def view_requests(request):
     try:
-        with open("course/static/log/result.json") as json_file:
-            data = json.load(json_file)
+        with open(PROCESS_REQUESTS_LOG) as json_file:
+            content = json.load(json_file)
 
-        return JsonResponse(data)
+        return JsonResponse(content)
     except Exception:
-        return JsonResponse({"response": "no data to display"})
+        return JsonResponse({"processed": "No processed requests"})
 
 
 @staff_member_required
 def view_canceled_SRS(request):
-    with open("course/static/log/deleted_courses_issues.log") as content:
+    try:
+        with open(CHECK_CANCELED_LOG) as json_file:
+            content = json.load(json_file)
 
-        return HttpResponse(content, content_type="text/plain; charset=utf8")
+        return JsonResponse(content)
+    except Exception:
+        return JsonResponse({"canceled": "No canceled courses"})
 
 
 @staff_member_required
-def remove_canceled_requests(request):
-    done = {"response": "", "processed": []}
+def delete_canceled_requests(request):
     canceled_requests = Request.objects.filter(status="CANCELED")
-    done["processed"] = [
+    response = {}
+    response["deleted"] = [
         request.course_requested.course_code for request in canceled_requests
     ]
-    done["response"] = datetime.now().strftime("%m/%d/%y %I:%M%p")
+    response["time"] = datetime.now().strftime("%m/%d/%y %I:%M%p")
 
-    return JsonResponse(done)
+    if not TASKS_LOG_PATH.exists():
+        mkdir(TASKS_LOG_PATH)
+
+    with open(DELETE_REQUESTS_LOG, "w+") as writer:
+        json.dump(response, writer)
+
+    return JsonResponse(response)
+
+
+@staff_member_required
+def view_deleted_requests(request):
+    try:
+        with open(DELETE_REQUESTS_LOG) as json_file:
+            content = json.load(json_file)
+
+        return JsonResponse(content)
+    except Exception:
+        return JsonResponse({"response": "No canceled courses"})
 
 
 def quick_config(request):

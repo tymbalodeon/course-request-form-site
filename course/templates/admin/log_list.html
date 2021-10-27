@@ -24,27 +24,26 @@
                     <tr>
                         <td scope="row">Process Requests</td>
                         <td><a data-toggle="popover" tabindex="0" data-trigger="focus" data-content="Run this process to create Canvas Sites for all of the Approved Requests. Anything stuck in IN_PROCESS needs immediate remediation."><i class="fas fa-info-circle"></i></a></td>
-                        <td><button id="viewRequests" onclick="viewRequests()" class="muted-button">View Recent</button></td>
-                        <td><center><button id="processRequests" onclick="processRequests()">Run</button></center></td>
+                        <td><button onclick="viewRequests()" class="muted-button">View Recent</button></td>
+                        <td><center><button id="process-requests" onclick="processRequests()">Run</button></center></td>
                     </tr>
                     <tr>
                         <td scope="row">Delete Canceled Requests</td>
                         <td><a data-toggle="popover" tabindex="0" data-trigger="focus" data-content="Requests that are Canceled are deleted every 20 minutes. If you need to delete them immediately, run this process."><i class="fas fa-info-circle"></i></a></td>
-                        <td>N/A</td>
-                        <td> <center><button id="" onclick="deleteCanceledRequests()">Run</button></center></td>
+                        <td><button onclick="viewDeletedRequests()" class="muted-button">View Recent</button></td>
+                        <td><center><button id="" onclick="deleteCanceledRequests()">Run</button></center></td>
                     </tr>
                     <tr>
                         <td scope="row">Check Canceled SRS Courses</td>
                         <td><a data-toggle="popover" tabindex="0" data-trigger="focus" data-content="Every night the CRF checks if SRS courses with Canvas sites have been canceled. Click 'View Recent' to see the file."><i class="fas fa-info-circle"></i></a></td>
-                        <td><button id="viewRequests"  onclick="viewCanceledSRS()"class="muted-button">View Recent</button></td>
-                        <td>N/A </td>
+                        <td><button onclick="viewCanceledSRS()"class="muted-button">View Recent</button></td>
+                        <td>N/A</td>
                     </tr>
-
                 </tbody>
             </table>
         </fieldset>
 
-        <fieldset id="oneOffTasks" style="display:none;">
+        <fieldset id="one-off-tasks" style="display:none;">
             <legend></legend>
             <div id="loader" style="display:none;"></div>
             <pre id="json" style="overflow:auto;height:300px;display:none">
@@ -54,9 +53,9 @@
         <fieldset>
             <legend>External Tools</legend>
             <ul>
-                <li><a href="https://esb.isc-seo.upenn.edu/8093/jsp/registerUser.jsp"> Create Canvas Account</a></li>
-                <li><a href="https://canvas.upenn.edu/accounts/96678/sis_import"> SIS Import</a></li>
-                <li><a href="https://esb.isc-seo.upenn.edu/8093/jsp/research.jsp"> Enrollment Research</a></li>
+                <li><a href="https://esb.isc-seo.upenn.edu/8093/jsp/registerUser.jsp">Create Canvas Account</a></li>
+                <li><a href="https://canvas.upenn.edu/accounts/96678/sis_import">SIS Import</a></li>
+                <li><a href="https://esb.isc-seo.upenn.edu/8093/jsp/research.jsp">Enrollment Research</a></li>
                 <li><a href="https://www.site24x7.com/sv.do?id=wpdDGdqhZh3AEfebhWS0zB19hcUM6sQepLjBjOdP5x-zAm3C-LDZ-7Dxe4xsaLS2FgajJGBvx2K3sn59m650wH19kAV6t9WQschut6uKx1o%3D"> LTS Status Page</a></li>
             </ul>
         </fieldset>
@@ -66,105 +65,81 @@
 
 {% block template_page_js %}
     <script>
-     $(function () {
+     $(function() {
          $('[data-toggle="popover"]').popover()
      });
      $('.popover-dismiss').popover({
          trigger: 'focus'
      });
 
-     function deleteCanceledRequests() {
-         console.log('Deleting Canceled Requests');
-         $.ajax({
-             url: '/admin/delete_canceled_requests/',
-             type: 'GET',
-             beforeSend: function() {
-                 console.log("beforesend");
-                 $("#oneOffTasks").show(400);
-                 $("#oneOffTasks > legend").text("Deleting: Canceled Requests");
-                 $("#json").hide(300)
-                 $("#loader").show(400);
-             },
-             success: function(result){
-                 console.log("success");
-                 console.log(result);
-                 var myJSON = JSON.stringify(result,undefined,2);
-                 console.log(myJSON);
-                 $("#loader").hide(300);
-                 document.getElementById("json").innerHTML = myJSON;
-                 $("#json").show(500).css("height","300px");
-         }});
-     };
+     const getShowStartHeader = (header) => {
+         const showStartHeader = () => {
+             $("#one-off-tasks").show(400);
+             $("#one-off-tasks > legend").text(header);
+             $("#json").hide(300)
+             $("#loader").show(400);
+         }
 
-     function viewCanceledSRS() {
-         console.log('running view canceled');
-         $.ajax({
-             url: '/admin/view_canceled_SRS',
-             type: 'GET',
-             beforeSend: function() {
-                 console.log("beforesend");
-                 $("#oneOffTasks").show(400);
-                 $("#oneOffTasks > legend").text("Viewing: Canceled SRS Courses");
-                 $("#json").hide(300)
-                 $("#loader").show(400);
-             },
-             success: function(result){
-                 console.log("success");
-                 console.log(result);
-                 $("#loader").hide(300);
-                 document.getElementById("json").innerHTML = result;
-                 $("#json").show(500).css("height","300px");
-         }});
-     };
+         return showStartHeader;
+     }
 
-     function viewRequests() {
-         console.log('running view');
-         $.ajax({
-             url: '/admin/view_requests',
-             type: 'GET',
-             beforeSend: function() {
-                 console.log("beforesend");
-                 $("#oneOffTasks").show(400);
-                 $("#oneOffTasks > legend").text("Viewing: Requests");
-                 $("#json").hide(300)
-                 $("#loader").show(400);
-             },
-             success: function(result){
-                 console.log("success");
-                 console.log(result);
-                 var myJSON = JSON.stringify(result,undefined,2);
-                 console.log(myJSON);
-                 $("#loader").hide(300);
-                 document.getElementById("json").innerHTML = myJSON;
-                 $("#json").show(500).css("height","300px");
-         }});
-     };
+     const showResultContent = (result) => {
+         const content = JSON.stringify(result, undefined, 2);
+         $("#loader").hide(300);
+         document.getElementById("json").innerHTML = content;
+         $("#json").show(500).css("height","300px");
+     }
 
      function processRequests() {
-         console.log('running process');
          $.ajax({
              url: '/admin/process_requests',
              type: 'GET',
              beforeSend: function() {
-                 console.log("beforesend");
-                 $("#processRequests").text("Running").fadeIn(900);
-                 $("#processRequests").attr("disabled", true);
-                 $("#oneOffTasks").css("display","block");
-                 $("#oneOffTasks > legend").text("Running: Requests");
-                 $("#json").hide(300)
-                 $("#loader").show(500)
+                 $("#process-requests").text("Running").fadeIn(900);
+                 $("#process-requests").attr("disabled", true);
+                 getShowStartHeader("Running: Requests")();
              },
-             success: function(result){
-                 console.log("success");
-                 console.log(result);
-                 var myJSON = JSON.stringify(result,undefined,2);
-                 console.log(myJSON);
-                 document.getElementById("json").innerHTML = myJSON;
-                 $("#loader").hide(300)
-                 $("#json").show(300).css("height","300px");
-                 $("#processRequests").html("Run").fadeIn(900);
-                 $("#processRequests").attr("disabled", false);
+             success: function(result) {
+                 showResultContent(result);
+                 $("#process-requests").html("Run").fadeIn(900);
+                 $("#process-requests").attr("disabled", false);
          }});
+     }
+
+     function viewRequests() {
+         $.ajax({
+             url: '/admin/view_requests',
+             type: 'GET',
+             beforeSend: getShowStartHeader("Viewing: Requests"),
+             success: showResultContent
+         });
+     };
+
+     function deleteCanceledRequests() {
+         $.ajax({
+             url: '/admin/delete_canceled_requests/',
+             type: 'GET',
+             beforeSend: getShowStartHeader("Deleting: Canceled Requests"),
+             success: showResultContent
+         });
+     };
+
+     function viewDeletedRequests() {
+         $.ajax({
+             url: '/admin/view_deleted_requests',
+             type: 'GET',
+             beforeSend: getShowStartHeader("Viewing: Deleted Canceled Requests"),
+             success: showResultContent
+         });
+     };
+
+     function viewCanceledSRS() {
+         $.ajax({
+             url: '/admin/view_canceled_SRS',
+             type: 'GET',
+             beforeSend: getShowStartHeader("Viewing: Canceled SRS Courses"),
+             success: showResultContent
+         });
      };
     </script>
 {% endblock %}
