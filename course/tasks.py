@@ -543,7 +543,7 @@ def create_canvas_sites(
             verbose,
         )
 
-        for enrollment in serialized.data["additional_enrollmenets"]:
+        for enrollment in serialized.data["additional_enrollments"]:
             enroll_user(
                 request,
                 canvas_course,
