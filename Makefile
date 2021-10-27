@@ -9,6 +9,16 @@ TERM := $(shell if (( $(MONTH) > 8 )); \
 					then echo "B"; \
 				else echo "A"; \
 				fi)
+ifeq (TERM, A)
+NEXT_TERM = B
+NEXT_YEAR = $(YEAR)
+else ifeq (TERM, B)
+NEXT_TERM = C
+NEXT_YEAR = $(YEAR)
+else
+NEXT_TERM = A
+NEXT_YEAR := $(shell expr $(YEAR) + 1)
+endif
 
 all: help
 
@@ -19,7 +29,7 @@ check: ## Check for problems
 	$(MANAGE) check
 
 courses: ## Populate the database with the current term's courses
-	$(MANAGE) add_courses -t $(YEAR)$(TERM) -o
+	$(MANAGE) add_courses -t $(YEAR)$(TERM) -o && $(MANAGE) add_courses -t $(NEXT_YEAR)$(NEXT_TERM) -o
 
 db: ## Open the database shell
 	$(MANAGE) dbshell
@@ -75,6 +85,8 @@ shell: ## Open an app-aware python shell
 .PHONY: static
 static: ## Collect static files
 	$(MANAGE) collectstatic --no-input
+
+start: install populate run ## Run everything necessary to start the project from scratch
 
 subjects: ## Populate the database with subjects
 	$(MANAGE) add_subjects -o
