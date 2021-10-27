@@ -276,24 +276,23 @@ class RequestSerializer(DynamicFieldsModelSerializer):
         return super(RequestSerializer, self).to_internal_value(data)
 
     def validate(self, data):
-        if "additional_enrollments" in data.keys():
-            if data["additional_enrollments"]:
-                for enrollment in data["additional_enrollments"]:
-                    print(f"Checking Users for {enrollment['user']}...")
-                    user = validate_pennkey(enrollment["user"])
+        if "additional_enrollments" in data.keys() and data["additional_enrollments"]:
+            for enrollment in data["additional_enrollments"]:
+                print(f"Checking Users for {enrollment['user']}...")
+                user = validate_pennkey(enrollment["user"])
 
-                    if user is None:
-                        print(f"FAILED to find User {enrollment['user']}.")
+                if user is None:
+                    print(f"FAILED to find User {enrollment['user']}.")
 
-                        raise ValidationError(
-                            {
-                                "error": (
-                                    "An error occurred. Please check that the pennkeys"
-                                    " you entered are correct and add the course"
-                                    " information to the additional instructions field."
-                                )
-                            }
-                        )
+                    raise ValidationError(
+                        {
+                            "error": (
+                                "An error occurred. Please check that the pennkeys"
+                                " you entered are correct and add the course"
+                                " information to the additional instructions field."
+                            )
+                        }
+                    )
 
         return data
 
