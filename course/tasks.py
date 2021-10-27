@@ -258,7 +258,10 @@ def handle_sections(
 
 
 def enroll_user(request, canvas_course, user, role, course_section_id, test):
-    canvas_user = get_user_by_sis(user.username, test=test)
+    try:
+        canvas_user = get_user_by_sis(user.username, test=test)
+    except Exception:
+        canvas_user = get_user_by_sis(user, test=test)
 
     if canvas_user is None:
         try:
