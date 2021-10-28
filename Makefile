@@ -94,3 +94,6 @@ subjects: ## Populate the database with subjects
 
 superuser: ## Create a user with admin privileges
 	$(MANAGE) createsuperuser
+
+test: ## Run the test suite
+	$(MANAGE) test tests -v 2

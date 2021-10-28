@@ -21,3 +21,10 @@ repos:
         args: [--ignore-missing-imports]
         additional_dependencies:
           [types-Markdown==3.3.6, types-requests==2.25.11]
+  - repo: local
+    hooks:
+      - id: django-test
+        name: django-test
+        entry: python manage.py test tests
+        pass_filenames: false
+        language: system
