@@ -22,5 +22,5 @@ user = # user
 password = # password
 service = # service name from your tnsnames.ora file
 
-[cx_oracle]
+[cx_oracle] # only necessary on macOS to connect to the Data Warehouse
 lib_dir = # path/to/instantclient

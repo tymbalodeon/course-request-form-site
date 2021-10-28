@@ -27,7 +27,7 @@ black: ## Format code
 	black --experimental-string-processing $(ROOT_DIR)
 
 check: ## Check for problems
-	$(MANAGE) check && pre-commit run -a
+	pre-commit run -a
 
 courses: ## Populate the database with the current term's courses
 	$(MANAGE) add_courses -t $(YEAR)$(TERM) -odi && $(MANAGE) add_courses -t $(NEXT_YEAR)$(NEXT_TERM) -odi
