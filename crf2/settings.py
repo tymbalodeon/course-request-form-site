@@ -10,6 +10,7 @@ from helpers.helpers import get_config_boolean_value, get_config_value
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = get_config_value("django", "secret_key", raw=True)
 DEBUG = get_config_boolean_value("django", "debug")
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 CANVAS_ENVIRONMENT = "PRODUCTION"
 ALLOWED_HOSTS = ["*", "localhost"]
 INTERNAL_IPS = ["127.0.0.1"]
