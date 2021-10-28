@@ -53,25 +53,18 @@ class School(Model):
         default=True, verbose_name="Additional Enrollments Form Field"
     )
 
-    def get_subjects(self):
-        try:
-            subjects = Subject.objects.filter(schools=self)
-        except Exception:
-            subjects = None
+    def __str__(self):
+        return f"{self.name} ({self.abbreviation})"
 
-        return subjects
+    def get_subjects(self):
+        return Subject.objects.filter(schools=self)
 
     def save(self, *args, **kwargs):
-        subjects = Subject.objects.filter(schools=self.abbreviation)
-
-        for subject in subjects:
+        for subject in self.get_subjects():
             subject.visible = self.visible
             subject.save()
 
         super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"{self.name} ({self.abbreviation})"
 
     class Meta:
         ordering = ("name",)
