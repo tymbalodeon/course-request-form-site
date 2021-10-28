@@ -1,7 +1,7 @@
 from django.conf import settings
-from django.conf.urls import include, url
+from django.conf.urls import include
 from django.contrib.auth.views import LoginView, LogoutView
-from django.urls import path
+from django.urls import path, re_path
 from django.views.generic.base import TemplateView
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.routers import DefaultRouter
@@ -53,12 +53,12 @@ router.register(r"canvassites", CanvasSiteViewSet)
 urlpatterns = [
     path("siterequest/", emergency_redirect),
     path("contact/googleform/", google_form),
-    url("admin/process_requests/", process_requests),
-    url("admin/view_requests/", view_requests),
-    url("admin/view_canceled_SRS/", view_canceled_SRS),
-    url("admin/delete_canceled_requests/", delete_canceled_requests),
-    url("admin/view_deleted_requests/", view_deleted_requests),
-    url("quickconfig/", quick_config),
+    re_path("admin/process_requests/", process_requests),
+    re_path("admin/view_requests/", view_requests),
+    re_path("admin/view_canceled_SRS/", view_canceled_SRS),
+    re_path("admin/delete_canceled_requests/", delete_canceled_requests),
+    re_path("admin/view_deleted_requests/", view_deleted_requests),
+    re_path("quickconfig/", quick_config),
     path(
         "documentation/",
         TemplateView.as_view(template_name="documentation.html"),
@@ -69,10 +69,10 @@ urlpatterns = [
         TemplateView.as_view(template_name="admin/user_lookup.html"),
         name="user_lookup",
     ),
-    url("courselookup/", open_data_proxy),
-    url("dwlookup/", check_data_warehouse_for_course),
-    url(r"^api/", include(router.urls)),
-    url(r"^api_doc/", schema_view),
+    re_path("courselookup/", open_data_proxy),
+    re_path("dwlookup/", check_data_warehouse_for_course),
+    re_path(r"^api/", include(router.urls)),
+    re_path(r"^api_doc/", schema_view),
     path(
         "courses/",
         CourseViewSet.as_view({"get": "list"}, renderer_classes=[TemplateHTMLRenderer]),
@@ -199,19 +199,19 @@ urlpatterns = [
         ),
         name="logout",
     ),
-    url(r"^canvasuser/(?P<username>\w+)/$", my_proxy),
+    re_path(r"^canvasuser/(?P<username>\w+)/$", my_proxy),
     path("searchcanvas/<search>/", auto_complete_canvas_course),
-    url(
+    re_path(
         r"^user-autocomplete/$",
         UserAutocomplete.as_view(),
         name="user-autocomplete",
     ),
-    url(
+    re_path(
         r"^subject-autocomplete/$",
         SubjectAutocomplete.as_view(),
         name="subject-autocomplete",
     ),
-    url(
+    re_path(
         r"^canvas_site-autocomplete/$",
         CanvasSiteAutocomplete.as_view(),
         name="canvas_site-autocomplete",
