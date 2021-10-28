@@ -31,13 +31,12 @@ _This README uses these aliases. Actual commands can be seen in the Makefile its
 
 ### Commands
 
-- To create a development admin user: `make superuser`
+- To get started for the first time: `make start` (you will be prompted to create a superuser)
 - To populate a local database with real data: `make populate` (You may get "locked for overuse"--if so, simply wait and try again later.)
   _For more information, see the files in course/management/commands/_
 - To run the application: `make run`
   - To run the application with live reloading (recommended): `make live` in one terminal and `make run` in another
 - If you make changes to your "models.py" file, you will need to run: `make migrations`
-  _This is run automatically by `make run` and `make superuser`_
 - To run a project-aware interactive python shell: `make shell`
 - To interactively query the sqlite3 database, run `make db`
   - To view tables: `.tables`
@@ -47,7 +46,7 @@ _This README uses these aliases. Actual commands can be seen in the Makefile its
     3. `pragma table_info(<table_name>)`
 
 To log in as an admin: [http://localhost:8000/admin/](http://localhost:8000/admin/)  
-To log in as a user: [http://localhost:8000/accounts/login/](http://localhost:8000/accounts/login/)
+To log in as a non-admin user: [http://localhost:8000/accounts/login/](http://localhost:8000/accounts/login/)
 
 ## Server
 
