@@ -68,7 +68,7 @@ migrations: migration migrate ## Make migrations and migrate
 mypy: ## Type-check code
 	pre-commit install && pre-commit run mypy -a
 
-populate: migrations schools subjects courses ## Populate the database with schools, subjects, and courses
+populate: schools subjects courses ## Populate the database with schools, subjects, and courses
 
 restart: migrations static ## Restart the app
 	touch /home/django/crf2/crf2/wsgi.py
@@ -86,7 +86,7 @@ shell: ## Open an app-aware python shell
 static: ## Collect static files
 	$(MANAGE) collectstatic --no-input
 
-start: install populate run ## Run everything necessary to start the project from scratch
+start: install migrations superuser populate run ## Run everything necessary to start the project from scratch
 
 subjects: ## Populate the database with subjects
 	$(MANAGE) add_subjects -o

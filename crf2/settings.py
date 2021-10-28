@@ -155,8 +155,8 @@ LOGGING = {
     "formatters": {
         "large": {
             "format": (
-                "%(asctime)s  %(levelname)s  %(process)d  %(pathname)s  %(funcName)s "
-                " %(lineno)d  %(message)s  "
+                "%(asctime)s %(levelname)s %(process)d %(pathname)s %(funcName)s"
+                " %(lineno)d %(message)s"
             )
         },
         "tiny": {"format": "%(asctime)s  %(message)s  "},

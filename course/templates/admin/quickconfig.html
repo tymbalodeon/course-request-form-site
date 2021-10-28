@@ -97,7 +97,13 @@
             <fieldset id="quickConfigResult" style="">
                 <legend>Results</legend>
                 <pre id="json" style="height:300px;">
-                    <p>{% if data %} {{data | pprint}}{% else %}no data{% endif %}</p>
+                    <p>
+                        {% if data %}
+                            {{data | pprint}}
+                        {% else %}
+                            no data
+                        {% endif %}
+                    </p>
                 </pre>
             </fieldset>
             <br>
