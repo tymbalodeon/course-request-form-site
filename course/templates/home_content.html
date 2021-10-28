@@ -11,7 +11,7 @@
             <blockquote class="show">
                 <div style="width:100%;" id="notice">
                     <p class="message">
-                        {{ data.notice.get_notice_as_markdown }}
+                        {{ data.notice.get_html }}
                         {% if staff %}
                             <a href="{%  url 'admin:course_notice_change'   data.notice.pk %}" style="float:right;"> (change this message) </a>
                         {% endif %}

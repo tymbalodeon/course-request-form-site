@@ -1,3 +1,5 @@
+from bleach import clean
+from bleach_allowlist import markdown_attrs, markdown_tags
 from django.contrib.auth.models import User
 from django.db.models import (
     CASCADE,
@@ -14,7 +16,7 @@ from django.db.models import (
     Q,
     TextField,
 )
-from django.utils.html import mark_safe
+from django.utils.safestring import mark_safe
 from markdown import markdown
 
 
@@ -28,30 +30,27 @@ class Activity(Model):
     name = CharField(max_length=40)
     abbr = CharField(max_length=3, unique=True, primary_key=True)
 
-    def __str__(self):
-        return self.abbr
-
-    def __repr__(self):
-        return self.abbr
-
-    def get_name(self):
-        return self.abbr
-
     class Meta:
+        ordering = ["abbr"]
         verbose_name = "Activity Type"
         verbose_name_plural = "Activity Types"
-        ordering = ("abbr",)
+
+    def __str__(self):
+        return self.abbr
 
 
 class School(Model):
     name = CharField(max_length=50, unique=True)
     abbreviation = CharField(max_length=10, unique=True, primary_key=True)
     visible = BooleanField(default=True)
-    opendata_abbr = CharField(max_length=2)
+    open_data_abbreviation = CharField(max_length=2)
     canvas_subaccount = IntegerField(null=True)
     form_additional_enrollments = BooleanField(
         default=True, verbose_name="Additional Enrollments Form Field"
     )
+
+    class Meta:
+        ordering = ["name"]
 
     def __str__(self):
         return f"{self.name} ({self.abbreviation})"
@@ -66,11 +65,6 @@ class School(Model):
 
         super().save(*args, **kwargs)
 
-    class Meta:
-        ordering = ("name",)
-        verbose_name = "School // Sub Account"
-        verbose_name_plural = "Schools // Sub Accounts"
-
 
 class Subject(Model):
     name = CharField(max_length=50)
@@ -80,13 +74,11 @@ class Subject(Model):
         School, related_name="subjects", on_delete=CASCADE, blank=True, null=True
     )
 
+    class Meta:
+        ordering = ["name"]
+
     def __str__(self):
         return f"{self.name} ({self.abbreviation})"
-
-    class Meta:
-        ordering = ("name",)
-        verbose_name = "Subject // Deptartment "
-        verbose_name_plural = "Subjects // Departments"
 
 
 class CanvasSite(Model):
@@ -102,19 +94,17 @@ class CanvasSite(Model):
     sis_course_id = CharField(max_length=50, blank=True, default=None, null=True)
     workflow_state = CharField(max_length=15, blank=False, default=None)
 
+    class Meta:
+        ordering = ["canvas_id"]
+
+    def __str__(self):
+        return self.name
+
     def get_owners(self):
         return "\n".join([p.username for p in self.owners.all()])
 
     def get_added_permissions(self):
         return "\n".join([p.username for p in self.added_permissions.all()])
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        ordering = ("canvas_id",)
-        verbose_name = "Canvas Site"
-        verbose_name_plural = "Canvas Sites"
 
 
 class CourseManager(Manager):
@@ -126,9 +116,7 @@ class Course(Model):
     SPRING = "A"
     SUMMER = "B"
     FALL = "C"
-
     TERM_CHOICES = ((SPRING, "Spring"), (SUMMER, "Summer"), (FALL, "Fall"))
-
     course_activity = ForeignKey(Activity, related_name="courses", on_delete=CASCADE)
     course_code = CharField(
         max_length=150, unique=True, primary_key=True, editable=False
@@ -169,12 +157,11 @@ class Course(Model):
     sections = ManyToManyField("self", blank=True, symmetrical=True, default=None)
     updated = DateTimeField(auto_now=True)
     year = CharField(max_length=4, blank=False)
+    objects = Manager()
+    CourseManager = CourseManager()
 
     class Meta:
-        ordering = (
-            "-year",
-            "course_code",
-        )
+        ordering = ["-year", "course_code"]
 
     def find_requested(self):
         if self.requested_override is True:
@@ -351,9 +338,6 @@ class Course(Model):
             ]
         )
 
-    objects = Manager()
-    CourseManager = CourseManager()
-
 
 class Notice(Model):
     creation_date = DateTimeField(auto_now_add=True)
@@ -365,20 +349,12 @@ class Notice(Model):
     class Meta:
         get_latest_by = "updated_date"
 
-    def get_notice_as_markdown(self):
-        return mark_safe(markdown(self.notice_text, safe_mode="escape"))
-
     def __str__(self):
+        return self.notice_heading
 
-        return (
-            "(#"
-            + str(self.pk)
-            + ") "
-            + self.creation_date.strftime("%m-%d-%Y")
-            + ': "'
-            + self.notice_heading
-            + '" by '
-            + self.owner.username
+    def get_html(self):
+        return mark_safe(
+            clean(markdown(self.notice_text), markdown_tags, markdown_attrs)
         )
 
 
@@ -394,7 +370,7 @@ class Request(Model):
     course_requested = OneToOneField(Course, on_delete=CASCADE, primary_key=True)
     copy_from_course = CharField(max_length=100, null=True, default=None, blank=True)
     title_override = CharField(max_length=100, null=True, default=None, blank=True)
-    lps_online = BooleanField(default=False)
+    lps_online = BooleanField(default=False, verbose_name="LPS Online")
     exclude_announcements = BooleanField(default=False)
     additional_instructions = TextField(blank=True, default=None, null=True)
     admin_additional_instructions = TextField(blank=True, default=None, null=True)
@@ -513,15 +489,16 @@ class PageContent(Model):
     markdown_text = TextField(max_length=4000)
     updated_date = DateTimeField(auto_now=True)
 
-    def get_page_as_markdown(self):
-        return mark_safe(markdown(self.markdown_text, safe_mode="escape"))
-
     def __str__(self):
         return self.location
+
+    def get_html(self):
+        return mark_safe(
+            clean(markdown(self.markdown_text), markdown_tags, markdown_attrs)
+        )
 
 
 class RequestSummary(Request):
     class Meta:
         proxy = True
-        verbose_name = "Request Summary"
-        verbose_name_plural = "Requests Summary"
+        verbose_name_plural = "Requests summaries"
