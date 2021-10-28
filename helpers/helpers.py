@@ -5,6 +5,8 @@ from pathlib import Path
 config = ConfigParser()
 config.read("config/config.ini")
 
+MAIN_ACCOUNT_ID = 96678
+
 
 def get_config_boolean_value(key, value):
     return config.getboolean(key, value)

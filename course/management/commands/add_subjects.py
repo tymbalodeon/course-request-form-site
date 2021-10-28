@@ -40,7 +40,9 @@ class Command(BaseCommand):
                     if not Subject.objects.filter(abbreviation=abbreviation).exists():
                         try:
                             school_code = Open_Data.find_school_by_subj(abbreviation)
-                            school_name = School.objects.get(opendata_abbr=school_code)
+                            school_name = School.objects.get(
+                                open_data_abbreviation=school_code
+                            )
                             Subject.objects.update_or_create(
                                 abbreviation=abbreviation,
                                 defaults={

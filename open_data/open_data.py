@@ -1,7 +1,7 @@
 import requests
 
 
-class OpenData(object):
+class OpenData:
     def __init__(self, base_url, id, key):
         self.headers = {"Authorization-Bearer": id, "Authorization-Token": key}
         self.base_url = base_url
@@ -29,10 +29,9 @@ class OpenData(object):
         self.add_param("page_number", current + 1)
         result_data, service_meta = self.call_api(only_data=False)
 
-        if service_meta["current_page_number"] == current + 1:
-            return result_data
-        else:
-            return None
+        return (
+            result_data if service_meta["current_page_number"] == current + 1 else None
+        )
 
     def call_api(self, only_data=True):
         url = f"{self.base_url}{self.uri}"
@@ -56,10 +55,9 @@ class OpenData(object):
         else:
             result_data = response_json["result_data"]
 
-        if only_data:
-            return result_data
-        else:
-            return result_data, response_json["service_meta"]
+        return (
+            result_data if only_data else (result_data, response_json["service_meta"])
+        )
 
     def get_available_terms(self):
         url = f"{self.base_url}course_section_search_parameters/"
@@ -90,6 +88,7 @@ class OpenData(object):
     def get_available_subj(self):
         url = f"{self.base_url}course_section_search_parameters/"
         response = requests.get(url, headers=self.headers).json()
+        result = {}
 
         try:
             result = (
@@ -98,6 +97,6 @@ class OpenData(object):
                 else response["result_data"][0]["departments_map"]
             )
         except Exception as error:
-            result = error
+            print(f"- ERROR: Something went wrong ({error})")
 
         return result

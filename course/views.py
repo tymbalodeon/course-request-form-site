@@ -62,7 +62,7 @@ from course.serializers import (
 from course.tasks import create_canvas_sites
 from course.utils import data_warehouse_lookup, update_user_courses, validate_pennkey
 from data_warehouse.data_warehouse import inspect_course
-from helpers.helpers import get_config_values
+from helpers.helpers import MAIN_ACCOUNT_ID, get_config_values
 from open_data.open_data import OpenData
 
 FIVE_OR_MORE_ALPHABETIC_CHARACTERS = r"[a-z]{5,}"
@@ -1222,7 +1222,7 @@ def auto_complete_canvas_course(request, search_results):
     if request.is_ajax():
         query = urllib.parse.unquote(search_results)
         canvas = get_canvas()
-        account = canvas.get_account(96678)
+        account = canvas.get_account(MAIN_ACCOUNT_ID)
         search_results = account.get_courses(
             search_term=query, search_by="course", sort="course_name", per_page=10
         )[:10]

@@ -1,10 +1,8 @@
 from __future__ import print_function
 
-import platform
 from configparser import ConfigParser
 from datetime import datetime
 from logging import getLogger
-from pathlib import Path
 from re import findall, sub
 from string import capwords
 
@@ -13,14 +11,6 @@ import cx_Oracle
 from course import utils
 from course.models import Activity, Course, Profile, School, Subject, User
 from open_data.open_data import OpenData
-
-if platform.system() == "Darwin":
-    lib_dir = Path.home() / "Downloads/instantclient_19_8"
-    config_dir = lib_dir / "network/admin"
-    cx_Oracle.init_oracle_client(
-        lib_dir=str(lib_dir),
-        config_dir=str(config_dir),
-    )
 
 ROMAN_NUMERAL_REGEX = (
     r"(?=[MDCLXVI].)M*(C[MD]|D?C{0,3})(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})\)?$"
@@ -287,7 +277,7 @@ def inspect_instructor(pennkey, term):
 
 
 def pull_courses(term):
-    print(") Pulling courses...")
+    print(") Pulling courses from the Data Warehouse...")
 
     term = term.upper()
     open_data = get_open_data()
@@ -345,7 +335,7 @@ def pull_courses(term):
         except Exception:
             try:
                 school_code = open_data.find_school_by_subj(subject_area)
-                school = School.objects.get(opendata_abbr=school_code)
+                school = School.objects.get(open_data_abbreviation=school_code)
                 subject = Subject.objects.create(
                     abbreviation=subject_area, name=subject_area, schools=school
                 )
@@ -367,7 +357,7 @@ def pull_courses(term):
             except Exception:
                 try:
                     school_code = open_data.find_school_by_subj(p_subj)
-                    school = School.objects.get(opendata_abbr=school_code)
+                    school = School.objects.get(open_data_abbreviation=school_code)
                     primary_subject = Subject.objects.create(
                         abbreviation=p_subj, name=p_subj, schools=school
                     )

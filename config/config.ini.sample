@@ -21,3 +21,6 @@ email = # pennkey@upenn.edu
 user = # user
 password = # password
 service = # service name from your tnsnames.ora file
+
+[cx_oracle]
+lib_dir = # path/to/instantclient

@@ -21,7 +21,7 @@ class Command(BaseCommand):
                         abbreviation=school["abbreviation"],
                         defaults={
                             "visible": school["visibility"],
-                            "opendata_abbr": school["opendata_abbr"],
+                            "open_data_abbreviation": school["open_data_abbreviation"],
                             "canvas_subaccount": school["canvas_subaccount"],
                         },
                     )
@@ -31,7 +31,7 @@ class Command(BaseCommand):
                         abbreviation=school["abbreviation"],
                         defaults={
                             "visible": school["visibility"],
-                            "opendata_abbr": school["opendata_abbr"],
+                            "open_data_abbreviation": school["open_data_abbreviation"],
                         },
                     )
 

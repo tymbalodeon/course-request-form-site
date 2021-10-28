@@ -1,5 +1,8 @@
 import os
+import platform
+from pathlib import Path
 
+import cx_Oracle
 from celery.schedules import crontab
 
 from helpers.helpers import get_config_boolean_value, get_config_value
@@ -196,3 +199,8 @@ LOGGING = {
 if DEBUG:
     INSTALLED_APPS.append("livereload")
     MIDDLEWARE.append("livereload.middleware.LiveReloadScript")
+
+if platform.system() == "Darwin":
+    lib_dir = get_config_value("cx_oracle", "lib_dir")
+    lib_dir = Path.home() / lib_dir
+    cx_Oracle.init_oracle_client(lib_dir=str(lib_dir))

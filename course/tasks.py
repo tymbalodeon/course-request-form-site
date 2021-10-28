@@ -22,6 +22,7 @@ from data_warehouse.data_warehouse import (
     delete_canceled_courses,
     pull_instructors,
 )
+from helpers.helpers import MAIN_ACCOUNT_ID
 
 LPS_ONLINE_ACCOUNT_ID = 132413
 LIBRARIAN_ROLE_ID = "1383"
@@ -491,7 +492,7 @@ def create_canvas_sites(
         )
         sis_course_id = f"SRS_{course_requested.srs_format_primary()}"
         term_id = find_term_id(
-            96678,
+            MAIN_ACCOUNT_ID,
             f"{course_requested.year}{course_requested.course_term}",
             test=test,
         )
