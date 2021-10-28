@@ -1,6 +1,7 @@
 ROOT_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 REQUIREMENTS = requirements.txt
 MANAGE = python manage.py
+LOCAL_PORT = http://localhost:8000
 YEAR := $(shell date +%Y)
 MONTH := $(shell date +%m)
 TERM := $(shell if (( $(MONTH) > 8 )); \
@@ -73,8 +74,8 @@ populate: schools subjects courses ## Populate the database with schools, subjec
 restart: migrations static ## Restart the app
 	touch /home/django/crf2/crf2/wsgi.py
 
-run: migrations ## Run the app
-	$(MANAGE) runserver
+run: ## Run the app
+	open $(LOCAL_PORT) && $(MANAGE) runserver
 
 schools: ## Populate the database with schools
 	$(MANAGE) add_schools
@@ -91,5 +92,5 @@ start: install migrations superuser populate run ## Run everything necessary to 
 subjects: ## Populate the database with subjects
 	$(MANAGE) add_subjects -o
 
-superuser: migrations ## Create a user with admin privileges
+superuser: ## Create a user with admin privileges
 	$(MANAGE) createsuperuser
