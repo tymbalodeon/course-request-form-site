@@ -34,7 +34,11 @@ courses: ## Populate the database with the current term's courses
 	$(MANAGE) add_courses -t $(YEAR)$(TERM) -odi && $(MANAGE) add_courses -t $(NEXT_YEAR)$(NEXT_TERM) -odi
 
 coverage: ## Show the coverage report
+ifdef fail-under
+	coverage run manage.py $(TEST) && coverage report --skip-covered --fail-under $(fail-under)
+else
 	coverage run manage.py $(TEST) && coverage report --skip-covered
+endif
 
 coverage-html: ## Open the coverage report in the browser
 	coverage html && open htmlcov/index.html

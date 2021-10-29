@@ -20,6 +20,7 @@ data/
 .isort.cfg
 
 course/static/log
+staticfiles/log
 
 htmlcov/
 .coverage
