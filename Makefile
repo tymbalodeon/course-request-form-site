@@ -2,6 +2,7 @@ ROOT_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 REQUIREMENTS = requirements.txt
 MANAGE = python manage.py
 LOCAL_PORT = http://localhost:8000
+TEST = test tests
 YEAR := $(shell date +%Y)
 MONTH := $(shell date +%m)
 TERM := $(shell if (( $(MONTH) > 8 )); \
@@ -33,7 +34,7 @@ courses: ## Populate the database with the current term's courses
 	$(MANAGE) add_courses -t $(YEAR)$(TERM) -odi && $(MANAGE) add_courses -t $(NEXT_YEAR)$(NEXT_TERM) -odi
 
 coverage: ## Show the coverage report
-	coverage report --skip-covered
+	coverage run manage.py $(TEST) && coverage report --skip-covered
 
 coverage-html: ## Open the coverage report in the browser
 	coverage html && open htmlcov/index.html
@@ -102,4 +103,4 @@ superuser: ## Create a user with admin privileges
 	$(MANAGE) createsuperuser
 
 test: ## Run the test suite
-	$(MANAGE) test tests -v 2
+	$(MANAGE) $(TEST) -v 2
