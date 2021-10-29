@@ -172,32 +172,18 @@ class Course(Model):
             ]
         )
 
-    def __unicode__(self):
-        return "_".join(
-            [
-                self.course_subject.abbreviation,
-                self.course_number,
-                self.course_section,
-                self.year,
-                self.course_term,
-            ]
-        )
-
     def find_requested(self):
         if self.requested_override is True:
             return True
         else:
-            multi_section_request = self.multisection_request
-            crosslisted_request = self.crosslisted_request
-
             try:
                 request = Request.objects.get(course_requested=self.course_code)
             except Exception:
                 request = None
 
-            exists = request or multi_section_request or crosslisted_request
-
-            return bool(exists)
+            return bool(
+                request or self.multisection_request or self.crosslisted_request
+            )
 
     def set_requested(self, requested):
         self.requested = requested

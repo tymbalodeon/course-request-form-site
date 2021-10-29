@@ -93,7 +93,6 @@ class CourseTest(TestCase):
             name=SUBJECT_NAME, abbreviation=SUBJECT_ABBREVIATION
         )
         activity = Activity.objects.create(name=ACTIVITY_NAME, abbr=ACTIVITY_ABBR)
-        print(self.course_code)
         Course.objects.create(
             course_code=self.course_code,
             course_subject=subject,
@@ -164,7 +163,7 @@ class SchoolTest(TestCase):
     def test_get_subjects(self):
         school = School.objects.get(name=SCHOOL_NAME)
         subjects = Subject.objects.filter(schools=school)
-        self.assertQuerysetEqual(school.get_subjects(), subjects, transform=lambda x: x)
+        self.assertQuerysetEqual(school.subjects.all(), subjects, transform=lambda x: x)
 
     def test_save(self):
         def get_school_and_subject():
