@@ -3,6 +3,7 @@ REQUIREMENTS = requirements.txt
 MANAGE = python manage.py
 LOCAL_PORT = http://localhost:8000
 TEST = test tests
+COVERAGE = coverage run manage.py $(TEST) && coverage report --skip-covered --sort=cover
 YEAR := $(shell date +%Y)
 MONTH := $(shell date +%m)
 TERM := $(shell if (( $(MONTH) > 8 )); \
@@ -35,9 +36,9 @@ courses: ## Populate the database with the current term's courses
 
 coverage: ## Show the coverage report
 ifdef fail-under
-	coverage run manage.py $(TEST) && coverage report --skip-covered --fail-under $(fail-under)
+	$(COVERAGE) --fail-under $(fail-under)
 else
-	coverage run manage.py $(TEST) && coverage report --skip-covered
+	$(COVERAGE)
 endif
 
 coverage-html: ## Open the coverage report in the browser
