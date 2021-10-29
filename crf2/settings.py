@@ -195,8 +195,7 @@ if DEBUG:
     MIDDLEWARE.append("livereload.middleware.LiveReloadScript")
 
     if platform.system() == "Darwin":
-        lib_dir = get_config_value("cx_oracle", "lib_dir")
-        lib_dir = Path.home() / lib_dir
+        lib_dir = Path.home() / get_config_value("cx_oracle", "lib_dir")
         cx_Oracle.init_oracle_client(lib_dir=str(lib_dir))
 else:
     MIDDLEWARE += ["django.contrib.auth.middleware.RemoteUserMiddleware"]
