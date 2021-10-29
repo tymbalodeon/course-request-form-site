@@ -162,6 +162,27 @@ class Course(Model):
     class Meta:
         ordering = ["-year", "course_code"]
 
+    def __str__(self):
+        return "_".join(
+            [
+                self.course_subject.abbreviation,
+                self.course_number,
+                self.course_section,
+                self.year + self.course_term,
+            ]
+        )
+
+    def __unicode__(self):
+        return "_".join(
+            [
+                self.course_subject.abbreviation,
+                self.course_number,
+                self.course_section,
+                self.year,
+                self.course_term,
+            ]
+        )
+
     def find_requested(self):
         if self.requested_override is True:
             return True
@@ -315,27 +336,6 @@ class Course(Model):
                 return f"{subject} {number}-{section} {year_and_term}"
         else:
             return self.srs_format()
-
-    def __str__(self):
-        return "_".join(
-            [
-                self.course_subject.abbreviation,
-                self.course_number,
-                self.course_section,
-                self.year + self.course_term,
-            ]
-        )
-
-    def __unicode__(self):
-        return "_".join(
-            [
-                self.course_subject.abbreviation,
-                self.course_number,
-                self.course_section,
-                self.year,
-                self.course_term,
-            ]
-        )
 
 
 class Notice(Model):
