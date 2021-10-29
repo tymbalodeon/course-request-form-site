@@ -111,12 +111,6 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 30,
 }
 
-if not DEBUG:
-    MIDDLEWARE += ["django.contrib.auth.middleware.RemoteUserMiddleware"]
-    AUTHENTICATION_BACKENDS = [
-        "django.contrib.auth.backends.RemoteUserBackend",
-    ]
-
 DEBUG_TOOLBAR_PANELS = [
     "debug_toolbar.panels.versions.VersionsPanel",
     "debug_toolbar.panels.timer.TimerPanel",
@@ -200,7 +194,12 @@ if DEBUG:
     INSTALLED_APPS.append("livereload")
     MIDDLEWARE.append("livereload.middleware.LiveReloadScript")
 
-if platform.system() == "Darwin":
-    lib_dir = get_config_value("cx_oracle", "lib_dir")
-    lib_dir = Path.home() / lib_dir
-    cx_Oracle.init_oracle_client(lib_dir=str(lib_dir))
+    if platform.system() == "Darwin":
+        lib_dir = get_config_value("cx_oracle", "lib_dir")
+        lib_dir = Path.home() / lib_dir
+        cx_Oracle.init_oracle_client(lib_dir=str(lib_dir))
+else:
+    MIDDLEWARE += ["django.contrib.auth.middleware.RemoteUserMiddleware"]
+    AUTHENTICATION_BACKENDS = [
+        "django.contrib.auth.backends.RemoteUserBackend",
+    ]

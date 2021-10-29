@@ -32,6 +32,12 @@ check: ## Check for problems
 courses: ## Populate the database with the current term's courses
 	$(MANAGE) add_courses -t $(YEAR)$(TERM) -odi && $(MANAGE) add_courses -t $(NEXT_YEAR)$(NEXT_TERM) -odi
 
+coverage: ## Show the coverage report
+	coverage report --skip-covered
+
+coverage-html: ## Open the coverage report in the browser
+	coverage html && open htmlcov/index.html
+
 db: ## Open the database shell
 	$(MANAGE) dbshell
 

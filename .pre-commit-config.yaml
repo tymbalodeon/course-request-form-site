@@ -25,6 +25,20 @@ repos:
           - types-bleach==4.1.1
   - repo: local
     hooks:
+      - id: django-migrate
+        name: django-migrate
+        entry: make migrations
+        language: system
+        pass_filenames: false
+  - repo: local
+    hooks:
+      - id: django-collectstatic
+        name: django-collectstatic
+        entry: make static
+        language: system
+        pass_filenames: false
+  - repo: local
+    hooks:
       - id: django-check
         name: django-check
         entry: python manage.py check
@@ -34,6 +48,6 @@ repos:
     hooks:
       - id: django-test
         name: django-test
-        entry: python manage.py test tests
+        entry: make test
         language: system
         pass_filenames: false
