@@ -32,8 +32,7 @@ class Activity(Model):
 
     class Meta:
         ordering = ["abbr"]
-        verbose_name = "Activity Type"
-        verbose_name_plural = "Activity Types"
+        verbose_name_plural = "Activites"
 
     def __str__(self):
         return self.abbr
@@ -101,10 +100,10 @@ class CanvasSite(Model):
         return self.name
 
     def get_owners(self):
-        return "\n".join([p.username for p in self.owners.all()])
+        return "\n".join([owner.username for owner in self.owners.all()])
 
     def get_added_permissions(self):
-        return "\n".join([p.username for p in self.added_permissions.all()])
+        return "\n".join([owner.username for owner in self.added_permissions.all()])
 
 
 class CourseManager(Manager):
