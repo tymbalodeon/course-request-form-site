@@ -1,4 +1,3 @@
-import os
 import platform
 from pathlib import Path
 
@@ -7,7 +6,7 @@ from celery.schedules import crontab
 
 from helpers.helpers import get_config_boolean_value, get_config_value
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 SECRET_KEY = get_config_value("django", "secret_key", raw=True)
 DEBUG = get_config_boolean_value("django", "debug")
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
@@ -15,7 +14,7 @@ CANVAS_ENVIRONMENT = "PRODUCTION"
 ALLOWED_HOSTS = ["*", "localhost"]
 INTERNAL_IPS = ["127.0.0.1"]
 STATIC_URL = "/static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATIC_ROOT = BASE_DIR / "staticfiles"
 LOGOUT_REDIRECT_URL = (
     "/Shibboleth.sso/Logout?return=https://idp.pennkey.upenn.edu/logout"
 )
@@ -59,7 +58,7 @@ ROOT_URLCONF = "crf2.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, "templates")],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -76,7 +75,7 @@ WSGI_APPLICATION = "crf2.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
+        "NAME": str(BASE_DIR / "db.sqlite3"),
         "OPTIONS": {"timeout": 20},
     }
 }
