@@ -27,7 +27,7 @@ from course.models import (
     Subject,
     UpdateLog,
 )
-from course.utils import validate_pennkey
+from course.utils import get_user_by_pennkey
 
 
 class DynamicFieldsModelSerializer(ModelSerializer):
@@ -254,7 +254,7 @@ class RequestSerializer(DynamicFieldsModelSerializer):
         def check_for_crf_account(enrollments):
             for enrollment in enrollments:
                 print(f"Checking Users for {enrollment['user']}...")
-                user = validate_pennkey(enrollment["user"])
+                user = get_user_by_pennkey(enrollment["user"])
 
                 if user is None:
                     print(f"FAILED to find User {enrollment['user']}.")
@@ -279,7 +279,7 @@ class RequestSerializer(DynamicFieldsModelSerializer):
         if "additional_enrollments" in data.keys() and data["additional_enrollments"]:
             for enrollment in data["additional_enrollments"]:
                 print(f"Checking Users for {enrollment['user']}...")
-                user = validate_pennkey(enrollment["user"])
+                user = get_user_by_pennkey(enrollment["user"])
 
                 if user is None:
                     print(f"FAILED to find User {enrollment['user']}.")

@@ -60,7 +60,7 @@ from course.serializers import (
     UserSerializer,
 )
 from course.tasks import create_canvas_sites
-from course.utils import update_user_courses, validate_pennkey
+from course.utils import get_user_by_pennkey, update_user_courses
 from data_warehouse.data_warehouse import get_course, get_staff_account
 from helpers.helpers import MAIN_ACCOUNT_ID, get_config_values
 from open_data.open_data import OpenData
@@ -1044,7 +1044,7 @@ class HomePage(APIView, UserPassesTestMixin):
             on_behalf_of = request.data["on_behalf_of"].lower()
 
             if on_behalf_of:
-                lookup_user = validate_pennkey(on_behalf_of)
+                lookup_user = get_user_by_pennkey(on_behalf_of)
 
                 if lookup_user is None:
                     messages.error(
@@ -1385,7 +1385,7 @@ def quick_config(request):
             if not pennkey:
                 data["Info"]["Errors"] = "please set pennkey"
             else:
-                user = validate_pennkey(pennkey)
+                user = get_user_by_pennkey(pennkey)
 
                 if not user:
                     data["Info"]["Errors"] = f"failed to find user {pennkey} in DW"
