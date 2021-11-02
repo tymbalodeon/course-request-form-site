@@ -12,12 +12,11 @@ from helpers.helpers import (
     separate_year_and_term,
 )
 
-username = get_config_username()
-OWNER = User.objects.get(username=username)
+OWNER = User.objects.get(username=get_config_username())
 LOG_PATH = "/home/django/crf2/data/bulk_creation_log.csv"
 
 
-def get_requested_or_unrequested_courses(
+def get_courses(
     year_and_term, school_abbreviation, requested=False, exclude_crosslist=True
 ):
     requested_display = "requested" if requested else "unrequested"
@@ -52,7 +51,7 @@ def get_requested_or_unrequested_courses(
 
 
 def group_sections(year_and_term, school):
-    courses = get_requested_or_unrequested_courses(year_and_term, school)
+    courses = get_courses(year_and_term, school)
     all_sections = set()
     SECTIONS = dict()
 
@@ -127,9 +126,7 @@ def write_courses(year_and_term, school_abbreviation):
     3. Unrequested unique course numbers consolidated
     4. Unrequested unique course numbers consolidated with no Canvas site
     """
-    unrequested_courses = get_requested_or_unrequested_courses(
-        year_and_term, school_abbreviation
-    )
+    unrequested_courses = get_courses(year_and_term, school_abbreviation)
 
     print(") Checking unrequested courses for existing sites..")
 
@@ -238,12 +235,8 @@ def write_request_statuses(year_and_term, school_abbreviation, verbose=True):
 
         return [str(item) for item in row]
 
-    unrequested_courses = get_requested_or_unrequested_courses(
-        year_and_term, school_abbreviation
-    )
-    requested_courses = get_requested_or_unrequested_courses(
-        year_and_term, school_abbreviation, requested=True
-    )
+    unrequested_courses = get_courses(year_and_term, school_abbreviation)
+    requested_courses = get_courses(year_and_term, school_abbreviation, requested=True)
 
     print(") Finding request objects for requested courses...")
 
