@@ -324,7 +324,6 @@ def pull_courses(term):
         activity,
         title,
     ) in cursor:
-
         course_code = course_code.replace(" ", "")
         subject_area = subject_area.replace(" ", "")
         xc_code = xc_code.replace(" ", "")
