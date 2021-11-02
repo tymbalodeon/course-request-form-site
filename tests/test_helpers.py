@@ -13,9 +13,6 @@ class HelpersTest(TestCase):
     year_and_term = f"{year}{term}"
     data_directory_name = "test_data"
 
-    def setUp(self):
-        pass
-
     def test_separate_year_and_term(self):
         year, term = separate_year_and_term(self.year_and_term)
         self.assertEqual(year, self.year)
