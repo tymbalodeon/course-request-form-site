@@ -1,0 +1,6 @@
+[report]
+omit = manage.py
+exclude_lines =
+              pragma: no cover
+              if DEBUG:
+              if settings.DEBUG:

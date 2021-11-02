@@ -5,7 +5,11 @@ from pprint import PrettyPrinter
 from django.db.models import Q
 
 from course.models import Request, School
-from helpers.helpers import get_data_directory, separate_year_and_term
+from helpers.helpers import (
+    DATA_DIRECTORY_NAME,
+    get_data_directory,
+    separate_year_and_term,
+)
 
 CURRENT_MONTH = datetime.now().month
 SCHOOLS = list(School.objects.all())
@@ -111,7 +115,7 @@ def write_requests(requests, individual_path, bulk_created_path):
 
 
 def write_requests_summary(year_and_term, start_month=5, verbose=False):
-    DATA_DIRECTORY = get_data_directory()
+    DATA_DIRECTORY = get_data_directory(DATA_DIRECTORY_NAME)
     file_path = DATA_DIRECTORY / f"{year_and_term}_requests_summary.csv"
     individual_path = DATA_DIRECTORY / f"{year_and_term}_individual_requests.csv"
     bulk_created_path = DATA_DIRECTORY / f"{year_and_term}_bulk_created_requests.csv"

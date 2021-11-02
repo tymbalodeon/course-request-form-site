@@ -41,7 +41,7 @@ def create_canvas_user(penn_key, penn_id, email, full_name, test=False):
 def get_user_courses(login_id):
     user = get_user_by_sis(login_id)
 
-    return user.get_courses(enrollment_type="teacher") if user else None
+    return user.get_courses(enrollment_type="teacher") if user else []
 
 
 def find_in_canvas(sis_section_id, test=False):

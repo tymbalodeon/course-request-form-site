@@ -373,7 +373,10 @@ def delete_announcements(canvas_course, verbose):
     if verbose:
         print("\t* Deleting Announcements...")
 
-    announcements = canvas_course.get_discussion_topics(only_announcements=True)
+    announcements = [
+        announcement
+        for announcement in canvas_course.get_discussion_topics(only_announcements=True)
+    ]
 
     for announcement in announcements:
         title = announcement.title

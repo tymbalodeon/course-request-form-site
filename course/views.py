@@ -60,8 +60,8 @@ from course.serializers import (
     UserSerializer,
 )
 from course.tasks import create_canvas_sites
-from course.utils import data_warehouse_lookup, update_user_courses, validate_pennkey
-from data_warehouse.data_warehouse import inspect_course
+from course.utils import get_user_by_pennkey, update_user_courses
+from data_warehouse.data_warehouse import get_course, get_staff_account
 from helpers.helpers import MAIN_ACCOUNT_ID, get_config_values
 from open_data.open_data import OpenData
 
@@ -112,29 +112,6 @@ def print_log_message(request, object_type, action_type):
         f") Retrieving {object_type} {action_type.upper()} {search_term_display}for"
         f' "{request.user}"...'
     )
-
-
-class TestUserProfileCreated(UserPassesTestMixin):
-    def test_func(self):
-        user = User.objects.get(username=self.request.user.username)
-
-        try:
-            if user.profile:
-                return True
-        except Exception:
-            user_data = data_warehouse_lookup(penn_key=user.username)
-
-            if user_data:
-                first_name = user_data["first_name"].title()
-                last_name = user_data["last_name"].title()
-                user.update(
-                    first_name=first_name, last_name=last_name, email=user_data["email"]
-                )
-                Profile.objects.create(user=user, penn_id=user_data["penn_id"])
-
-                return True
-            else:
-                return False
 
 
 class MixedPermissionModelViewSet(ModelViewSet):
@@ -985,7 +962,7 @@ class HomePage(APIView, UserPassesTestMixin):
 
                 return True
         except Exception:
-            user_data = data_warehouse_lookup(penn_key=user.username)
+            user_data = get_staff_account(penn_key=user.username)
 
             if user_data:
                 user.first_name = user_data["first_name"].title()
@@ -1044,7 +1021,7 @@ class HomePage(APIView, UserPassesTestMixin):
             on_behalf_of = request.data["on_behalf_of"].lower()
 
             if on_behalf_of:
-                lookup_user = validate_pennkey(on_behalf_of)
+                lookup_user = get_user_by_pennkey(on_behalf_of)
 
                 if lookup_user is None:
                     messages.error(
@@ -1161,13 +1138,6 @@ class UpdateLogViewSet(MixedPermissionModelViewSet, ModelViewSet):
         return Response({"data": periodic_tasks}, template_name="admin/log_list.html")
 
 
-def google_form(request):
-    return redirect(
-        "https://docs.google.com/forms/d/e/"
-        "1FAIpQLSeyF8mcCvvA4J4jQEmeNXCgjbHd4bG_2GfXEPgtezvljLV-pw/viewform"
-    )
-
-
 def user_info(request):
     form_one = EmailChangeForm(request.user)
     form_two = UserForm()
@@ -1187,7 +1157,7 @@ def DWHSE_Proxy(request):
     return JsonResponse({})
 
 
-def my_proxy(request, username):
+def user_courses(request, username):
     print(f"Username: {username}")
 
     user = get_user_by_sis(username)
@@ -1385,7 +1355,7 @@ def quick_config(request):
             if not pennkey:
                 data["Info"]["Errors"] = "please set pennkey"
             else:
-                user = validate_pennkey(pennkey)
+                user = get_user_by_pennkey(pennkey)
 
                 if not user:
                     data["Info"]["Errors"] = f"failed to find user {pennkey} in DW"
@@ -1462,7 +1432,7 @@ def quick_config(request):
         return render(request, "admin/quickconfig.html", {"data": data})
 
 
-def open_data_proxy(request):
+def check_open_data_for_course(request):
     data = {}
     size = 0
     print(f"Course lookup failed: {request}")
@@ -1519,7 +1489,7 @@ def check_data_warehouse_for_course(request):
                 "instructors",
             ]
             course_code = request.GET.get("course_code")
-            results = inspect_course(course_code, verbose=False)
+            results = get_course(course_code, verbose=False)
 
             if results:
                 size = len(results)

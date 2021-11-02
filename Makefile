@@ -44,6 +44,9 @@ endif
 coverage-html: ## Open the coverage report in the browser
 	coverage html && open htmlcov/index.html
 
+coverage-missing: ## Show the coverage report with missing-lines
+	$(COVERAGE) -m
+
 db: ## Open the database shell
 	$(MANAGE) dbshell
 

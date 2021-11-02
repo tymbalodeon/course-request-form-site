@@ -57,7 +57,7 @@ def course_to_course_code(course):
 @register.simple_tag
 def get_markdown(location):
     return (
-        PageContent.objects.get(location=location).get_page_as_markdown()
+        PageContent.objects.get(location=location).get_html()
         if PageContent.objects.filter(location=location).exists()
         else ""
     )
