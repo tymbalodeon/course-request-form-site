@@ -61,7 +61,7 @@ from course.serializers import (
 )
 from course.tasks import create_canvas_sites
 from course.utils import data_warehouse_lookup, update_user_courses, validate_pennkey
-from data_warehouse.data_warehouse import inspect_course
+from data_warehouse.data_warehouse import get_course
 from helpers.helpers import MAIN_ACCOUNT_ID, get_config_values
 from open_data.open_data import OpenData
 
@@ -1519,7 +1519,7 @@ def check_data_warehouse_for_course(request):
                 "instructors",
             ]
             course_code = request.GET.get("course_code")
-            results = inspect_course(course_code, verbose=False)
+            results = get_course(course_code, verbose=False)
 
             if results:
                 size = len(results)

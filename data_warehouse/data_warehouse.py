@@ -94,7 +94,7 @@ def get_user(penn_id):
         return [first_name, last_name, email, pennkey]
 
 
-def inspect_course(section, term=None, verbose=True):
+def get_course(section, term=None, verbose=True):
     section = (
         section.replace("SRS_", "")
         .replace("_", "")
@@ -249,7 +249,7 @@ def inspect_course(section, term=None, verbose=True):
     return results
 
 
-def inspect_instructor(pennkey, term):
+def get_instructor(pennkey, term):
     cursor = get_cursor()
     cursor.execute(
         """
@@ -391,7 +391,6 @@ def pull_courses(term):
 
         try:
             title = format_title(title) if title else title
-
             created = Course.objects.update_or_create(
                 course_code=course_code,
                 defaults={
@@ -409,63 +408,16 @@ def pull_courses(term):
                 },
             )[1]
 
-            if created:
-                print(f"- Added course {course_code}")
-            else:
-                print(f"- Updated course {course_code}")
+            print(
+                f"- Added course {course_code}"
+                if created
+                else f"- Updated course {course_code}"
+            )
 
         except Exception as error:
-            print(
-                {
-                    "course_term": term,
-                    "course_activity": activity,
-                    "course_code": course_code,
-                    "course_subject": subject,
-                    "course_primary_subject": primary_subject,
-                    "primary_crosslist": primary_crosslist,
-                    "course_schools": school,
-                    "course_number": course_number,
-                    "course_section": section_number,
-                    "course_name": title,
-                    "year": year,
-                }
-            )
-            print(type(error), error.__cause__, error)
+            print(f"- ERROR: Failed to add or update course {course_code} ({error})")
 
     print("FINISHED")
-
-
-def create_instructors(term):
-    cursor = get_cursor()
-    cursor.execute(
-        """
-        SELECT
-            e.FIRST_NAME,
-            e.LAST_NAME,
-            e.PENNKEY,
-            e.PENN_ID,
-            e.EMAIL_ADDRESS
-        FROM dwadmin.course_section_instructor cs
-        JOIN dwadmin.employee_general_v e
-        ON cs.Instructor_Penn_Id=e.PENN_ID
-        WHERE cs.TERM= :term
-        """,
-        term=term,
-    )
-
-    for first_name, last_name, pennkey, penn_id, email in cursor:
-        try:
-            first_name = first_name.title()
-            last_name = last_name.title()
-            instructor = User.objects.create_user(
-                username=pennkey,
-                first_name=first_name,
-                last_name=last_name,
-                email=email,
-            )
-            Profile.objects.create(user=instructor, penn_id=penn_id)
-        except Exception as error:
-            print(error)
 
 
 def pull_instructors(term):
@@ -582,32 +534,6 @@ def pull_instructors(term):
     print("FINISHED")
 
 
-def available_terms():
-    cursor = get_cursor()
-    cursor.execute(
-        """
-        SELECT
-            current_academic_term,
-            next_academic_term,
-            previous_academic_term,
-            next_next_academic_term,
-            previous_previous_acad_term
-        FROM
-            dwadmin.present_period
-        """
-    )
-    for term in cursor:
-        print(term)
-
-
-def daily_sync(term):
-    pull_courses(term)
-    pull_instructors(term)
-    utils.process_canvas()
-    utils.update_sites_info(term)
-    delete_canceled_courses(term)
-
-
 def delete_canceled_courses(term):
     cursor = get_cursor()
     cursor.execute(
@@ -683,3 +609,11 @@ def delete_canceled_courses(term):
                 print(
                     "- The canceled course {course_code} doesn't exist in the CRF yet."
                 )
+
+
+def daily_sync(term):
+    pull_courses(term)
+    pull_instructors(term)
+    utils.process_canvas()
+    utils.update_sites_info(term)
+    delete_canceled_courses(term)
