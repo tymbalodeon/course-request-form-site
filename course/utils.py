@@ -2,12 +2,11 @@ from __future__ import print_function
 
 import logging
 
-import cx_Oracle
 from django.db.models import Q
 
 from canvas.api import create_canvas_user, get_canvas, get_user_by_sis, get_user_courses
 from course.models import CanvasSite, Profile, Request, User
-from helpers.helpers import get_config_values
+from data_warehouse.data_warehouse import get_staff_account
 
 logging.basicConfig(
     filename="logs/users.log",
@@ -17,71 +16,6 @@ logging.basicConfig(
 )
 
 
-def data_warehouse_lookup(penn_key=None, penn_id=None):
-    user, password, service = get_config_values("data_warehouse")
-    connection = cx_Oracle.connect(user, password, service)
-    cursor = connection.cursor()
-
-    if penn_key:
-        print(f"Checking Data Warehouse for pennkey {penn_key}...")
-
-        cursor.execute(
-            """
-            SELECT
-                first_name, last_name, email_address, penn_id
-            FROM
-                employee_general
-            WHERE
-                pennkey = :pennkey
-            """,
-            pennkey=penn_key,
-        )
-
-        for first_name, last_name, email, dw_penn_id in cursor:
-            print(
-                f'FOUND "{penn_key}": {first_name} {last_name} ({dw_penn_id})'
-                f" {email.strip()}"
-            )
-
-            return {
-                "first_name": first_name,
-                "last_name": last_name,
-                "email": email,
-                "penn_id": dw_penn_id,
-            }
-    elif penn_id:
-        print(f"Checking Data Warehouse for penn id {penn_id}...")
-
-        cursor.execute(
-            """
-            SELECT
-                first_name, last_name, email_address, pennkey
-            FROM
-                employee_general
-            WHERE
-                penn_id = :penn_id
-            """,
-            penn_id=penn_id,
-        )
-
-        for first_name, last_name, email, dw_penn_key in cursor:
-            print(
-                f'FOUND "{penn_id}": {first_name} {last_name} ({dw_penn_key})'
-                f" {email.strip()}"
-            )
-
-            return {
-                "first_name": first_name,
-                "last_name": last_name,
-                "email": email,
-                "penn_key": penn_key,
-            }
-    else:
-        print("Checking Data Warehouse: NO PENNKEY OR PENN ID PROVIDED.")
-
-    return False
-
-
 def validate_pennkey(pennkey):
     if isinstance(pennkey, str):
         pennkey = pennkey.lower()
@@ -89,7 +23,7 @@ def validate_pennkey(pennkey):
     try:
         user = User.objects.get(username=pennkey)
     except User.DoesNotExist:
-        userdata = data_warehouse_lookup(penn_key=pennkey)
+        userdata = get_staff_account(penn_key=pennkey)
 
         if userdata:
             first_name = userdata["first_name"].title()
@@ -113,7 +47,7 @@ def check_by_penn_id(PENN_ID):
     try:
         return Profile.objects.get(penn_id=PENN_ID).user
     except Exception:
-        user_data = data_warehouse_lookup(penn_id=PENN_ID)
+        user_data = get_staff_account(penn_id=PENN_ID)
 
         if user_data:
             first_name = user_data["first_name"].title()
@@ -164,7 +98,7 @@ def find_no_canvas_account():
                     user.first_name + " " + user.last_name,
                 )
             except Exception:
-                userdata = data_warehouse_lookup(penn_key=user.username)
+                userdata = get_staff_account(penn_key=user.username)
 
                 if userdata:
                     Profile.objects.create(user=user, penn_id=userdata["penn_id"])

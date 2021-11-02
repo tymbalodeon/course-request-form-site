@@ -60,8 +60,8 @@ from course.serializers import (
     UserSerializer,
 )
 from course.tasks import create_canvas_sites
-from course.utils import data_warehouse_lookup, update_user_courses, validate_pennkey
-from data_warehouse.data_warehouse import get_course
+from course.utils import update_user_courses, validate_pennkey
+from data_warehouse.data_warehouse import get_course, get_staff_account
 from helpers.helpers import MAIN_ACCOUNT_ID, get_config_values
 from open_data.open_data import OpenData
 
@@ -122,7 +122,7 @@ class TestUserProfileCreated(UserPassesTestMixin):
             if user.profile:
                 return True
         except Exception:
-            user_data = data_warehouse_lookup(penn_key=user.username)
+            user_data = get_staff_account(penn_key=user.username)
 
             if user_data:
                 first_name = user_data["first_name"].title()
@@ -985,7 +985,7 @@ class HomePage(APIView, UserPassesTestMixin):
 
                 return True
         except Exception:
-            user_data = data_warehouse_lookup(penn_key=user.username)
+            user_data = get_staff_account(penn_key=user.username)
 
             if user_data:
                 user.first_name = user_data["first_name"].title()

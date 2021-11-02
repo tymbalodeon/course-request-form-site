@@ -80,18 +80,67 @@ def format_title(title):
     return title
 
 
-def get_user(penn_id):
+def get_staff_account(penn_key=None, penn_id=None):
     cursor = get_cursor()
-    cursor.execute(
-        """
-        SELECT FIRST_NAME, LAST_NAME, EMAIL_ADDRESS, PENNKEY
-        FROM EMPLOYEE_GENERAL
-        WHERE PENN_ID= :penn_id """,
-        penn_id=str(penn_id),
-    )
 
-    for first_name, last_name, email, pennkey in cursor:
-        return [first_name, last_name, email, pennkey]
+    if not penn_key and not penn_id:
+        print("Checking Data Warehouse: NO PENNKEY OR PENN ID PROVIDED.")
+
+        return False
+    elif penn_key:
+        print(f"Checking Data Warehouse for pennkey {penn_key}...")
+
+        cursor.execute(
+            """
+            SELECT
+                first_name, last_name, email_address, penn_id
+            FROM
+                employee_general
+            WHERE
+                pennkey = :pennkey
+            """,
+            pennkey=penn_key,
+        )
+
+        for first_name, last_name, email, dw_penn_id in cursor:
+            print(
+                f'FOUND "{penn_key}": {first_name} {last_name} ({dw_penn_id})'
+                f" {email.strip()}"
+            )
+
+            return {
+                "first_name": first_name,
+                "last_name": last_name,
+                "email": email,
+                "penn_id": dw_penn_id,
+            }
+    elif penn_id:
+        print(f"Checking Data Warehouse for penn id {penn_id}...")
+
+        cursor.execute(
+            """
+            SELECT
+                first_name, last_name, email_address, pennkey
+            FROM
+                employee_general
+            WHERE
+                penn_id = :penn_id
+            """,
+            penn_id=penn_id,
+        )
+
+        for first_name, last_name, email, dw_penn_key in cursor:
+            print(
+                f'FOUND "{penn_id}": {first_name} {last_name} ({dw_penn_key})'
+                f" {email.strip()}"
+            )
+
+            return {
+                "first_name": first_name,
+                "last_name": last_name,
+                "email": email,
+                "penn_key": penn_key,
+            }
 
 
 def get_course(section, term=None, verbose=True):
