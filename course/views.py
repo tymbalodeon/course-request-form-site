@@ -114,29 +114,6 @@ def print_log_message(request, object_type, action_type):
     )
 
 
-class TestUserProfileCreated(UserPassesTestMixin):
-    def test_func(self):
-        user = User.objects.get(username=self.request.user.username)
-
-        try:
-            if user.profile:
-                return True
-        except Exception:
-            user_data = get_staff_account(penn_key=user.username)
-
-            if user_data:
-                first_name = user_data["first_name"].title()
-                last_name = user_data["last_name"].title()
-                user.update(
-                    first_name=first_name, last_name=last_name, email=user_data["email"]
-                )
-                Profile.objects.create(user=user, penn_id=user_data["penn_id"])
-
-                return True
-            else:
-                return False
-
-
 class MixedPermissionModelViewSet(ModelViewSet):
     permission_classes_by_action: Dict[str, list] = {}
     login_url = "/accounts/login/"
@@ -1161,13 +1138,6 @@ class UpdateLogViewSet(MixedPermissionModelViewSet, ModelViewSet):
         return Response({"data": periodic_tasks}, template_name="admin/log_list.html")
 
 
-def google_form(request):
-    return redirect(
-        "https://docs.google.com/forms/d/e/"
-        "1FAIpQLSeyF8mcCvvA4J4jQEmeNXCgjbHd4bG_2GfXEPgtezvljLV-pw/viewform"
-    )
-
-
 def user_info(request):
     form_one = EmailChangeForm(request.user)
     form_two = UserForm()
@@ -1187,7 +1157,7 @@ def DWHSE_Proxy(request):
     return JsonResponse({})
 
 
-def my_proxy(request, username):
+def user_courses(request, username):
     print(f"Username: {username}")
 
     user = get_user_by_sis(username)
@@ -1462,7 +1432,7 @@ def quick_config(request):
         return render(request, "admin/quickconfig.html", {"data": data})
 
 
-def open_data_proxy(request):
+def check_open_data_for_course(request):
     data = {}
     size = 0
     print(f"Course lookup failed: {request}")
