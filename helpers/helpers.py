@@ -6,6 +6,7 @@ config = ConfigParser()
 config.read("config/config.ini")
 
 MAIN_ACCOUNT_ID = 96678
+DATA_DIRECTORY_NAME = "data"
 
 
 def get_config_boolean_value(key, value):
@@ -35,10 +36,10 @@ def separate_year_and_term(year_and_term):
     return year_and_term[:-1], year_and_term[-1]
 
 
-def get_data_directory():
-    DATA_DIRECTORY = Path.cwd() / "data"
+def get_data_directory(data_directory_name):
+    data_directory_parent = Path.cwd() / data_directory_name
 
-    if not DATA_DIRECTORY.exists():
-        mkdir(DATA_DIRECTORY)
+    if not data_directory_parent.exists():
+        mkdir(data_directory_parent)
 
-    return DATA_DIRECTORY
+    return data_directory_parent

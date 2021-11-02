@@ -7,6 +7,7 @@ from canvas.api import get_canvas
 from course.models import Course, Request, School, User
 from course.tasks import create_canvas_sites
 from helpers.helpers import (
+    DATA_DIRECTORY_NAME,
     get_config_username,
     get_data_directory,
     separate_year_and_term,
@@ -150,7 +151,7 @@ def write_courses(year_and_term, school_abbreviation):
 
     print(f"FOUND {len(siteless_consolidated_courses)} SITELESS CONSOLIDATED COURSES.")
 
-    DATA_DIRECTORY = get_data_directory()
+    DATA_DIRECTORY = get_data_directory(DATA_DIRECTORY_NAME)
 
     course_lists = {
         "unrequested_courses": unrequested_courses,
