@@ -37,14 +37,15 @@ courses: ## Populate the database with the current term's courses
 coverage: ## Show the coverage report
 ifdef fail-under
 	$(COVERAGE) --fail-under $(fail-under)
-else ifdef m
-	$(COVERAGE) -m
 else
 	$(COVERAGE)
 endif
 
 coverage-html: ## Open the coverage report in the browser
 	coverage html && open htmlcov/index.html
+
+coverage-missing: ## Show the coverage report with missing-lines
+	$(COVERAGE) -m
 
 db: ## Open the database shell
 	$(MANAGE) dbshell

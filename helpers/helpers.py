@@ -10,7 +10,7 @@ DATA_DIRECTORY_NAME = "data"
 
 
 def get_config_boolean_value(key, value):
-    return config.getboolean(key, value)
+    return config.getboolean(key, value, fallback=False)
 
 
 def get_config_value(key, value, raw=False):

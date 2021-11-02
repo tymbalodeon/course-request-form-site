@@ -198,8 +198,8 @@ if DEBUG:
         lib_dir = get_config_value("cx_oracle", "lib_dir")
         lib_dir = Path.home() / lib_dir
         cx_Oracle.init_oracle_client(lib_dir=str(lib_dir))
-else:
-    MIDDLEWARE += ["django.contrib.auth.middleware.RemoteUserMiddleware"]
+else:  # pragma: no cover
+    MIDDLEWARE.append("django.contrib.auth.middleware.RemoteUserMiddleware")
     AUTHENTICATION_BACKENDS = [
         "django.contrib.auth.backends.RemoteUserBackend",
     ]
