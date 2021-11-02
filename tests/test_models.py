@@ -93,7 +93,6 @@ class CourseTest(TestCase):
             name=SUBJECT_NAME, abbreviation=SUBJECT_ABBREVIATION
         )
         activity = Activity.objects.create(name=ACTIVITY_NAME, abbr=ACTIVITY_ABBR)
-        print(self.course_code)
         Course.objects.create(
             course_code=self.course_code,
             course_subject=subject,
