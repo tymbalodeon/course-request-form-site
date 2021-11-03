@@ -1,5 +1,4 @@
 from dal.autocomplete import ModelSelect2
-from django.contrib.auth.models import User
 from django.forms import (
     CharField,
     EmailField,
@@ -11,7 +10,7 @@ from django.forms import (
     ValidationError,
 )
 
-from .models import CanvasSite, Subject
+from .models import CanvasSite, Subject, User
 
 
 class ContactForm(Form):

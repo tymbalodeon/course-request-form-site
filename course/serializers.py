@@ -1,6 +1,5 @@
 import collections
 
-from django.contrib.auth.models import User
 from rest_framework.serializers import (
     BooleanField,
     CharField,
@@ -27,6 +26,7 @@ from .models import (
     School,
     Subject,
     UpdateLog,
+    User,
 )
 
 

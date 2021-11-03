@@ -10,7 +10,6 @@ from typing import Dict
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.mixins import UserPassesTestMixin
-from django.contrib.auth.models import User
 from django.contrib.auth.views import redirect_to_login
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
@@ -52,6 +51,7 @@ from .models import (
     School,
     Subject,
     UpdateLog,
+    User,
 )
 from .serializers import (
     AutoAddSerializer,

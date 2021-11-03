@@ -1,8 +1,7 @@
 from dal import autocomplete
-from django.contrib.auth.models import User
 from django.db.models import Q
 
-from .models import CanvasSite, Subject
+from .models import CanvasSite, Subject, User
 
 
 class UserAutocomplete(autocomplete.Select2QuerySetView):
