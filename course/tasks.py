@@ -36,6 +36,8 @@ ENROLLMENT_TYPES = {
     "librarian": "DesignerEnrollment",
 }
 
+logger = getLogger(__name__)
+
 
 @task()
 def task_nightly_sync(term):
@@ -59,9 +61,9 @@ def task_process_canvas():
 
 @task()
 def task_update_sites_info(term):
-    print(") Updating site info for {term} courses...")
+    logger.info("Updating site info for {term} courses...")
     sync_crf_canvas_sites(term)
-    print("FINISHED")
+    logger.info("FINISHED")
 
 
 @task()
@@ -91,7 +93,7 @@ def check_for_account(penn_key):
 
             return canvas_account if canvas_account else None
         except Exception as error:
-            print(f"- ERROR: Failed to create canvas account for {penn_key} ({error}).")
+            logger.error(f"Failed to create canvas account for {penn_key} ({error}).")
 
 
 def add_request_process_notes(message, request):
@@ -100,7 +102,7 @@ def add_request_process_notes(message, request):
     request.save()
 
 
-def get_school_account(request, course_requested, test, verbose):
+def get_school_account(request, course_requested, test):
     account = get_canvas_account(
         LPS_ONLINE_ACCOUNT_ID
         if request.lps_online and course_requested.course_schools.abbreviation == "SAS"
@@ -111,10 +113,7 @@ def get_school_account(request, course_requested, test, verbose):
     if not account:
         add_request_process_notes("failed to locate Canvas Account", request)
         message = "\t- ERROR: failed to locate Canvas Account"
-        getLogger("error_logger").error(message)
-
-        if verbose:
-            print(message)
+        logger.error(message)
 
     return account
 
@@ -138,7 +137,7 @@ def get_section_code(request, course_requested):
         return None
 
 
-def get_canvas_course(request, account, course, sis_course_id, test, verbose):
+def get_canvas_course(request, account, course, sis_course_id, test):
     already_exists = False
     canvas_course = None
 
@@ -155,10 +154,7 @@ def get_canvas_course(request, account, course, sis_course_id, test, verbose):
                 request,
             )
             message = f"\t- ERROR: failed to create site ({error})"
-            getLogger("error_logger").error(message)
-
-            if verbose:
-                print(message)
+            logger.error(message)
 
     return already_exists, canvas_course
 
@@ -177,7 +173,6 @@ def create_section(
     section_name,
     sis_course_id,
     additional_sections,
-    verbose,
 ):
     try:
         section = {
@@ -197,10 +192,7 @@ def create_section(
     except Exception as error:
         add_request_process_notes("failed to create section", request)
         message = f"\t- ERROR: failed to create section ({error})"
-        getLogger("error_logger").error(message)
-
-        if verbose:
-            print(message)
+        logger.error(message)
 
         return "already exists", additional_sections
 
@@ -213,7 +205,6 @@ def handle_sections(
     additional_sections,
     sections,
     test,
-    verbose,
 ):
     if sections:
         sections = [section.course_code for section in sections]
@@ -242,7 +233,6 @@ def handle_sections(
             course_title,
             sis_section,
             additional_sections,
-            verbose,
         )[1]
 
     for section in additional_sections:
@@ -315,7 +305,7 @@ def enroll_user(request, canvas_course, user, role, course_section_id, test):
             add_request_process_notes(f"failed to add user: {username}", request)
 
 
-def set_reserves(request, canvas_course, verbose):
+def set_reserves(request, canvas_course):
     try:
         tab = Tab(
             canvas_course._requester,
@@ -331,17 +321,13 @@ def set_reserves(request, canvas_course, verbose):
             add_request_process_notes("failed to configure ARES", request)
     except Exception as error:
         message = f"\t- ERROR: {error}"
-        getLogger("error_logger").error(message)
-
-        if verbose:
-            print(message)
+        logger.error(message)
 
         add_request_process_notes("failed to try to configure ARES", request)
 
 
-def delete_zoom_events(canvas_course, test, verbose):
-    if verbose:
-        print("\t* Deleting Zoom events...")
+def delete_zoom_events(canvas_course, test):
+    logger.info("\t* Deleting Zoom events...")
 
     canvas = get_canvas(test)
     course_string = f"course_{canvas_course.id}"
@@ -364,13 +350,11 @@ def delete_zoom_events(canvas_course, test, verbose):
             )
         )
 
-        if verbose:
-            print(f"\t- Event '{deleted}' deleted.")
+        logger.info(f"\t- Event '{deleted}' deleted.")
 
 
-def delete_announcements(canvas_course, verbose):
-    if verbose:
-        print("\t* Deleting Announcements...")
+def delete_announcements(canvas_course):
+    logger.info("\t* Deleting Announcements...")
 
     announcements = [
         announcement
@@ -381,23 +365,19 @@ def delete_announcements(canvas_course, verbose):
         title = announcement.title
         announcement.delete()
 
-        if verbose:
-            print(f"\t- Announcement '{title}' deleted.")
+        logger.info(f"\t- Announcement '{title}' deleted.")
 
 
-def migrate_course(canvas_course, serialized, test, verbose):
+def migrate_course(canvas_course, serialized, test):
     try:
         exclude_announcements = serialized.data.get("exclude_announcements", None)
         source_course_id = serialized.data["copy_from_course"]
-
-        if verbose:
-            announcements = " WITHOUT announcements" if exclude_announcements else ""
-            print(
-                "\t* Copying course data from course id"
-                f" {source_course_id}"
-                f"{announcements}..."
-            )
-
+        announcements = " WITHOUT announcements" if exclude_announcements else ""
+        logger.info(
+            "\t* Copying course data from course id"
+            f" {source_course_id}"
+            f"{announcements}..."
+        )
         content_migration = canvas_course.create_content_migration(
             migration_type="course_copy_importer",
             settings={"source_course_id": source_course_id},
@@ -407,25 +387,19 @@ def migrate_course(canvas_course, serialized, test, verbose):
             content_migration.get_progress().workflow_state == "queued"
             or content_migration.get_progress().workflow_state == "running"
         ):
-            if verbose:
-                print("\t* Migration running...")
+            logger.info("\t* Migration running...")
 
             time.sleep(8)
 
-        if verbose:
-            print("\t- MIGRATION COMPLETE")
+        logger.info("\t- MIGRATION COMPLETE")
 
-        delete_zoom_events(canvas_course, test, verbose)
+        delete_zoom_events(canvas_course, test)
 
         if exclude_announcements:
-            delete_announcements(canvas_course, verbose)
+            delete_announcements(canvas_course)
 
     except Exception as error:
-        message = f"\t- ERROR: {error}"
-        getLogger("error_logger").error(message)
-
-        if verbose:
-            print(message)
+        logger.error(error)
 
 
 def add_site_owners(canvas_course, canvas_site):
@@ -436,7 +410,7 @@ def add_site_owners(canvas_course, canvas_site):
             user = User.objects.get(username=instructor)
             canvas_site.owners.add(user)
         except Exception as error:
-            print(f"\t- ERROR: Failed to add {instructor} to site owners ({error})")
+            logger.error(f"Failed to add {instructor} to site owners ({error})")
 
 
 @task()
@@ -444,19 +418,16 @@ def create_canvas_sites(
     requested_courses=None,
     sections=None,
     test=False,
-    verbose=True,
 ):
-    if verbose:
-        print(") Creating Canvas sites for requested courses...")
+    logger.info("Creating Canvas sites for requested courses...")
 
     if requested_courses is None:
         requested_courses = Request.objects.filter(status="APPROVED")
 
     if not requested_courses:
-        if verbose:
-            print("SUMMARY")
-            print("- No requested courses found.")
-            print("FINISHED")
+        logger.info("SUMMARY")
+        logger.info("- No requested courses found.")
+        logger.info("FINISHED")
 
         return
 
@@ -469,10 +440,9 @@ def create_canvas_sites(
         additional_sections = list()
         course_requested = request.course_requested
 
-        if verbose:
-            print(f") Creating Canvas site for {course_requested}...")
+        logger.info(f"Creating Canvas site for {course_requested}...")
 
-        account = get_school_account(request, course_requested, test, verbose)
+        account = get_school_account(request, course_requested, test)
 
         if not account:
             continue
@@ -505,7 +475,7 @@ def create_canvas_sites(
             "term_id": term_id,
         }
         already_exists, canvas_course = get_canvas_course(
-            request, account, course, sis_course_id, test, verbose
+            request, account, course, sis_course_id, test
         )
 
         if not canvas_course:
@@ -521,7 +491,6 @@ def create_canvas_sites(
                 section_name,
                 sis_course_id,
                 additional_sections,
-                verbose,
             )
 
             if created_section == "already exists":
@@ -543,7 +512,6 @@ def create_canvas_sites(
             additional_sections,
             sections,
             test,
-            verbose,
         )
 
         for enrollment in serialized.data["additional_enrollments"]:
@@ -557,10 +525,10 @@ def create_canvas_sites(
             )
 
         if serialized.data["reserves"]:
-            set_reserves(request, canvas_course, verbose)
+            set_reserves(request, canvas_course)
 
         if serialized.data["copy_from_course"]:
-            migrate_course(canvas_course, serialized, test, verbose)
+            migrate_course(canvas_course, serialized, test)
 
         canvas_site = CanvasSite.objects.update_or_create(
             canvas_id=canvas_course.id,
@@ -577,14 +545,12 @@ def create_canvas_sites(
         request.process_notes = ""
         request.save()
 
-        if verbose:
-            print(
-                f"- UPDATED Canvas site: {canvas_course}"
-                if already_exists
-                else f"- CREATED Canvas site: {canvas_site}."
-            )
+        logger.info(
+            f"UPDATED Canvas site: {canvas_course}"
+            if already_exists
+            else f"CREATED Canvas site: {canvas_site}."
+        )
 
-    if verbose:
-        print("FINISHED")
+    logger.info("FINISHED")
 
     return True if section_already_exists else False

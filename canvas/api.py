@@ -1,9 +1,13 @@
+from logging import getLogger
+
 from canvasapi import Canvas
 from canvasapi.exceptions import CanvasException
 
 from config.config import PROD_KEY, PROD_URL, TEST_KEY, TEST_URL
 
 MAIN_ACCOUNT_ID = 96678
+
+logger = getLogger(__name__)
 
 
 def get_canvas(test=False):
@@ -31,7 +35,7 @@ def create_canvas_user(penn_key, penn_id, email, full_name, test=False):
 
         return user
     except CanvasException as error:
-        print(
+        logger.error(
             f"- ERROR: Failed to create canvas user {full_name}, {penn_key} ({error}) "
         )
 

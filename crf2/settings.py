@@ -1,3 +1,4 @@
+import os
 import platform
 from pathlib import Path
 
@@ -146,50 +147,49 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+CRF_LOGGER = {
+    "handlers": ["crf", "console"],
+    "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+    "propagate": False,
+}
+MODULES = [
+    "canvas",
+    "config",
+    "course",
+    "crf2",
+    "data_warehouse",
+    "open_data",
+    "reports",
+]
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
-        "large": {
+        "verbose": {
             "format": (
-                "%(asctime)s %(levelname)s %(process)d %(pathname)s %(funcName)s"
-                " %(lineno)d %(message)s"
+                '[%(levelname)s] %(asctime)s -- %(filename)s, "%(funcName)s",'
+                " %(lineno)d -- %(message)s"
             )
         },
-        "tiny": {"format": "%(asctime)s  %(message)s  "},
     },
+    "filters": {"require_debug_true": {"()": "django.utils.log.RequireDebugTrue"}},
     "handlers": {
-        "errors_file": {
-            "level": "ERROR",
+        "console": {
+            "level": "INFO",
+            "filters": ["require_debug_true"],
+            "class": "logging.StreamHandler",
+        },
+        "crf": {
+            "level": "INFO",
             "class": "logging.handlers.TimedRotatingFileHandler",
-            "filename": "logs/error.log",
+            "filename": "logs/crf.log",
             "when": "midnight",
             "interval": 1,
             "backupCount": 10,
-            "formatter": "large",
-        },
-        "info_file": {
-            "level": "INFO",
-            "class": "logging.handlers.TimedRotatingFileHandler",
-            "filename": "logs/info.log",
-            "when": "midnight",
-            "interval": 1,
-            "backupCount": 10,
-            "formatter": "large",
+            "formatter": "verbose",
         },
     },
-    "loggers": {
-        "error_logger": {
-            "handlers": ["errors_file"],
-            "level": "WARNING",
-            "propagate": False,
-        },
-        "info_logger": {
-            "handlers": ["info_file"],
-            "level": "INFO",
-            "propagate": False,
-        },
-    },
+    "loggers": {module: CRF_LOGGER for module in MODULES},
 }
 
 if DEBUG:

@@ -76,6 +76,8 @@ PROCESS_REQUESTS_LOG = TASKS_LOG_PATH / "processed-requests.json"
 DELETE_REQUESTS_LOG = TASKS_LOG_PATH / "deleted-courses.json"
 CHECK_CANCELED_LOG = TASKS_LOG_PATH / "canceled-courses.json"
 
+logger = getLogger(__name__)
+
 
 def get_term(index):
     if index >= 9:
@@ -110,8 +112,8 @@ def print_log_message(request, object_type, action_type):
 
     search_term_display = f'using search term "{search_term}" ' if search_term else ""
 
-    print(
-        f") Retrieving {object_type} {action_type.upper()} {search_term_display}for"
+    logger.info(
+        f"Retrieving {object_type} {action_type.upper()} {search_term_display}for"
         f' "{request.user}"...'
     )
 
@@ -127,7 +129,7 @@ class MixedPermissionModelViewSet(ModelViewSet):
                 for permission in self.permission_classes_by_action[self.action]
             ]
         except KeyError:
-            print(f"KeyError for permission: {self.action}")
+            logger.error(f"KeyError for permission: {self.action}")
 
             return [permission() for permission in self.permission_classes]
 
@@ -272,7 +274,7 @@ class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
                     "next_term": next_term,
                 }
 
-            print(response.data["paginator"].page)
+            logger.info(response.data["paginator"].page)
 
             return response
 
@@ -283,7 +285,7 @@ class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
 
         if request.accepted_renderer.format == "html":
             course_instance = self.get_object()
-            print(f"- COURSE: {course_instance}")
+            logger.info(f"- COURSE: {course_instance}")
 
             if course_instance.requested:
                 request_instance = (
@@ -498,7 +500,7 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
                     "autocompleteUser": UserForm(),
                 }
 
-            print(response.data["paginator"].page)
+            logger.info(response.data["paginator"].page)
 
             return response
 
@@ -585,7 +587,7 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
         print_log_message(request, "request", "detail")
 
         response = super(RequestViewSet, self).retrieve(request, *args, **kwargs)
-        print(f"- REQUEST: {response.data['course_requested']}")
+        logger.info(f"- REQUEST: {response.data['course_requested']}")
 
         if request.resolver_match.url_name == "UI-request-detail-success":
             return Response(
@@ -781,7 +783,7 @@ class SchoolViewSet(MixedPermissionModelViewSet, ModelViewSet):
                 response.template_name = "schools_list.html"
                 response.data = {"results": response.data, "paginator": self.paginator}
 
-            print(response.data["paginator"].page)
+            logger.info(response.data["paginator"].page)
 
             return response
 
@@ -802,7 +804,7 @@ class SchoolViewSet(MixedPermissionModelViewSet, ModelViewSet):
 
         response = super(SchoolViewSet, self).retrieve(request, *args, **kwargs)
 
-        print(f"- SCHOOL: {response.data['name']}")
+        logger.info(f"- SCHOOL: {response.data['name']}")
 
         return (
             Response({"data": response.data}, template_name="school_detail.html")
@@ -847,7 +849,7 @@ class SubjectViewSet(MixedPermissionModelViewSet, ModelViewSet):
                 response.template_name = "subjects_list.html"
                 response.data = {"results": response.data, "paginator": self.paginator}
 
-            print(response.data["paginator"].page)
+            logger.info(response.data["paginator"].page)
 
             return response
 
@@ -856,7 +858,7 @@ class SubjectViewSet(MixedPermissionModelViewSet, ModelViewSet):
 
         response = super(SubjectViewSet, self).retrieve(request, *args, **kwargs)
 
-        print(f"- SUBJECT: {response.data['name']}")
+        logger.info(f"- SUBJECT: {response.data['name']}")
 
         return (
             Response({"data": response.data}, template_name="subject_detail.html")
@@ -953,14 +955,14 @@ class HomePage(APIView, UserPassesTestMixin):
 
     permission_classes = (permissions.IsAuthenticated,)
 
-    def test_func(self):
+    def check_if_user_exists(self):
         user_name = self.request.user.username
-        print(f') Checking Users for "{user_name}"...')
+        logger.info(f'Checking Users for "{user_name}"...')
         user = User.objects.get(username=self.request.user.username)
 
         try:
             if user.profile:
-                print(f'- FOUND user "{user_name}".')
+                logger.info(f'FOUND user "{user_name}".')
 
                 return True
         except Exception:
@@ -973,16 +975,16 @@ class HomePage(APIView, UserPassesTestMixin):
                 Profile.objects.create(user=user, penn_id=user_data["penn_id"])
                 update_user_courses(user.username)
 
-                print(f'CREATED user "{user_name}".')
+                logger.info(f'CREATED user "{user_name}".')
 
                 return True
             else:
-                print(f'FAILED to create user "{user_name}".')
+                logger.error(f'FAILED to create user "{user_name}".')
 
                 return False
 
     def get(self, request):
-        self.test_func()
+        self.check_if_user_exists()
 
         try:
             notice = Notice.objects.latest()
@@ -1036,7 +1038,7 @@ class HomePage(APIView, UserPassesTestMixin):
                     )
 
         except KeyError as error:
-            print(f"ERROR: There was a problem setting the session ({error})")
+            logger.error(f"ERROR: There was a problem setting the session ({error})")
 
         request.session["on_behalf_of"] = on_behalf_of
 
@@ -1105,7 +1107,7 @@ class AutoAddViewSet(MixedPermissionModelViewSet, ModelViewSet):
                     "user_form": UserForm(),
                 }
 
-            print(response.data["paginator"].page)
+            logger.info(response.data["paginator"].page)
 
             return response
 
@@ -1160,7 +1162,7 @@ def DWHSE_Proxy(request):
 
 
 def user_courses(request, username):
-    print(f"Username: {username}")
+    logger.info(f"Username: {username}")
 
     user = get_user_by_sis(username)
     courses = user.get_courses(enrollment_type="teacher") if user else None
@@ -1238,7 +1240,7 @@ def process_requests(request):
         except Exception as error:
             error = str(error)
             response["error"] = error
-            getLogger("error_logger").error(error)
+            logger.error(error)
 
         response["time"] = datetime.now().strftime("%m/%d/%y %I:%M%p")
 
@@ -1437,7 +1439,7 @@ def quick_config(request):
 def check_open_data_for_course(request):
     data = {}
     size = 0
-    print(f"Course lookup failed: {request}")
+    logger.warning(f"Course lookup failed: {request}")
 
     if request.GET:
         try:
@@ -1463,7 +1465,7 @@ def check_open_data_for_course(request):
             else:
                 size = 1
         except Exception as error:
-            print(f"ERROR (OpenData): {error}")
+            logger.error(f"ERROR (OpenData): {error}")
 
     return render(request, "admin/course_lookup.html", {"data": data, "size": size})
 
@@ -1504,7 +1506,7 @@ def check_data_warehouse_for_course(request):
             else:
                 data["data"] = "COURSE NOT FOUND"
         except Exception as error:
-            print(f"ERROR (Data Warehouse): {error}")
+            logger.error(f"ERROR (Data Warehouse): {error}")
 
     return render(request, "admin/dw_lookup.html", {"data": data, "size": size})
 

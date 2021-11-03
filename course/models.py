@@ -1,3 +1,5 @@
+from logging import getLogger
+
 from bleach import clean
 from bleach_allowlist import markdown_attrs, markdown_tags
 from django.contrib.auth.models import User
@@ -18,6 +20,8 @@ from django.db.models import (
 )
 from django.utils.safestring import mark_safe
 from markdown import markdown
+
+logger = getLogger(__name__)
 
 
 class Profile(Model):
@@ -254,7 +258,7 @@ class Course(Model):
                 request = None
 
             if not request and self.requested:
-                print(f"Request NOT FOUND for {self.course_code} ({error}).")
+                logger.warning(f"Request NOT FOUND for {self.course_code} ({error}).")
 
             return request
 
