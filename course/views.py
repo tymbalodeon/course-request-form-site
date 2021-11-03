@@ -62,7 +62,7 @@ from course.serializers import (
 from course.tasks import create_canvas_sites
 from course.utils import get_user_by_pennkey, update_user_courses
 from data_warehouse.data_warehouse import get_course, get_staff_account
-from helpers.helpers import MAIN_ACCOUNT_ID, get_config_values
+from helpers.helpers import MAIN_ACCOUNT_ID, get_config_options
 from open_data.open_data import OpenData
 
 FIVE_OR_MORE_ALPHABETIC_CHARACTERS = r"[a-z]{5,}"
@@ -1442,7 +1442,7 @@ def check_open_data_for_course(request):
             course_id = request.GET.get("course_id", None)
             term = request.GET.get("term", None)
             instructor = request.GET.get("instructor", None)
-            open_data_id, key, domain = get_config_values("open_data")
+            open_data_id, key, domain = get_config_options("open_data")
             open_data = OpenData(domain, open_data_id, key)
             open_data.set_uri("course_section_search")
             open_data.add_param("course_id", course_id)

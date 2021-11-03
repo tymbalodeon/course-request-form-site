@@ -4,7 +4,7 @@ from django.core.mail import EmailMessage
 from django.template.loader import get_template
 
 from course.models import User
-from helpers.helpers import get_config_value
+from helpers.helpers import get_config_option
 
 
 def get_email(pennkey):
@@ -46,7 +46,7 @@ def course_created_canvas(context):
 
 
 def admin_lock(context):
-    admin_email = get_config_value("users", "email")
+    admin_email = get_config_option("users", "email")
     template = get_template("email/admin_lock.txt")
     content = template.render(context)
     email = EmailMessage(

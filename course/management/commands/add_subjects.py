@@ -3,7 +3,7 @@ import logging
 from django.core.management.base import BaseCommand
 
 from course.models import School, Subject
-from helpers.helpers import get_config_values
+from helpers.helpers import get_config_options
 from open_data.open_data import OpenData
 
 
@@ -23,7 +23,7 @@ class Command(BaseCommand):
 
         missing_schools = list()
         fails = 0
-        open_data_id, key, domain = get_config_values("open_data")
+        open_data_id, key, domain = get_config_options("open_data")
         Open_Data = OpenData(base_url=domain, id=open_data_id, key=key)
         subjects = Open_Data.get_available_subj()
 

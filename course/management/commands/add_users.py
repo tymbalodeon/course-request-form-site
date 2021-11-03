@@ -4,7 +4,7 @@ from django.core.management.base import BaseCommand
 from django.utils.crypto import get_random_string
 
 from course.models import Profile
-from helpers.helpers import get_config_username_and_password, get_config_values
+from helpers.helpers import get_config_options, get_config_username_and_password
 
 
 class Command(BaseCommand):
@@ -77,7 +77,7 @@ class Command(BaseCommand):
                 print(f"- FAILED to add user: {username}")
 
         if department:
-            user, password, service = get_config_values("data_warehouse")
+            user, password, service = get_config_options("data_warehouse")
             connection = cx_Oracle.connect(user, password, service)
             cursor = connection.cursor()
             cursor.execute(

@@ -4,11 +4,11 @@ from pathlib import Path
 import cx_Oracle
 from celery.schedules import crontab
 
-from helpers.helpers import get_config_boolean_value, get_config_value
+from helpers.helpers import get_config_boolean, get_config_option
 
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
-SECRET_KEY = get_config_value("django", "secret_key", raw=True)
-DEBUG = get_config_boolean_value("django", "debug")
+SECRET_KEY = get_config_option("django", "secret_key", raw=True)
+DEBUG = get_config_boolean("django", "debug")
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 CANVAS_ENVIRONMENT = "PRODUCTION"
 ALLOWED_HOSTS = ["*", "localhost"]
@@ -197,7 +197,7 @@ if DEBUG:
     MIDDLEWARE.append("livereload.middleware.LiveReloadScript")
 
     if platform.system() == "Darwin":
-        lib_dir = Path.home() / get_config_value("cx_oracle", "lib_dir")
+        lib_dir = Path.home() / get_config_option("cx_oracle", "lib_dir")
         cx_Oracle.init_oracle_client(lib_dir=str(lib_dir))
 else:  # pragma: no cover
     MIDDLEWARE.append("django.contrib.auth.middleware.RemoteUserMiddleware")
