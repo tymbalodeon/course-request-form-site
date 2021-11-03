@@ -10,9 +10,9 @@ def get_canvas(test=False):
     return Canvas(URL_TEST if test else URL_PROD, TOKEN_TEST if test else TOKEN_PROD)
 
 
-def get_user_by_sis(login_id, test=False):
+def get_canvas_account(account_id, test=False):
     try:
-        return get_canvas(test).get_user(login_id, "sis_login_id")
+        return get_canvas(test).get_account(account_id)
     except CanvasException:
         return None
 
@@ -21,7 +21,7 @@ def create_canvas_user(penn_key, penn_id, email, full_name, test=False):
     pseudonym = {"sis_user_id": penn_id, "unique_id": penn_key}
 
     try:
-        account = find_account(MAIN_ACCOUNT_ID, test=test)
+        account = get_canvas_account(MAIN_ACCOUNT_ID, test=test)
 
         if not account:
             return None
@@ -38,29 +38,22 @@ def create_canvas_user(penn_key, penn_id, email, full_name, test=False):
         return None
 
 
+def get_user_by_sis(login_id, test=False):
+    try:
+        return get_canvas(test).get_user(login_id, "sis_login_id")
+    except CanvasException:
+        return None
+
+
 def get_user_courses(login_id):
     user = get_user_by_sis(login_id)
 
     return user.get_courses(enrollment_type="teacher") if user else []
 
 
-def find_in_canvas(sis_section_id, test=False):
+def get_term_id(account_id, sis_term_id, test=False):
     try:
-        return get_canvas(test).get_section(sis_section_id, use_sis_id=True)
-    except CanvasException:
-        return None
-
-
-def find_account(account_id, test=False):
-    try:
-        return get_canvas(test).get_account(account_id)
-    except CanvasException:
-        return None
-
-
-def find_term_id(account_id, sis_term_id, test=False):
-    try:
-        account = get_canvas(test).get_account(account_id)
+        account = get_canvas_account(account_id, test=test)
         response = account._requester.request(
             "GET", f"accounts/{account_id}/terms/sis_term_id:{sis_term_id}"
         )

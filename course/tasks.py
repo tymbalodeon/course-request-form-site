@@ -9,9 +9,9 @@ from celery import task
 
 from canvas.api import (
     create_canvas_user,
-    find_account,
-    find_term_id,
     get_canvas,
+    get_canvas_account,
+    get_term_id,
     get_user_by_sis,
 )
 from course import utils
@@ -101,8 +101,8 @@ def add_request_process_notes(message, request):
     request.save()
 
 
-def get_account(request, course_requested, test, verbose):
-    account = find_account(
+def get_school_account(request, course_requested, test, verbose):
+    account = get_canvas_account(
         LPS_ONLINE_ACCOUNT_ID
         if request.lps_online and course_requested.course_schools.abbreviation == "SAS"
         else course_requested.course_schools.canvas_subaccount,
@@ -473,7 +473,7 @@ def create_canvas_sites(
         if verbose:
             print(f") Creating Canvas site for {course_requested}...")
 
-        account = get_account(request, course_requested, test, verbose)
+        account = get_school_account(request, course_requested, test, verbose)
 
         if not account:
             continue
@@ -494,7 +494,7 @@ def create_canvas_sites(
             else f"{section_code} {course_requested.course_name}"
         )
         sis_course_id = f"SRS_{course_requested.srs_format_primary()}"
-        term_id = find_term_id(
+        term_id = get_term_id(
             MAIN_ACCOUNT_ID,
             f"{course_requested.year}{course_requested.course_term}",
             test=test,
