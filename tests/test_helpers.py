@@ -4,7 +4,15 @@ from shutil import rmtree
 
 from django.test import TestCase
 
-from helpers.helpers import get_data_directory, separate_year_and_term
+from helpers.helpers import (
+    USER_SECTION,
+    get_config_email,
+    get_config_option,
+    get_config_username,
+    get_config_username_and_password,
+    get_data_directory,
+    separate_year_and_term,
+)
 
 
 class HelpersTest(TestCase):
@@ -12,6 +20,18 @@ class HelpersTest(TestCase):
     term = "A"
     year_and_term = f"{year}{term}"
     data_directory_name = "test_data"
+    username = get_config_username()
+    password = get_config_option(USER_SECTION, "password")
+    email = get_config_option(USER_SECTION, "email")
+
+    def test_get_config_username_and_password(self):
+        username, password = get_config_username_and_password()
+        self.assertEqual(username, self.username)
+        self.assertEqual(password, self.password)
+
+    def test_get_config_email(self):
+        email = get_config_email()
+        self.assertTrue(email, self.email)
 
     def test_separate_year_and_term(self):
         year, term = separate_year_and_term(self.year_and_term)
