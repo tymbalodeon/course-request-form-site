@@ -1,10 +1,15 @@
-import requests
+from requests import get
+
+from config.config import OPEN_DATA_DOMAIN, OPEN_DATA_ID, OPEN_DATA_KEY
 
 
 class OpenData:
-    def __init__(self, base_url, id, key):
-        self.headers = {"Authorization-Bearer": id, "Authorization-Token": key}
-        self.base_url = base_url
+    def __init__(self, open_data_id, key, domain):
+        self.headers = {
+            "Authorization-Bearer": open_data_id,
+            "Authorization-Token": key,
+        }
+        self.domain = domain
         self.uri = ""
         self.params = {
             "number_of_results_per_page": 30,
@@ -34,8 +39,8 @@ class OpenData:
         )
 
     def call_api(self, only_data=True):
-        url = f"{self.base_url}{self.uri}"
-        response = requests.get(url, headers=self.headers, params=self.params)
+        url = f"{self.domain}{self.uri}"
+        response = get(url, headers=self.headers, params=self.params)
         response_json = response.json()
         service_meta = response_json["service_meta"]
 
@@ -60,8 +65,8 @@ class OpenData:
         )
 
     def get_available_terms(self):
-        url = f"{self.base_url}course_section_search_parameters/"
-        response = requests.get(url, headers=self.headers).json()
+        url = f"{self.domain}course_section_search_parameters/"
+        response = get(url, headers=self.headers).json()
 
         return [*response["result_data"][0]["available_terms_map"]]
 
@@ -73,21 +78,21 @@ class OpenData:
         return self.call_api(only_data=True)
 
     def find_school_by_subj(self, subject):
-        url = f"{self.base_url}course_info/{subject}/"
+        url = f"{self.domain}course_info/{subject}/"
         params = {"results_per_page": 2}
-        response = requests.get(url, headers=self.headers, params=params).json()
+        response = get(url, headers=self.headers, params=params).json()
 
         return response["result_data"][0]["school_code"]
 
     def get_available_activity(self):
-        url = f"{self.base_url}course_section_search_parameters/"
-        response = requests.get(url, headers=self.headers).json()
+        url = f"{self.domain}course_section_search_parameters/"
+        response = get(url, headers=self.headers).json()
 
         return response["result_data"][0]["activity_map"]
 
     def get_available_subj(self):
-        url = f"{self.base_url}course_section_search_parameters/"
-        response = requests.get(url, headers=self.headers).json()
+        url = f"{self.domain}course_section_search_parameters/"
+        response = get(url, headers=self.headers).json()
         result = {}
 
         try:
@@ -100,3 +105,7 @@ class OpenData:
             print(f"- ERROR: Something went wrong ({error})")
 
         return result
+
+
+def get_open_data_connection():
+    return OpenData(OPEN_DATA_ID, OPEN_DATA_KEY, OPEN_DATA_DOMAIN)

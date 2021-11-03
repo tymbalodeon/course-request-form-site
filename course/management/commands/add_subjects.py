@@ -2,9 +2,8 @@ import logging
 
 from django.core.management.base import BaseCommand
 
-from config.config import OPEN_DATA_DOMAIN, OPEN_DATA_ID, OPEN_DATA_KEY
 from course.models import School, Subject
-from open_data.open_data import OpenData
+from open_data.open_data import get_open_data_connection
 
 
 class Command(BaseCommand):
@@ -23,8 +22,8 @@ class Command(BaseCommand):
 
         missing_schools = list()
         fails = 0
-        Open_Data = OpenData(OPEN_DATA_DOMAIN, OPEN_DATA_ID, OPEN_DATA_KEY)
-        subjects = Open_Data.get_available_subj()
+        open_data = get_open_data_connection()
+        subjects = open_data.get_available_subj()
 
         if type(subjects) != dict:
             print(f"- ERROR: {subjects}")
@@ -38,7 +37,7 @@ class Command(BaseCommand):
 
                     if not Subject.objects.filter(abbreviation=abbreviation).exists():
                         try:
-                            school_code = Open_Data.find_school_by_subj(abbreviation)
+                            school_code = open_data.find_school_by_subj(abbreviation)
                             school_name = School.objects.get(
                                 open_data_abbreviation=school_code
                             )
@@ -52,7 +51,7 @@ class Command(BaseCommand):
                             )
                             print(f"{index_display} ADDED {name} ({abbreviation}).")
                         except Exception as error:
-                            school_code = Open_Data.find_school_by_subj(abbreviation)
+                            school_code = open_data.find_school_by_subj(abbreviation)
                             missing_schools.append(school_code)
                             index_display = (
                                 f"{index_display} ERROR: FAILED to add {abbreviation}"

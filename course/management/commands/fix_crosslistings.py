@@ -1,14 +1,13 @@
 import csv
 import sys
 
-from config.config import OPEN_DATA_DOMAIN, OPEN_DATA_ID, OPEN_DATA_KEY
 from course.models import Course
-from open_data.open_data import OpenData
+from open_data.open_data import get_open_data_connection
 
 
 def find_crosslistings(year_term):
-    Open_Data = OpenData(OPEN_DATA_DOMAIN, OPEN_DATA_ID, OPEN_DATA_KEY)
-    courses = Open_Data.get_courses_by_term(year_term)
+    open_data = get_open_data_connection()
+    courses = open_data.get_courses_by_term(year_term)
     page = 1
     crosslisting_fix = list()
 
@@ -40,7 +39,7 @@ def find_crosslistings(year_term):
                     print(course["section_id"], course["crosslist_primary"])
 
         page += 1
-        courses = Open_Data.next_page()
+        courses = open_data.next_page()
 
 
 def fix_crosslistings(courses, year_and_term):

@@ -3,10 +3,10 @@ import logging
 
 from django.core.management.base import BaseCommand
 
-from config.config import OPEN_DATA_DOMAIN, OPEN_DATA_ID, OPEN_DATA_KEY
 from course.models import Activity, Course, School, Subject, User
+from course.utils import split_year_and_term
 from data_warehouse.data_warehouse import pull_courses, pull_instructors
-from open_data.open_data import OpenData
+from open_data.open_data import get_open_data_connection
 
 
 def pull_from_local_store():
@@ -41,10 +41,9 @@ def pull_from_local_store():
 def pull_from_open_data(year_and_term):
     print(") Pulling courses from Open Data...")
 
-    year = year_and_term[:-1]
-    term = year_and_term[-1]
-    Open_Data = OpenData(OPEN_DATA_DOMAIN, OPEN_DATA_ID, OPEN_DATA_KEY)
-    courses = Open_Data.get_courses_by_term(year_and_term)
+    year, term = split_year_and_term(year_and_term)
+    open_data = get_open_data_connection()
+    courses = open_data.get_courses_by_term(year_and_term)
     page = 1
 
     while courses is not None:
@@ -66,7 +65,7 @@ def pull_from_open_data(year_and_term):
                 subject = Subject.objects.get(abbreviation=course["course_department"])
             except Exception:
                 try:
-                    school_code = Open_Data.find_school_by_subj(
+                    school_code = open_data.find_school_by_subj(
                         course["course_department"]
                     )
                     school = School.objects.get(open_data_abbreviation=school_code)
@@ -90,7 +89,7 @@ def pull_from_open_data(year_and_term):
                     primary_subject = Subject.objects.get(abbreviation=primary_subject)
                 except Exception:
                     try:
-                        school_code = Open_Data.find_school_by_subj(primary_subject)
+                        school_code = open_data.find_school_by_subj(primary_subject)
                         school = School.objects.get(open_data_abbreviation=school_code)
                         primary_subject = Subject.objects.create(
                             abbreviation=primary_subject,
@@ -151,7 +150,7 @@ def pull_from_open_data(year_and_term):
                 print(f"- ERROR:{error}")
 
         page += 1
-        courses = Open_Data.next_page()
+        courses = open_data.next_page()
 
     print("FINISHED")
 
