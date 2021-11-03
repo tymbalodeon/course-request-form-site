@@ -4,11 +4,11 @@ from pathlib import Path
 import cx_Oracle
 from celery.schedules import crontab
 
-from helpers.helpers import get_config_boolean, get_config_option
+from config.config import DEBUG_VALUE, SECRET_KEY_VALUE, get_config_option
 
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
-SECRET_KEY = get_config_option("django", "secret_key", raw=True)
-DEBUG = get_config_boolean("django", "debug")
+SECRET_KEY = SECRET_KEY_VALUE
+DEBUG = DEBUG_VALUE
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 CANVAS_ENVIRONMENT = "PRODUCTION"
 ALLOWED_HOSTS = ["*", "localhost"]

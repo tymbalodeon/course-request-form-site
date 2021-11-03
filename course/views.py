@@ -34,6 +34,7 @@ from canvas.api import (
     get_canvas,
     get_user_by_sis,
 )
+from config.config import get_config_options
 from course import email_processor
 from course.forms import (
     CanvasSiteForm,
@@ -68,7 +69,6 @@ from course.serializers import (
 from course.tasks import create_canvas_sites
 from course.utils import get_user_by_pennkey, update_user_courses
 from data_warehouse.data_warehouse import get_course, get_staff_account
-from helpers.helpers import get_config_options
 from open_data.open_data import OpenData
 
 FIVE_OR_MORE_ALPHABETIC_CHARACTERS = r"[a-z]{5,}"

@@ -3,8 +3,8 @@ import logging
 from django.core.mail import EmailMessage
 from django.template.loader import get_template
 
+from config.config import get_config_option
 from course.models import User
-from helpers.helpers import get_config_option
 
 
 def get_email(pennkey):

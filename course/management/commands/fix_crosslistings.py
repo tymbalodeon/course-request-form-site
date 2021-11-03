@@ -1,8 +1,8 @@
 import csv
 import sys
 
+from config.config import get_config_options
 from course.models import Course
-from helpers.helpers import get_config_options
 from open_data.open_data import OpenData
 
 

@@ -4,15 +4,14 @@ from shutil import rmtree
 
 from django.test import TestCase
 
-from helpers.helpers import (
+from config.config import (
     USER_SECTION,
     get_config_email,
     get_config_option,
     get_config_username,
     get_config_username_and_password,
-    get_data_directory,
-    separate_year_and_term,
 )
+from helpers.helpers import get_data_directory, separate_year_and_term
 
 
 class HelpersTest(TestCase):

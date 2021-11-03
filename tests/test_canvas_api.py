@@ -9,7 +9,7 @@ from canvas.api import (
     get_user_by_sis,
     get_user_courses,
 )
-from helpers.helpers import get_config_username
+from config.config import get_config_username
 
 
 class CanvasAPITest(TestCase):
