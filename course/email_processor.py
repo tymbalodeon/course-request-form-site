@@ -1,4 +1,4 @@
-import logging
+from logging import getLogger
 
 from django.core.mail import EmailMessage
 from django.template.loader import get_template
@@ -6,6 +6,8 @@ from django.template.loader import get_template
 from config.config import EMAIL
 
 from .models import User
+
+logger = getLogger(__name__)
 
 
 def get_email(pennkey):
@@ -16,7 +18,7 @@ def get_email(pennkey):
             user_email = None
     except User.DoesNotExist:
         user_email = None
-        logging.critical(f"ERROR: Could not find {pennkey} in system.")
+        logger.critical(f"ERROR: Could not find {pennkey} in system.")
 
     return user_email
 
@@ -105,9 +107,3 @@ def added_to_request(context):
         to=[user_email] if user_email else [],
     )
     email.send()
-
-
-def main():
-    logging.basicConfig(
-        filename="course/static/logs/emails.log", format="%(asctime)s %(message)s"
-    )

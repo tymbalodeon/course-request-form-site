@@ -1,4 +1,3 @@
-from logging import DEBUG, basicConfig
 from os import mkdir
 from pathlib import Path
 
@@ -7,13 +6,6 @@ from django.db.models import Q
 from canvas.api import get_canvas, get_user_courses
 
 from .models import CanvasSite, Request, User
-
-basicConfig(
-    filename="logs/users.log",
-    format="(%(asctime)s) %(levelname)s - %(message)s",
-    level=DEBUG,
-    datefmt="%m/%d/%Y %I:%M:%S %p",
-)
 
 DATA_DIRECTORY_NAME = "data"
 
