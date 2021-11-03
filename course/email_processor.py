@@ -4,7 +4,8 @@ from django.core.mail import EmailMessage
 from django.template.loader import get_template
 
 from config.config import EMAIL
-from course.models import User
+
+from .models import User
 
 
 def get_email(pennkey):

@@ -14,7 +14,8 @@ from rest_framework.serializers import (
     ValidationError,
 )
 
-from course.models import (
+from .helpers import get_user_by_pennkey
+from .models import (
     Activity,
     AdditionalEnrollment,
     AutoAdd,
@@ -27,7 +28,6 @@ from course.models import (
     Subject,
     UpdateLog,
 )
-from course.utils import get_user_by_pennkey
 
 
 class DynamicFieldsModelSerializer(ModelSerializer):

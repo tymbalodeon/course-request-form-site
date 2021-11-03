@@ -41,7 +41,7 @@ repos:
     hooks:
       - id: django-check
         name: django-check
-        entry: python manage.py check
+        entry: make check-django
         language: system
         pass_filenames: false
   - repo: local

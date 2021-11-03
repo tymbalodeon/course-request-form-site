@@ -7,12 +7,8 @@ from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.routers import DefaultRouter
 from rest_framework_swagger.views import get_swagger_view
 
-from course.auto_complete import (
-    CanvasSiteAutocomplete,
-    SubjectAutocomplete,
-    UserAutocomplete,
-)
-from course.views import (
+from .auto_complete import CanvasSiteAutocomplete, SubjectAutocomplete, UserAutocomplete
+from .views import (
     AutoAddViewSet,
     CanvasSiteViewSet,
     CourseViewSet,

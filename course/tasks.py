@@ -13,14 +13,15 @@ from canvas.api import (
     get_term_id,
     get_user_by_sis,
 )
-from course import utils
-from course.models import CanvasSite, Course, Request, User
-from course.serializers import RequestSerializer
 from data_warehouse.data_warehouse import (
     daily_sync,
     delete_canceled_courses,
     pull_instructors,
 )
+
+from .models import CanvasSite, Course, Request, User
+from .serializers import RequestSerializer
+from .utils import process_canvas, sync_crf_canvas_sites
 
 LPS_ONLINE_ACCOUNT_ID = 132413
 LIBRARIAN_ROLE_ID = "1383"
@@ -53,13 +54,13 @@ def task_pull_instructors(term):
 
 @task()
 def task_process_canvas():
-    utils.process_canvas()
+    process_canvas()
 
 
 @task()
 def task_update_sites_info(term):
     print(") Updating site info for {term} courses...")
-    utils.sync_crf_canvas_sites(term)
+    sync_crf_canvas_sites(term)
     print("FINISHED")
 
 

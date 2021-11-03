@@ -11,7 +11,7 @@ from django.forms import (
     ValidationError,
 )
 
-from course.models import CanvasSite, Subject
+from .models import CanvasSite, Subject
 
 
 class ContactForm(Form):

@@ -35,15 +35,13 @@ from canvas.api import (
     get_user_by_sis,
 )
 from config.config import OPEN_DATA_DOMAIN, OPEN_DATA_ID, OPEN_DATA_KEY
-from course import email_processor
-from course.forms import (
-    CanvasSiteForm,
-    ContactForm,
-    EmailChangeForm,
-    SubjectForm,
-    UserForm,
-)
-from course.models import (
+from data_warehouse.data_warehouse import get_course, get_staff_account
+from open_data.open_data import OpenData
+
+from .email_processor import admin_lock, autoadd_contact, feedback
+from .forms import CanvasSiteForm, ContactForm, EmailChangeForm, SubjectForm, UserForm
+from .helpers import get_user_by_pennkey
+from .models import (
     Activity,
     AutoAdd,
     CanvasSite,
@@ -55,7 +53,7 @@ from course.models import (
     Subject,
     UpdateLog,
 )
-from course.serializers import (
+from .serializers import (
     AutoAddSerializer,
     CanvasSiteSerializer,
     CourseSerializer,
@@ -66,10 +64,8 @@ from course.serializers import (
     UpdateLogSerializer,
     UserSerializer,
 )
-from course.tasks import create_canvas_sites
-from course.utils import get_user_by_pennkey, update_user_courses
-from data_warehouse.data_warehouse import get_course, get_staff_account
-from open_data.open_data import OpenData
+from .tasks import create_canvas_sites
+from .utils import update_user_courses
 
 FIVE_OR_MORE_ALPHABETIC_CHARACTERS = r"[a-z]{5,}"
 SPRING = "A"
@@ -690,7 +686,7 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
 
         if "status" in request.data:
             if request.data["status"] == "LOCKED":
-                email_processor.admin_lock(
+                admin_lock(
                     context={
                         "request_detail_url": request.build_absolute_uri(
                             reverse(
@@ -1070,7 +1066,7 @@ class AutoAddViewSet(MixedPermissionModelViewSet, ModelViewSet):
         response = Response(
             serializer.data, status=status.HTTP_201_CREATED, headers=headers
         )
-        email_processor.autoadd_contact(
+        autoadd_contact(
             {
                 "user": serializer.data["user"],
                 "role": serializer.data["role"],
@@ -1569,7 +1565,7 @@ def contact(request):
                 "contact_email": contact_email,
                 "form_content": form_content,
             }
-            email_processor.feedback(context)
+            feedback(context)
 
             return redirect("contact")
 

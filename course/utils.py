@@ -5,8 +5,8 @@ from pathlib import Path
 from django.db.models import Q
 
 from canvas.api import get_canvas, get_user_courses
-from course.models import CanvasSite, Profile, Request, User
-from data_warehouse.data_warehouse import get_staff_account
+
+from .models import CanvasSite, Request, User
 
 basicConfig(
     filename="logs/users.log",
@@ -29,33 +29,6 @@ def get_data_directory(data_directory_name):
         mkdir(data_directory_parent)
 
     return data_directory_parent
-
-
-def get_user_by_pennkey(pennkey):
-    if isinstance(pennkey, str):
-        pennkey = pennkey.lower()
-
-    try:
-        user = User.objects.get(username=pennkey)
-    except User.DoesNotExist:
-        account_values = get_staff_account(penn_key=pennkey)
-
-        if account_values:
-            first_name = account_values["first_name"].title()
-            last_name = account_values["last_name"].title()
-            user = User.objects.create_user(
-                username=pennkey,
-                first_name=first_name,
-                last_name=last_name,
-                email=account_values["email"],
-            )
-            Profile.objects.create(user=user, penn_id=account_values["penn_id"])
-            print(f'CREATED Profile for "{pennkey}".')
-        else:
-            user = None
-            print(f'FAILED to create Profile for "{pennkey}".')
-
-    return user
 
 
 def sync_crf_canvas_sites(year_and_term):

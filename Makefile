@@ -31,6 +31,9 @@ black: ## Format code
 check: ## Check for problems
 	pre-commit run -a
 
+check-django: ## Check for Django project problems
+	$(MANAGE) check
+
 courses: ## Populate the database with the current term's courses
 	$(MANAGE) add_courses -t $(YEAR)$(TERM) -odi && $(MANAGE) add_courses -t $(NEXT_YEAR)$(NEXT_TERM) -odi
 
