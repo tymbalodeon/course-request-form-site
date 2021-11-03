@@ -664,5 +664,5 @@ def daily_sync(term):
     pull_courses(term)
     pull_instructors(term)
     utils.process_canvas()
-    utils.update_sites_info(term)
+    utils.sync_crf_canvas_sites(term)
     delete_canceled_courses(term)

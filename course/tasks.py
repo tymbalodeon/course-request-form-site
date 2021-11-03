@@ -61,7 +61,7 @@ def task_process_canvas():
 @task()
 def task_update_sites_info(term):
     print(") Updating site info for {term} courses...")
-    utils.update_sites_info(term)
+    utils.sync_crf_canvas_sites(term)
     print("FINISHED")
 
 

@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-import logging
+from logging import DEBUG, basicConfig
 
 from django.db.models import Q
 
@@ -9,10 +9,10 @@ from course.models import CanvasSite, Profile, Request, User
 from data_warehouse.data_warehouse import get_staff_account
 from helpers.helpers import separate_year_and_term
 
-logging.basicConfig(
+basicConfig(
     filename="logs/users.log",
     format="(%(asctime)s) %(levelname)s - %(message)s",
-    level=logging.DEBUG,
+    level=DEBUG,
     datefmt="%m/%d/%Y %I:%M:%S %p",
 )
 
@@ -44,7 +44,7 @@ def get_user_by_pennkey(pennkey):
     return user
 
 
-def update_sites_info(year_and_term):
+def sync_crf_canvas_sites(year_and_term):
     year, term = separate_year_and_term(year_and_term)
     canvas_sites = Request.objects.filter(~Q(canvas_instance__isnull=True)).filter(
         status="COMPLETED",
