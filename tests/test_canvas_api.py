@@ -3,12 +3,13 @@ from datetime import datetime
 from django.test import TestCase
 
 from canvas.api import (
+    MAIN_ACCOUNT_ID,
     get_canvas_account,
     get_term_id,
     get_user_by_sis,
     get_user_courses,
 )
-from helpers.helpers import MAIN_ACCOUNT_ID, get_config_username
+from helpers.helpers import get_config_username
 
 
 class CanvasAPITest(TestCase):

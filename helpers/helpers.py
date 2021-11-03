@@ -5,7 +5,6 @@ from pathlib import Path
 config = ConfigParser()
 config.read("config/config.ini")
 
-MAIN_ACCOUNT_ID = 96678
 DATA_DIRECTORY_NAME = "data"
 USER_SECTION = "user"
 

@@ -1,9 +1,10 @@
 from canvasapi import Canvas
 from canvasapi.exceptions import CanvasException
 
-from helpers.helpers import MAIN_ACCOUNT_ID, get_config_options
+from helpers.helpers import get_config_options
 
 URL_PROD, TOKEN_PROD, URL_TEST, TOKEN_TEST = get_config_options("canvas")
+MAIN_ACCOUNT_ID = 96678
 
 
 def get_canvas(test=False):

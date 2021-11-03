@@ -8,6 +8,7 @@ from canvasapi.tab import Tab
 from celery import task
 
 from canvas.api import (
+    MAIN_ACCOUNT_ID,
     create_canvas_user,
     get_canvas,
     get_canvas_account,
@@ -22,7 +23,6 @@ from data_warehouse.data_warehouse import (
     delete_canceled_courses,
     pull_instructors,
 )
-from helpers.helpers import MAIN_ACCOUNT_ID
 
 LPS_ONLINE_ACCOUNT_ID = 132413
 LIBRARIAN_ROLE_ID = "1383"
