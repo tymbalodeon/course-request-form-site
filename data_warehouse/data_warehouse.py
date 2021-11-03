@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from configparser import ConfigParser
 from datetime import datetime
 from logging import getLogger

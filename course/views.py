@@ -34,7 +34,7 @@ from canvas.api import (
     get_canvas,
     get_user_by_sis,
 )
-from config.config import get_config_options
+from config.config import OPEN_DATA_DOMAIN, OPEN_DATA_ID, OPEN_DATA_KEY
 from course import email_processor
 from course.forms import (
     CanvasSiteForm,
@@ -1448,8 +1448,7 @@ def check_open_data_for_course(request):
             course_id = request.GET.get("course_id", None)
             term = request.GET.get("term", None)
             instructor = request.GET.get("instructor", None)
-            open_data_id, key, domain = get_config_options("open_data")
-            open_data = OpenData(domain, open_data_id, key)
+            open_data = OpenData(OPEN_DATA_DOMAIN, OPEN_DATA_ID, OPEN_DATA_KEY)
             open_data.set_uri("course_section_search")
             open_data.add_param("course_id", course_id)
 

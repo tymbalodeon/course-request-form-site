@@ -2,7 +2,7 @@ import logging
 
 from django.core.management.base import BaseCommand
 
-from config.config import get_config_options
+from config.config import OPEN_DATA_DOMAIN, OPEN_DATA_ID, OPEN_DATA_KEY
 from course.models import School, Subject
 from open_data.open_data import OpenData
 
@@ -23,8 +23,7 @@ class Command(BaseCommand):
 
         missing_schools = list()
         fails = 0
-        open_data_id, key, domain = get_config_options("open_data")
-        Open_Data = OpenData(base_url=domain, id=open_data_id, key=key)
+        Open_Data = OpenData(OPEN_DATA_DOMAIN, OPEN_DATA_ID, OPEN_DATA_KEY)
         subjects = Open_Data.get_available_subj()
 
         if type(subjects) != dict:

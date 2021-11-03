@@ -2,7 +2,7 @@ from datetime import datetime
 
 from django.test import TestCase
 
-from config.config import get_config_username
+from config.config import USERNAME
 from course.models import (
     Activity,
     CanvasSite,
@@ -14,7 +14,6 @@ from course.models import (
     User,
 )
 
-USERNAME = get_config_username()
 SCHOOL_NAME = "School"
 SCHOOL_ABBREVIATION = "SCH"
 SUBJECT_NAME = "Subject"

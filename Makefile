@@ -37,6 +37,8 @@ courses: ## Populate the database with the current term's courses
 coverage: ## Show the coverage report
 ifdef fail-under
 	$(COVERAGE) --fail-under $(fail-under)
+else ifdef search
+	$(COVERAGE) -m | grep $(search)
 else
 	$(COVERAGE)
 endif

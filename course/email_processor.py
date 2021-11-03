@@ -3,7 +3,7 @@ import logging
 from django.core.mail import EmailMessage
 from django.template.loader import get_template
 
-from config.config import get_config_option
+from config.config import EMAIL
 from course.models import User
 
 
@@ -46,7 +46,7 @@ def course_created_canvas(context):
 
 
 def admin_lock(context):
-    admin_email = get_config_option("users", "email")
+    admin_email = EMAIL
     template = get_template("email/admin_lock.txt")
     content = template.render(context)
     email = EmailMessage(

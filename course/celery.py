@@ -1,10 +1,8 @@
-from __future__ import absolute_import, unicode_literals
-
-import os
+from os import environ
 
 from celery import Celery
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "crf2.settings")
+environ.setdefault("DJANGO_SETTINGS_MODULE", "crf2.settings")
 app = Celery("course")
 app.config_from_object("django.conf:settings", namespace="CELERY")
 app.autodiscover_tasks()
@@ -12,4 +10,4 @@ app.autodiscover_tasks()
 
 @app.task(bind=True)
 def debug_task(self):
-    print("Request: {0!r}".format(self.request))
+    print(f"Request: {self.request}")

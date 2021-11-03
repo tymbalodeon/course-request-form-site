@@ -3,7 +3,13 @@ from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.utils.crypto import get_random_string
 
-from config.config import get_config_options, get_config_username_and_password
+from config.config import (
+    DATA_WAREHOUSE_PASSWORD,
+    DATA_WAREHOUSE_SERVICE,
+    DATA_WAREHOUSE_USERNAME,
+    PASSWORD,
+    USERNAME,
+)
 from course.models import Profile
 
 
@@ -66,19 +72,19 @@ class Command(BaseCommand):
                     print(f"- FAILED to add user: {username}")
 
         if courseware:
-            username, password = get_config_username_and_password()
 
             try:
                 user = User.objects.create_superuser(
-                    username=username, email="", password=password
+                    username=USERNAME, email="", password=PASSWORD
                 )
                 print(f"- ADDED user: {user}")
             except Exception:
                 print(f"- FAILED to add user: {username}")
 
         if department:
-            user, password, service = get_config_options("data_warehouse")
-            connection = cx_Oracle.connect(user, password, service)
+            connection = cx_Oracle.connect(
+                DATA_WAREHOUSE_USERNAME, DATA_WAREHOUSE_PASSWORD, DATA_WAREHOUSE_SERVICE
+            )
             cursor = connection.cursor()
             cursor.execute(
                 """

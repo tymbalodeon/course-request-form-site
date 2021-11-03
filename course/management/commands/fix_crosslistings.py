@@ -1,14 +1,13 @@
 import csv
 import sys
 
-from config.config import get_config_options
+from config.config import OPEN_DATA_DOMAIN, OPEN_DATA_ID, OPEN_DATA_KEY
 from course.models import Course
 from open_data.open_data import OpenData
 
 
 def find_crosslistings(year_term):
-    open_data_id, key, domain = get_config_options("open_data")
-    Open_Data = OpenData(base_url=domain, id=open_data_id, key=key)
+    Open_Data = OpenData(OPEN_DATA_DOMAIN, OPEN_DATA_ID, OPEN_DATA_KEY)
     courses = Open_Data.get_courses_by_term(year_term)
     page = 1
     crosslisting_fix = list()

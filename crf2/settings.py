@@ -4,7 +4,7 @@ from pathlib import Path
 import cx_Oracle
 from celery.schedules import crontab
 
-from config.config import DEBUG_VALUE, SECRET_KEY_VALUE, get_config_option
+from config.config import DEBUG_VALUE, LIB_DIR, SECRET_KEY_VALUE
 
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 SECRET_KEY = SECRET_KEY_VALUE
@@ -197,7 +197,7 @@ if DEBUG:
     MIDDLEWARE.append("livereload.middleware.LiveReloadScript")
 
     if platform.system() == "Darwin":
-        lib_dir = Path.home() / get_config_option("cx_oracle", "lib_dir")
+        lib_dir = Path.home() / LIB_DIR
         cx_Oracle.init_oracle_client(lib_dir=str(lib_dir))
 else:  # pragma: no cover
     MIDDLEWARE.append("django.contrib.auth.middleware.RemoteUserMiddleware")

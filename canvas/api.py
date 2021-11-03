@@ -1,14 +1,13 @@
 from canvasapi import Canvas
 from canvasapi.exceptions import CanvasException
 
-from config.config import get_config_options
+from config.config import PROD_KEY, PROD_URL, TEST_KEY, TEST_URL
 
-URL_PROD, TOKEN_PROD, URL_TEST, TOKEN_TEST = get_config_options("canvas")
 MAIN_ACCOUNT_ID = 96678
 
 
 def get_canvas(test=False):
-    return Canvas(URL_TEST if test else URL_PROD, TOKEN_TEST if test else TOKEN_PROD)
+    return Canvas(TEST_URL if test else PROD_URL, TEST_KEY if test else PROD_KEY)
 
 
 def get_canvas_account(account_id, test=False):

@@ -1,13 +1,12 @@
-from __future__ import print_function
-
 from logging import DEBUG, basicConfig
+from os import mkdir
+from pathlib import Path
 
 from django.db.models import Q
 
 from canvas.api import get_canvas, get_user_courses
 from course.models import CanvasSite, Profile, Request, User
 from data_warehouse.data_warehouse import get_staff_account
-from helpers.helpers import separate_year_and_term
 
 basicConfig(
     filename="logs/users.log",
@@ -15,6 +14,21 @@ basicConfig(
     level=DEBUG,
     datefmt="%m/%d/%Y %I:%M:%S %p",
 )
+
+DATA_DIRECTORY_NAME = "data"
+
+
+def split_year_and_term(year_and_term):
+    return year_and_term[:-1], year_and_term[-1]
+
+
+def get_data_directory(data_directory_name):
+    data_directory_parent = Path.cwd() / data_directory_name
+
+    if not data_directory_parent.exists():
+        mkdir(data_directory_parent)
+
+    return data_directory_parent
 
 
 def get_user_by_pennkey(pennkey):
@@ -45,7 +59,7 @@ def get_user_by_pennkey(pennkey):
 
 
 def sync_crf_canvas_sites(year_and_term):
-    year, term = separate_year_and_term(year_and_term)
+    year, term = split_year_and_term(year_and_term)
     canvas_sites = Request.objects.filter(~Q(canvas_instance__isnull=True)).filter(
         status="COMPLETED",
         course_requested__year=year,

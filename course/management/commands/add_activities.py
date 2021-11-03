@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from config.config import get_config_options
+from config.config import OPEN_DATA_DOMAIN, OPEN_DATA_ID, OPEN_DATA_KEY
 from course.models import Activity
 from open_data.open_data import OpenData
 
@@ -40,8 +40,7 @@ class Command(BaseCommand):
         opendata = kwargs["open_data"]
 
         if opendata:
-            open_data_id, key, domain = get_config_options("open_data")
-            Open_Data = OpenData(base_url=domain, id=open_data_id, key=key)
+            Open_Data = OpenData(OPEN_DATA_DOMAIN, OPEN_DATA_ID, OPEN_DATA_KEY)
             activities = Open_Data.get_available_activity().items()
         else:
             activities = ACTIVITY_CHOICES

@@ -5,22 +5,18 @@ from pprint import PrettyPrinter
 from django.db.models import Q
 
 from course.models import Request, School
-from helpers.helpers import (
-    DATA_DIRECTORY_NAME,
-    get_data_directory,
-    separate_year_and_term,
-)
+from course.utils import DATA_DIRECTORY_NAME, get_data_directory, split_year_and_term
 
 CURRENT_MONTH = datetime.now().month
 SCHOOLS = list(School.objects.all())
 
 
 def get_requests(year_and_term, start_month=5):
-    year, term = separate_year_and_term(year_and_term)
+    year, term = split_year_and_term(year_and_term)
     individual_requests = Request.objects.filter(
         Q(
             course_requested__year=year,
-            course_requested__course_term=term,
+            courssplit_year_and_termrm=term,
             created__month__gte=start_month,
         )
         & ~Q(additional_instructions__contains="Request automatically generated")

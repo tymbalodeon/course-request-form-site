@@ -3,7 +3,7 @@ import logging
 
 from django.core.management.base import BaseCommand
 
-from config.config import get_config_options
+from config.config import OPEN_DATA_DOMAIN, OPEN_DATA_ID, OPEN_DATA_KEY
 from course.models import Activity, Course, School, Subject, User
 from data_warehouse.data_warehouse import pull_courses, pull_instructors
 from open_data.open_data import OpenData
@@ -43,8 +43,7 @@ def pull_from_open_data(year_and_term):
 
     year = year_and_term[:-1]
     term = year_and_term[-1]
-    open_data_id, key, domain = get_config_options("open_data")
-    Open_Data = OpenData(base_url=domain, id=open_data_id, key=key)
+    Open_Data = OpenData(OPEN_DATA_DOMAIN, OPEN_DATA_ID, OPEN_DATA_KEY)
     courses = Open_Data.get_courses_by_term(year_and_term)
     page = 1
 
