@@ -21,7 +21,7 @@ else
 NEXT_TERM = A
 NEXT_YEAR := $(shell expr $(YEAR) + 1)
 endif
-LOG_PROGRAM = '$$1==level {for (i = 4; i < 9; i++) $$i=""; gsub(/ {2,}/, " "); print $$0}'
+LOG_PROGRAM = '$$1==level {for (i = 4; i < 7; i++) $$i=""; gsub(/ {2,}/, " "); print $$0}'
 LOG_FILE = ./logs/crf.log
 
 all: help
