@@ -91,11 +91,8 @@ def get_term(index):
 def get_search_term(request):
     search_term = request.GET.get("search", None)
 
-    if search_term:
-        search_term = search_term.replace("-", "")
-
-        if not search(FIVE_OR_MORE_ALPHABETIC_CHARACTERS, search_term):
-            search_term = search_term.replace(" ", "")
+    if search_term and not search(FIVE_OR_MORE_ALPHABETIC_CHARACTERS, search_term):
+        search_term = search_term.replace(" ", "").replace("-", "").replace("_", "")
 
     return search_term
 

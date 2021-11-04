@@ -72,6 +72,9 @@ install: ## Install the dependencies from the requirements.txt file
 isort: ## Sort imports
 	isort $(ROOT_DIR)
 
+launch: ## Run the app and open the browser
+	open $(LOCAL_PORT) && $(MANAGE) runserver
+
 live: ## Start the livereload server
 	$(MANAGE) livereload
 
@@ -95,7 +98,7 @@ restart: migrations static ## Restart the app
 	touch /home/django/crf2/crf2/wsgi.py
 
 run: ## Run the app
-	open $(LOCAL_PORT) && $(MANAGE) runserver
+	$(MANAGE) runserver
 
 schools: ## Populate the database with schools
 	$(MANAGE) add_schools
