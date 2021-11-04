@@ -189,7 +189,7 @@ LOGGING = {
             "formatter": "verbose",
         },
     },
-    "loggers": {"crf2": CRF_LOGGER},
+    "loggers": {module: CRF_LOGGER for module in MODULES},
 }
 
 if DEBUG:
