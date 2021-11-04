@@ -1,6 +1,5 @@
-ROOT_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
-REQUIREMENTS = requirements.txt
 MANAGE = python manage.py
+REQUIREMENTS = requirements.txt
 LOCAL_PORT = http://localhost:8000
 TEST = test tests
 COVERAGE = coverage run manage.py $(TEST) && coverage report --skip-covered --sort=cover
@@ -22,11 +21,12 @@ else
 NEXT_TERM = A
 NEXT_YEAR := $(shell expr $(YEAR) + 1)
 endif
+LOG_PROGRAM = '$$1==level {for (i = 4; i < 9; i++) $$i=""; gsub(/ {2,}/, " "); print $$0}'
+LOG_FILE = ./logs/crf.log
 
 all: help
-
 black: ## Format code
-	black --experimental-string-processing $(ROOT_DIR)
+	black --experimental-string-processing ./
 
 check: ## Check for problems
 	pre-commit run -a
@@ -35,7 +35,8 @@ check-django: ## Check for Django project problems
 	$(MANAGE) check
 
 courses: ## Populate the database with the current term's courses
-	$(MANAGE) add_courses -t $(YEAR)$(TERM) -odi && $(MANAGE) add_courses -t $(NEXT_YEAR)$(NEXT_TERM) -odi
+	$(MANAGE) add_courses -t $(YEAR)$(TERM) -odi && \
+	$(MANAGE) add_courses -t $(NEXT_YEAR)$(NEXT_TERM) -odi
 
 coverage: ## Show the coverage report
 ifdef fail-under
@@ -56,7 +57,7 @@ db: ## Open the database shell
 	$(MANAGE) dbshell
 
 flake: ## Lint code
-	flake8 $(ROOT_DIR)
+	flake8 ./
 
 format: isort black ## Format code
 
@@ -64,13 +65,15 @@ freeze: ## Freeze the dependencies to the requirements.txt file
 	pip freeze > $(REQUIREMENTS)
 
 help: ## Display the help menu
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
+	sort | \
+	awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 install: ## Install the dependencies from the requirements.txt file
 	pip install -r $(REQUIREMENTS)
 
 isort: ## Sort imports
-	isort $(ROOT_DIR)
+	isort ./
 
 launch: ## Run the app and open the browser
 	open $(LOCAL_PORT) && $(MANAGE) runserver
@@ -78,8 +81,17 @@ launch: ## Run the app and open the browser
 live: ## Start the livereload server
 	$(MANAGE) livereload
 
-log: ## View the last 100 lines of the log file
+log-apache: ## View the last 100 lines of the apache log file
 	tail -n 100 /var/log/crf2/crf2_error.log
+
+log-info: ## View the last 100 INFO-level messages in the crf log
+	awk -v level="[INFO]" $(LOG_PROGRAM) $(LOG_FILE) | tail -n 100
+
+log-warning: ## View the last 100 WARNING-level messages in the crf log
+	awk -v level="[WARNING]" $(LOG_PROGRAM) $(LOG_FILE) | tail -n 100
+
+log-error: ## View the last 100 ERROR-level messages in the crf log
+	awk -v level="[ERROR]" $(LOG_PROGRAM) $(LOG_FILE) | tail -n 100
 
 migrate: ## Migrate the database
 	$(MANAGE) migrate
