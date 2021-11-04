@@ -8,7 +8,7 @@ import cx_Oracle
 
 from course import utils
 from course.models import Activity, Course, Profile, School, Subject, User
-from open_data.open_data import OpenData
+from open_data.open_data import get_open_data_connection
 
 ROMAN_NUMERAL_REGEX = (
     r"(?=[MDCLXVI].)M*(C[MD]|D?C{0,3})(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})\)?$"
@@ -25,14 +25,6 @@ def get_cursor():
     )
 
     return connection.cursor()
-
-
-def get_open_data():
-    config = ConfigParser()
-    config.read("config/config.ini")
-    values = dict(config.items("open_data"))
-
-    return OpenData(base_url=values["domain"], id=values["id"], key=values["key"])
 
 
 def format_title(title):
@@ -327,7 +319,7 @@ def pull_courses(term):
     print(") Pulling courses from the Data Warehouse...")
 
     term = term.upper()
-    open_data = get_open_data()
+    open_data = get_open_data_connection()
     cursor = get_cursor()
     cursor.execute(
         """
