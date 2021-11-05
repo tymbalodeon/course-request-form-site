@@ -50,21 +50,8 @@
         <br>
         <label>Canvas site</label>
         <div class="input-group mb-3">
-            {% if request_instance.copy_from_course %}
-                {% if staff %}
-                    {{ autocompleteCanvasSite.name }}
-                    {{ autocompleteCanvasSite.media }}
-                {% else %}
-                    <input name="copy_from_course" value="{{ request_instance.copy_from_course }}" type="number" class="form-control" aria-label="Canvas ID for content copy" style="width:unset;margin-bottom:8px;" disabled>
-                {% endif %}
-            {% else %}
-                {% if staff %}
-                    {{ autocompleteCanvasSite.name }}
-                    {{ autocompleteCanvasSite.media }}
-                {% else %}
-                    <input name="copy_from_course" value="" type="number" class="form-control" aria-label="Canvas ID for content copy" style="width:unset;margin-bottom:8px;" disabled>
-                {% endif %}
-            {% endif %}
+            {{ autocompleteCanvasSite.name }}
+            {{ autocompleteCanvasSite.media }}
         </div>
         <br>
         <p>
