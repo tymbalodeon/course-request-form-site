@@ -143,9 +143,9 @@
                                 {% if course.requested == True %}
                                     <a  href='{% url "UI-request-detail" pk=course.course_code %}' class="button muted-button" data-toggle="tooltip" data-placement="top" title="click to see details" style="padding: 0.35rem 0.35rem;">Requested</a>
                                 {% else %}
-                                    <button class="button" data-toggle="modal" data-target="#CourseModal" data-course="{{course.course_code}}" style="padding:0.35rem 0.35rem;">
+                                    <a type="button" class="button" href="/courses/{{course.course_code}}#RequestForm">
                                         Request
-                                    </button>
+                                    </a>
                                 {% endif %}
                             </td>
                         </tr>
