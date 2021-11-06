@@ -84,14 +84,17 @@ live: ## Start the livereload server
 log-apache: ## View the last 100 lines of the apache log file
 	tail -n 100 /var/log/crf2/crf2_error.log
 
-log-info: ## View the last 100 INFO-level messages in the crf log
+log: ## View the last 100 all messages in the crf log
+	awk -v level="[ERROR]" $(LOG_PROGRAM) $(LOG_FILE) | tail -n 100
+
+log-error: ## View the last 100 ERROR messages in the crf log
+	awk -v level="[ERROR]" $(LOG_PROGRAM) $(LOG_FILE) | tail -n 100
+
+log-info: ## View the last 100 INFO messages in the crf log
 	awk -v level="[INFO]" $(LOG_PROGRAM) $(LOG_FILE) | tail -n 100
 
-log-warning: ## View the last 100 WARNING-level messages in the crf log
+log-warning: ## View the last 100 WARNING messages in the crf log
 	awk -v level="[WARNING]" $(LOG_PROGRAM) $(LOG_FILE) | tail -n 100
-
-log-error: ## View the last 100 ERROR-level messages in the crf log
-	awk -v level="[ERROR]" $(LOG_PROGRAM) $(LOG_FILE) | tail -n 100
 
 migrate: ## Migrate the database
 	$(MANAGE) migrate
