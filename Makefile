@@ -23,6 +23,7 @@ NEXT_YEAR := $(shell expr $(YEAR) + 1)
 endif
 LOG_PROGRAM = '$$1==level {for (i = 4; i < 7; i++) $$i=""; gsub(/ {2,}/, " "); print $$0}'
 LOG_FILE = ./logs/crf.log
+TAIL = $(TAIL)
 
 all: help
 black: ## Format code
@@ -81,20 +82,20 @@ launch: ## Run the app and open the browser
 live: ## Start the livereload server
 	$(MANAGE) livereload
 
-log-apache: ## View the last 100 lines of the apache log file
-	tail -n 100 /var/log/crf2/crf2_error.log
+log-apache: ## Print the tail of the apache log file
+	$(TAIL) /var/log/crf2/crf2_error.log
 
-log: ## View the last 100 all messages in the crf log
-	awk -v level="[ERROR]" $(LOG_PROGRAM) $(LOG_FILE) | tail -n 100
+log: ## Print the tail of the crf log
+	$(TAIL) $(LOG_FILE)
 
-log-error: ## View the last 100 ERROR messages in the crf log
-	awk -v level="[ERROR]" $(LOG_PROGRAM) $(LOG_FILE) | tail -n 100
+log-error: ## Print the tail of only ERROR messages in the crf log
+	awk -v level="[ERROR]" $(LOG_PROGRAM) $(LOG_FILE) | $(TAIL)
 
-log-info: ## View the last 100 INFO messages in the crf log
-	awk -v level="[INFO]" $(LOG_PROGRAM) $(LOG_FILE) | tail -n 100
+log-info: ## Print the tail of only  INFO messages in the crf log
+	awk -v level="[INFO]" $(LOG_PROGRAM) $(LOG_FILE) | $(TAIL)
 
-log-warning: ## View the last 100 WARNING messages in the crf log
-	awk -v level="[WARNING]" $(LOG_PROGRAM) $(LOG_FILE) | tail -n 100
+log-warning: ## Print the tail of only WARNING messages in the crf log
+	awk -v level="[WARNING]" $(LOG_PROGRAM) $(LOG_FILE) | $(TAIL)
 
 migrate: ## Migrate the database
 	$(MANAGE) migrate

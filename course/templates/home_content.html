@@ -200,13 +200,14 @@
 
 {% block template_page_js %}
     <script>
-     $('#CourseModal').on('show.bs.modal', function (event) {
-         var button = $(event.relatedTarget)
-         var course = button.data('course')
-         var modal = $(this)
-         modal.find('.modal-title').text('Basic Request for ' + course)
-         modal.find(".modal-footer input[name='course_requested']").val(course)
-         modal.find(".modal-footer a").attr("href", '/courses/'+course+'#RequestForm')
+     $('#CourseModal').on('show.bs.modal', function(event) {
+         const button = $(event.relatedTarget)
+         const course = button.data('course')
+         const short_course = course.replace(/_/g, '')
+         const modal = $(this)
+         modal.find('.modal-title').text(`Quick Request for ${course}`)
+         modal.find('.modal-footer input[name="course_requested"]').val(short_course)
+         modal.find('.modal-footer a').attr('href', `/courses/${short_course}#RequestForm`)
      })
     </script>
 {% endblock %}

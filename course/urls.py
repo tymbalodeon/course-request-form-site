@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.conf.urls import include
 from django.contrib.auth.views import LoginView, LogoutView
-from django.urls import path, re_path
+from django.urls import path
 from django.views.generic.base import TemplateView
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.routers import DefaultRouter
@@ -47,12 +47,12 @@ router.register(r"autoadds", AutoAddViewSet)
 router.register(r"canvassites", CanvasSiteViewSet)
 urlpatterns = [
     path("siterequest/", emergency_redirect),
-    re_path("admin/process_requests/", process_requests),
-    re_path("admin/view_requests/", view_requests),
-    re_path("admin/view_canceled_SRS/", view_canceled_SRS),
-    re_path("admin/delete_canceled_requests/", delete_canceled_requests),
-    re_path("admin/view_deleted_requests/", view_deleted_requests),
-    re_path("quickconfig/", quick_config),
+    path("admin/process_requests/", process_requests),
+    path("admin/view_requests/", view_requests),
+    path("admin/view_canceled_SRS/", view_canceled_SRS),
+    path("admin/delete_canceled_requests/", delete_canceled_requests),
+    path("admin/view_deleted_requests/", view_deleted_requests),
+    path("quickconfig/", quick_config),
     path(
         "documentation/",
         TemplateView.as_view(template_name="documentation.html"),
@@ -63,10 +63,10 @@ urlpatterns = [
         TemplateView.as_view(template_name="admin/user_lookup.html"),
         name="user_lookup",
     ),
-    re_path("courselookup/", check_open_data_for_course),
-    re_path("dwlookup/", check_data_warehouse_for_course),
-    re_path(r"^api/", include(router.urls)),
-    re_path(r"^api_doc/", schema_view),
+    path("courselookup/", check_open_data_for_course),
+    path("dwlookup/", check_data_warehouse_for_course),
+    path("api/", include(router.urls)),
+    path("api_doc/", schema_view),
     path(
         "courses/",
         CourseViewSet.as_view({"get": "list"}, renderer_classes=[TemplateHTMLRenderer]),
@@ -165,7 +165,13 @@ urlpatterns = [
         ),
         name="UI-autoadd-list",
     ),
-    path("", HomePage.as_view(), name="home"),
+    path(
+        "",
+        HomePage.as_view(
+            {"get": "get", "post": "post"}, renderer_classes=[TemplateHTMLRenderer]
+        ),
+        name="home",
+    ),
     path("contact/", contact, name="contact"),
     path("accounts/userinfo/", user_info, name="userinfo"),
     path(
@@ -193,20 +199,16 @@ urlpatterns = [
         ),
         name="logout",
     ),
-    re_path(r"^canvasuser/(?P<username>\w+)/$", user_courses),
+    path("canvasuser/<username>/", user_courses),
     path("searchcanvas/<search>/", auto_complete_canvas_course),
-    re_path(
-        r"^user-autocomplete/$",
-        UserAutocomplete.as_view(),
-        name="user-autocomplete",
-    ),
-    re_path(
-        r"^subject-autocomplete/$",
+    path("user-autocomplete/", UserAutocomplete.as_view(), name="user-autocomplete"),
+    path(
+        "subject-autocomplete/",
         SubjectAutocomplete.as_view(),
         name="subject-autocomplete",
     ),
-    re_path(
-        r"^canvas_site-autocomplete/$",
+    path(
+        "canvas_site-autocomplete/",
         CanvasSiteAutocomplete.as_view(),
         name="canvas_site-autocomplete",
     ),
@@ -215,6 +217,8 @@ urlpatterns = [
 if settings.DEBUG:
     import debug_toolbar
 
-    urlpatterns = [
-        path("__debug__/", include(debug_toolbar.urls)),
-    ] + urlpatterns
+    urlpatterns.extend(
+        [
+            path("__debug__/", include(debug_toolbar.urls)),
+        ]
+    )

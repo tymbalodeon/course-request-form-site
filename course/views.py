@@ -1,11 +1,11 @@
-import json
-import urllib.parse
 from datetime import datetime
+from json import dump, dumps, load
 from logging import getLogger
 from os import mkdir
 from pathlib import Path
 from re import search
 from typing import Dict
+from urllib.parse import unquote
 
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
@@ -15,7 +15,8 @@ from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django_celery_beat.models import PeriodicTask
-from django_filters import rest_framework as filters
+from django_filters import CharFilter, ChoiceFilter, DateTimeFilter, ModelChoiceFilter
+from django_filters.rest_framework import FilterSet
 from rest_framework import permissions, serializers, status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -23,8 +24,7 @@ from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.utils.html import parse_html_list
-from rest_framework.views import APIView
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import ModelViewSet, ViewSet
 
 from canvas.api import (
     MAIN_ACCOUNT_ID,
@@ -141,23 +141,21 @@ class MixedPermissionModelViewSet(ModelViewSet):
         )
 
 
-class CourseFilter(filters.FilterSet):
-    activity = filters.ModelChoiceFilter(
+class CourseFilter(FilterSet):
+    activity = ModelChoiceFilter(
         queryset=Activity.objects.all(), field_name="course_activity", label="Activity"
     )
-    instructor = filters.CharFilter(
-        field_name="instructors__username", label="Instructor"
-    )
-    school = filters.ModelChoiceFilter(
+    instructor = CharFilter(field_name="instructors__username", label="Instructor")
+    school = ModelChoiceFilter(
         queryset=School.objects.all(),
         field_name="course_schools",
         to_field_name="abbreviation",
         label="School (abbreviation)",
     )
-    subject = filters.CharFilter(
+    subject = CharFilter(
         field_name="course_subject__abbreviation", label="Subject (abbreviation)"
     )
-    term = filters.ChoiceFilter(
+    term = ChoiceFilter(
         choices=Course.TERM_CHOICES, field_name="course_term", label="Term"
     )
 
@@ -325,19 +323,19 @@ class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
             return response
 
 
-class RequestFilter(filters.FilterSet):
-    status = filters.ChoiceFilter(
+class RequestFilter(FilterSet):
+    status = ChoiceFilter(
         choices=Request.REQUEST_PROCESS_CHOICES, field_name="status", label="Status"
     )
-    requestor = filters.CharFilter(field_name="owner__username", label="Requestor")
-    date = filters.DateTimeFilter(field_name="created", label="Created")
-    school = filters.ModelChoiceFilter(
+    requestor = CharFilter(field_name="owner__username", label="Requestor")
+    date = DateTimeFilter(field_name="created", label="Created")
+    school = ModelChoiceFilter(
         queryset=School.objects.all(),
         field_name="course_requested__course_schools",
         to_field_name="abbreviation",
         label="School (abbreviation)",
     )
-    term = filters.ChoiceFilter(
+    term = ChoiceFilter(
         choices=Course.TERM_CHOICES,
         field_name="course_requested__course_term",
         label="Term",
@@ -937,7 +935,7 @@ class CanvasSiteViewSet(MixedPermissionModelViewSet, ModelViewSet):
         )
 
 
-class HomePage(APIView, UserPassesTestMixin):
+class HomePage(ViewSet, UserPassesTestMixin):
     renderer_classes = [TemplateHTMLRenderer]
     template_name = "home_content.html"
     login_url = "/accounts/login/"
@@ -1191,7 +1189,7 @@ def user_courses(request, username):
 
 def auto_complete_canvas_course(request, search_results):
     if request.is_ajax():
-        query = urllib.parse.unquote(search_results)
+        query = unquote(search_results)
         canvas = get_canvas()
         account = canvas.get_account(MAIN_ACCOUNT_ID)
         search_results = account.get_courses(
@@ -1200,7 +1198,7 @@ def auto_complete_canvas_course(request, search_results):
         results = [
             {"label": result.name, "value": result.id} for result in search_results
         ]
-        data = json.dumps(results)
+        data = dumps(results)
     else:
         data = "fail"
     mimetype = "application/json"
@@ -1245,7 +1243,7 @@ def process_requests(request):
             mkdir(TASKS_LOG_PATH)
 
         with open(PROCESS_REQUESTS_LOG, "w+") as writer:
-            json.dump(response, writer)
+            dump(response, writer)
     else:
         response["processed"] = "No approved requests to process"
 
@@ -1256,7 +1254,7 @@ def process_requests(request):
 def view_requests(request):
     try:
         with open(PROCESS_REQUESTS_LOG) as json_file:
-            content = json.load(json_file)
+            content = load(json_file)
 
         return JsonResponse(content)
     except Exception:
@@ -1267,7 +1265,7 @@ def view_requests(request):
 def view_canceled_SRS(request):
     try:
         with open(CHECK_CANCELED_LOG) as json_file:
-            content = json.load(json_file)
+            content = load(json_file)
 
         return JsonResponse(content)
     except Exception:
@@ -1287,7 +1285,7 @@ def delete_canceled_requests(request):
         mkdir(TASKS_LOG_PATH)
 
     with open(DELETE_REQUESTS_LOG, "w+") as writer:
-        json.dump(response, writer)
+        dump(response, writer)
 
     return JsonResponse(response)
 
@@ -1296,7 +1294,7 @@ def delete_canceled_requests(request):
 def view_deleted_requests(request):
     try:
         with open(DELETE_REQUESTS_LOG) as json_file:
-            content = json.load(json_file)
+            content = load(json_file)
 
         return JsonResponse(content)
     except Exception:
@@ -1513,7 +1511,7 @@ def auto_complete(request):
         query = request.GET.get("term", "").capitalize()
         search_results = User.objects.filter(username__startswith=query)
         results = [user.username for user in search_results]
-        data = json.dumps(results)
+        data = dumps(results)
     else:
         data = "fail"
     mimetype = "application/json"
@@ -1526,7 +1524,7 @@ def auto_complete_subject(request):
         query = request.GET.get("term", "").capitalize()
         search_results = Subject.objects.filter(abbreviation__startswith=query)
         results = [abbreviation for abbreviation in search_results]
-        data = json.dumps(results)
+        data = dumps(results)
     else:
         data = "fail"
     mimetype = "application/json"
@@ -1541,7 +1539,7 @@ def auto_complete_canvas_site(request):
             Q(owners=query) | Q(added_permissions=query)
         )
         results = [site.name for site in search_results]
-        data = json.dumps(results)
+        data = dumps(results)
     else:
         data = "fail"
     mimetype = "application/json"
