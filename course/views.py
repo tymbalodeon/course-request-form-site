@@ -34,12 +34,15 @@ from canvas.api import (
     get_user_by_sis,
 )
 from config.config import OPEN_DATA_DOMAIN, OPEN_DATA_ID, OPEN_DATA_KEY
-from data_warehouse.data_warehouse import get_course, get_staff_account
+from data_warehouse.data_warehouse import (
+    get_course,
+    get_staff_account,
+    get_user_by_pennkey,
+)
 from open_data.open_data import OpenData
 
 from .email_processor import admin_lock, autoadd_contact, feedback
 from .forms import CanvasSiteForm, ContactForm, EmailChangeForm, SubjectForm, UserForm
-from .helpers import get_user_by_pennkey
 from .models import (
     Activity,
     AutoAdd,
@@ -65,27 +68,17 @@ from .serializers import (
     UserSerializer,
 )
 from .tasks import create_canvas_sites
+from .terms import CURRENT_YEAR, get_current_term, get_term_letters
 from .utils import update_user_courses
 
 FIVE_OR_MORE_ALPHABETIC_CHARACTERS = r"[a-z]{5,}"
-SPRING = "A"
-SUMMER = "B"
-FALL = "C"
+SPRING, SUMMER, FALL = get_term_letters()
 TASKS_LOG_PATH = Path("course/static/log")
 PROCESS_REQUESTS_LOG = TASKS_LOG_PATH / "processed-requests.json"
 DELETE_REQUESTS_LOG = TASKS_LOG_PATH / "deleted-courses.json"
 CHECK_CANCELED_LOG = TASKS_LOG_PATH / "canceled-courses.json"
 
 logger = getLogger(__name__)
-
-
-def get_term(index):
-    if index >= 9:
-        return FALL
-    elif index >= 5:
-        return SUMMER
-    else:
-        return SPRING
 
 
 def get_search_term(request):
@@ -172,24 +165,21 @@ class CourseFilter(FilterSet):
 
 
 class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
-    current_date = datetime.now()
-    current_year = current_date.year
-    current_month = current_date.month
-    next_year = current_year + 1
-    current_term = {index: get_term(index) for index in range(1, 13)}.get(current_month)
+    next_year = CURRENT_YEAR + 1
+    current_term = get_current_term()
     next_term = {SPRING: SUMMER, SUMMER: FALL, FALL: SPRING}.get(str(current_term))
     lookup_field = "course_code"
     queryset = (
         Course.objects.filter(
             course_term__in=[current_term, next_term],
-            year=current_year,
+            year=CURRENT_YEAR,
             course_subject__visible=True,
             course_schools__visible=True,
         )
         if current_term != FALL
         else Course.objects.filter(
             Q(course_term=next_term, year=next_year)
-            | Q(course_term=current_term, year=current_year),
+            | Q(course_term=current_term, year=CURRENT_YEAR),
             course_subject__visible=True,
             course_schools__visible=True,
         )
@@ -212,9 +202,9 @@ class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
     def list(self, request):
         print_log_message(request, "course", "list")
 
-        current_term = f"{self.current_year}{self.current_term}"
+        current_term = f"{CURRENT_YEAR}{self.current_term}"
         next_term = (
-            f"{self.current_year if self.current_term != FALL else self.next_year}"
+            f"{CURRENT_YEAR if self.current_term != FALL else self.next_year}"
             f"{self.next_term}"
         )
         search_term = get_search_term(request)

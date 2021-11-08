@@ -21,6 +21,8 @@ from django.db.models import (
 from django.utils.safestring import mark_safe
 from markdown import markdown
 
+from .terms import get_term_letters
+
 logger = getLogger(__name__)
 
 
@@ -116,9 +118,7 @@ class CourseManager(Manager):
 
 
 class Course(Model):
-    SPRING = "A"
-    SUMMER = "B"
-    FALL = "C"
+    SPRING, SUMMER, FALL = get_term_letters()
     TERM_CHOICES = ((SPRING, "Spring"), (SUMMER, "Summer"), (FALL, "Fall"))
     course_activity = ForeignKey(Activity, related_name="courses", on_delete=CASCADE)
     course_code = CharField(
@@ -130,10 +130,7 @@ class Course(Model):
     course_schools = ForeignKey(School, related_name="courses", on_delete=CASCADE)
     course_section = CharField(max_length=4, blank=False)
     course_subject = ForeignKey(Subject, on_delete=CASCADE, related_name="courses")
-    course_term = CharField(
-        max_length=1,
-        choices=TERM_CHOICES,
-    )
+    course_term = CharField(max_length=1, choices=TERM_CHOICES)
     created = DateTimeField(auto_now_add=True)
     crosslisted = ManyToManyField("self", blank=True, symmetrical=True, default=None)
     crosslisted_request = ForeignKey(
@@ -172,7 +169,7 @@ class Course(Model):
                 self.course_subject.abbreviation,
                 self.course_number,
                 self.course_section,
-                self.year + self.course_term,
+                f"{self.year}{self.course_term}",
             ]
         )
 

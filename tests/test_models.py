@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from django.test import TestCase
 
 from config.config import USERNAME
@@ -13,6 +11,7 @@ from course.models import (
     Subject,
     User,
 )
+from course.terms import CURRENT_YEAR, get_current_term
 
 SCHOOL_NAME = "School"
 SCHOOL_ABBREVIATION = "SCH"
@@ -70,8 +69,8 @@ class CanvasSiteTest(TestCase):
 class CourseTest(TestCase):
     course_number = "123"
     course_section = "456"
-    year = str(datetime.now().year)
-    course_term = "A"
+    year = CURRENT_YEAR
+    course_term = get_current_term()
     course_code = (
         f"{SUBJECT_ABBREVIATION}{course_number}{course_section}{year}{course_term}"
     )

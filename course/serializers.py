@@ -13,7 +13,8 @@ from rest_framework.serializers import (
     ValidationError,
 )
 
-from .helpers import get_user_by_pennkey
+from data_warehouse.data_warehouse import get_user_by_pennkey
+
 from .models import (
     Activity,
     AdditionalEnrollment,
