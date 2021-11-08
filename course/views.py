@@ -7,10 +7,11 @@ from re import search
 from typing import Dict
 from urllib.parse import unquote
 
-from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.mixins import AccessMixin, UserPassesTestMixin
 from django.contrib.auth.views import redirect_to_login
+from django.contrib.messages import ERROR, add_message
+from django.contrib.messages import error as messages_error
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
@@ -68,7 +69,7 @@ from .serializers import (
     UserSerializer,
 )
 from .tasks import create_canvas_sites
-from .terms import CURRENT_YEAR, get_current_term, get_term_letters
+from .terms import CURRENT_TERM, CURRENT_YEAR, NEXT_TERM, NEXT_YEAR, get_term_letters
 from .utils import update_user_courses
 
 FIVE_OR_MORE_ALPHABETIC_CHARACTERS = r"[a-z]{5,}"
@@ -153,7 +154,6 @@ class CourseFilter(FilterSet):
 
     class Meta:
         model = Course
-
         fields = [
             "term",
             "activity",
@@ -164,21 +164,18 @@ class CourseFilter(FilterSet):
 
 
 class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
-    next_year = CURRENT_YEAR + 1
-    current_term = get_current_term()
-    next_term = {SPRING: SUMMER, SUMMER: FALL, FALL: SPRING}.get(str(current_term))
     lookup_field = "course_code"
     queryset = (
         Course.objects.filter(
-            course_term__in=[current_term, next_term],
+            course_term__in=[CURRENT_TERM, NEXT_TERM],
             year=CURRENT_YEAR,
             course_subject__visible=True,
             course_schools__visible=True,
         )
-        if current_term != FALL
+        if CURRENT_TERM != FALL
         else Course.objects.filter(
-            Q(course_term=next_term, year=next_year)
-            | Q(course_term=current_term, year=CURRENT_YEAR),
+            Q(course_term=NEXT_TERM, year=NEXT_YEAR)
+            | Q(course_term=CURRENT_TERM, year=CURRENT_YEAR),
             course_subject__visible=True,
             course_schools__visible=True,
         )
@@ -201,11 +198,8 @@ class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
     def list(self, request):
         print_log_message(request, "course", "list")
 
-        current_term = f"{CURRENT_YEAR}{self.current_term}"
-        next_term = (
-            f"{CURRENT_YEAR if self.current_term != FALL else self.next_year}"
-            f"{self.next_term}"
-        )
+        current_term = f"{CURRENT_YEAR}{CURRENT_TERM}"
+        next_term = f"{CURRENT_YEAR if CURRENT_TERM != FALL else NEXT_YEAR}{NEXT_TERM}"
         search_term = get_search_term(request)
         queryset = (
             self.get_queryset().filter(
@@ -349,6 +343,46 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
         "delete": [IsAdminUser],
     }
 
+    def custom_permissions(self, request_obj, masquerade, instructors):
+        if self.request.user.is_staff:
+            return True
+
+        if self.request.method == "GET":
+            if not masquerade:
+                if (
+                    self.request.user.username == request_obj["owner"]
+                    or self.request.user.username == request_obj["masquerade"]
+                ):
+                    return True
+                else:
+                    raise PermissionDenied(
+                        {"message": "You don't have permission to access"}
+                    )
+            elif (
+                masquerade == request_obj["owner"]
+                or masquerade == request_obj["masquerade"]
+            ):
+                return True
+            else:
+                raise PermissionDenied(
+                    {"message": "You don't have permission to access"}
+                )
+
+        if self.request.method == "POST":
+            if instructors:
+                if self.request.user.username in instructors:
+                    return True
+                elif masquerade and masquerade in instructors:
+                    return True
+                else:
+                    raise PermissionDenied(
+                        {"message": "You don't have permission to access"}
+                    )
+            else:
+                return True
+        else:
+            return False
+
     def create(self, request):
         def update_course(course):
             course.save()
@@ -418,9 +452,10 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
         is_valid = serializer.is_valid()
 
         if not is_valid:
-            messages.add_message(request, messages.ERROR, serializer.errors)
+            for error in serializer.errors:
+                add_message(request, ERROR, error)
 
-            raise serializers.ValidationError(serializer.errors)
+            raise serializers.ValidationError()
 
         serializer.validated_data["masquerade"] = masquerade
         self.perform_create(serializer)
@@ -487,46 +522,6 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
             logger.info(response.data["paginator"].page)
 
             return response
-
-    def custom_permissions(self, request_obj, masquerade, instructors):
-        if self.request.user.is_staff:
-            return True
-
-        if self.request.method == "GET":
-            if not masquerade:
-                if (
-                    self.request.user.username == request_obj["owner"]
-                    or self.request.user.username == request_obj["masquerade"]
-                ):
-                    return True
-                else:
-                    raise PermissionDenied(
-                        {"message": "You don't have permission to access"}
-                    )
-            elif (
-                masquerade == request_obj["owner"]
-                or masquerade == request_obj["masquerade"]
-            ):
-                return True
-            else:
-                raise PermissionDenied(
-                    {"message": "You don't have permission to access"}
-                )
-
-        if self.request.method == "POST":
-            if instructors:
-                if self.request.user.username in instructors:
-                    return True
-                elif masquerade and masquerade in instructors:
-                    return True
-                else:
-                    raise PermissionDenied(
-                        {"message": "You don't have permission to access"}
-                    )
-            else:
-                return True
-        else:
-            return False
 
     def check_request_update_permissions(request, response_data):
         request_status = response_data["status"]
@@ -659,7 +654,7 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
         serializer.is_valid()
 
         if not serializer.is_valid():
-            messages.add_message(request, messages.ERROR, serializer.errors)
+            add_message(request, ERROR, serializer.errors)
 
             raise serializers.ValidationError(serializer.errors)
         else:
@@ -963,11 +958,11 @@ class HomePage(ViewSet, UserPassesTestMixin):
                 lookup_user = get_user_by_pennkey(on_behalf_of)
 
                 if lookup_user is None:
-                    messages.error(
+                    messages_error(
                         request, "Invalid Pennkey -- Pennkey must be Upenn Employee"
                     )
                 elif lookup_user.is_staff is True:
-                    messages.error(
+                    messages_error(
                         request,
                         "Invalid Pennkey -- Pennkey cannot be Courseware Team Member",
                     )
