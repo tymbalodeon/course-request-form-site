@@ -9,7 +9,7 @@ from urllib.parse import unquote
 
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
-from django.contrib.auth.mixins import UserPassesTestMixin
+from django.contrib.auth.mixins import AccessMixin, UserPassesTestMixin
 from django.contrib.auth.views import redirect_to_login
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
@@ -108,20 +108,19 @@ def print_log_message(request, object_type, action_type):
     )
 
 
-class MixedPermissionModelViewSet(ModelViewSet):
+class MixedPermissionModelViewSet(AccessMixin, ModelViewSet):
     permission_classes_by_action: Dict[str, list] = {}
     login_url = "/accounts/login/"
 
     def get_permissions(self):
-        try:
-            return [
+        return (
+            [
                 permission()
                 for permission in self.permission_classes_by_action[self.action]
             ]
-        except KeyError:
-            logger.error(f"KeyError for permission: {self.action}")
-
-            return [permission() for permission in self.permission_classes]
+            if self.permission_classes_by_action
+            else [permission() for permission in self.permission_classes]
+        )
 
     def handle_no_permission(self):
         if self.raise_exception or self.request.user.is_authenticated:
@@ -732,27 +731,11 @@ class UserViewSet(MixedPermissionModelViewSet, ModelViewSet):
     serializer_class = UserSerializer
     lookup_field = "username"
     filterset_fields = ("profile__penn_id",)
-    permission_classes_by_action: Dict[str, list] = {
-        "create": [],
-        "list": [],
-        "retrieve": [],
-        "update": [],
-        "partial_update": [],
-        "delete": [],
-    }
 
 
 class SchoolViewSet(MixedPermissionModelViewSet, ModelViewSet):
     queryset = School.objects.all()
     serializer_class = SchoolSerializer
-    permission_classes_by_action: Dict[str, list] = {
-        "create": [],
-        "list": [],
-        "retrieve": [],
-        "update": [],
-        "partial_update": [],
-        "delete": [],
-    }
 
     def list(self, request):
         print_log_message(request, "school", "list")
@@ -801,14 +784,6 @@ class SchoolViewSet(MixedPermissionModelViewSet, ModelViewSet):
 class SubjectViewSet(MixedPermissionModelViewSet, ModelViewSet):
     queryset = Subject.objects.all()
     serializer_class = SubjectSerializer
-    permission_classes_by_action: Dict[str, list] = {
-        "create": [],
-        "list": [],
-        "retrieve": [],
-        "update": [],
-        "partial_update": [],
-        "delete": [],
-    }
 
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -855,14 +830,6 @@ class SubjectViewSet(MixedPermissionModelViewSet, ModelViewSet):
 class NoticeViewSet(MixedPermissionModelViewSet, ModelViewSet):
     queryset = Notice.objects.all()
     serializer_class = NoticeSerializer
-    permission_classes_by_action: Dict[str, list] = {
-        "create": [],
-        "list": [],
-        "retrieve": [],
-        "update": [],
-        "partial_update": [],
-        "delete": [],
-    }
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -872,14 +839,6 @@ class CanvasSiteViewSet(MixedPermissionModelViewSet, ModelViewSet):
     queryset = CanvasSite.objects.all()
     serializer_class = CanvasSiteSerializer
     lookup_field = "canvas_id"
-    permission_classes_by_action: Dict[str, list] = {
-        "create": [],
-        "list": [],
-        "retrieve": [],
-        "update": [],
-        "partial_update": [],
-        "delete": [],
-    }
 
     def get_queryset(self):
         user = self.request.user
@@ -929,15 +888,6 @@ class HomePage(ViewSet, UserPassesTestMixin):
     renderer_classes = [TemplateHTMLRenderer]
     template_name = "home_content.html"
     login_url = "/accounts/login/"
-    permission_classes_by_action: Dict[str, list] = {
-        "create": [],
-        "list": [],
-        "retrieve": [],
-        "update": [],
-        "partial_update": [],
-        "delete": [],
-    }
-
     permission_classes = (permissions.IsAuthenticated,)
 
     def check_if_user_exists(self):
