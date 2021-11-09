@@ -25,7 +25,7 @@ from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.utils.html import parse_html_list
-from rest_framework.viewsets import ModelViewSet, ViewSet
+from rest_framework.viewsets import ModelViewSet
 
 from canvas.api import (
     MAIN_ACCOUNT_ID,
@@ -212,30 +212,8 @@ class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
         page = self.paginate_queryset(queryset)
 
         if page is not None:
-            serializer = self.get_serializer(
-                page,
-                many=True,
-                fields=[
-                    "course_subject",
-                    "course_code",
-                    "requested",
-                    "instructors",
-                    "course_activity",
-                    "year",
-                    "course_term",
-                    "course_primary_subject",
-                    "course_number",
-                    "course_section",
-                    "course_name",
-                    "multisection_request",
-                    "request",
-                    "crosslisted",
-                    "requested_override",
-                    "associated_request",
-                ],
-            )
+            serializer = self.get_serializer(page, many=True)
             response = self.get_paginated_response(serializer.data)
-            print(response.data)
 
             if request.accepted_renderer.format == "html":
                 response.template_name = "course_list.html"
@@ -245,9 +223,9 @@ class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
                     "filter": CourseFilter,
                     "request": request,
                     "is_staff": request.user.is_staff,
-                    "autocompleteUser": UserForm(),
-                    "autocompleteSubject": SubjectForm(),
-                    "autocompleteCanvasSite": CanvasSiteForm(),
+                    "autocomplete_user": UserForm(),
+                    "autocomplete_subject": SubjectForm(),
+                    "autocomplete_canvas_site": CanvasSiteForm(),
                     "style": {"template_pack": "rest_framework/vertical/"},
                     "current_term": current_term,
                     "next_term": next_term,
@@ -297,7 +275,7 @@ class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
                     "course": response.data,
                     "request_instance": request_instance,
                     "request_form": this_form,
-                    "autocompleteCanvasSite": CanvasSiteForm(),
+                    "autocomplete_canvas_site": CanvasSiteForm(),
                     "is_staff": request.user.is_staff,
                     "style": {"template_pack": "rest_framework/vertical/"},
                 },
@@ -481,14 +459,14 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
                     "results": response.data,
                     "paginator": self.paginator,
                     "filter": RequestFilter,
-                    "autocompleteUser": UserForm(),
+                    "autocomplete_user": UserForm(),
                 }
 
             logger.info(response.data["paginator"].page)
 
             return response
 
-    def check_request_update_permissions(request, response_data):
+    def check_request_update_permissions(self, request, response_data):
         request_status = response_data["status"]
         request_owner = response_data["owner"]
         request_masquerade = response_data["masquerade"]
@@ -540,9 +518,7 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
             )
 
         if request.accepted_renderer.format == "html":
-            permissions = RequestViewSet.check_request_update_permissions(
-                request, response.data
-            )
+            permissions = self.check_request_update_permissions(request, response.data)
 
             if request.resolver_match.url_name == "UI-request-detail-edit":
                 here = RequestSerializer(
@@ -554,7 +530,7 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
                         "request_instance": response.data,
                         "permissions": permissions,
                         "request_form": here,
-                        "autocompleteCanvasSite": CanvasSiteForm(),
+                        "autocomplete_canvas_site": CanvasSiteForm(),
                         "style": {"template_pack": "rest_framework/vertical/"},
                     },
                     template_name="request_detail_edit.html",
@@ -644,21 +620,23 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
                     }
                 )
 
-        if "view_type" in request.data:
-            if request.data["view_type"] == "UI-request-detail":
-                permissions = RequestViewSet.check_request_update_permissions(
-                    request,
-                    {
-                        "owner": instance.owner.username,
-                        "masquerade": instance.masquerade,
-                        "status": instance.status,
-                    },
-                )
+        if (
+            "view_type" in request.data
+            and request.data["view_type"] == "UI-request-detail"
+        ):
+            permissions = self.check_request_update_permissions(
+                request,
+                {
+                    "owner": instance.owner.username,
+                    "masquerade": instance.masquerade,
+                    "status": instance.status,
+                },
+            )
 
-                return Response(
-                    {"request_instance": serializer.data, "permissions": permissions},
-                    template_name="request_detail.html",
-                )
+            return Response(
+                {"request_instance": serializer.data, "permissions": permissions},
+                template_name="request_detail.html",
+            )
 
         return Response(serializer.data)
 
@@ -824,7 +802,7 @@ class CanvasSiteViewSet(MixedPermissionModelViewSet, ModelViewSet):
 
         return (
             Response(
-                {"data": response.data, "autocompleteUser": UserForm()},
+                {"data": response.data, "autocomplete_user": UserForm()},
                 template_name="canvassite_detail.html",
             )
             if request.accepted_renderer.format == "html"
@@ -839,7 +817,7 @@ class CanvasSiteViewSet(MixedPermissionModelViewSet, ModelViewSet):
         self.perform_update(serializer)
 
         return Response(
-            {"data": serializer.data, "autocompleteUser": UserForm()},
+            {"data": serializer.data, "autocomplete_user": UserForm()},
             template_name="canvassite_detail.html",
         )
 
@@ -851,7 +829,6 @@ class HomePage(UserPassesTestMixin, ModelViewSet):
     login_url = "/accounts/login/"
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = CourseSerializer
-    filterset_class = CourseFilter
     queryset = Course.objects.filter(course_schools__visible=True)
 
     def test_func(self):
@@ -882,9 +859,6 @@ class HomePage(UserPassesTestMixin, ModelViewSet):
 
                 return False
 
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
-
     def get(self, request):
         self.test_func()
 
@@ -896,59 +870,30 @@ class HomePage(UserPassesTestMixin, ModelViewSet):
         masquerade = request.session["on_behalf_of"]
         user = User.objects.get(username=masquerade) if masquerade else request.user
         courses = self.get_queryset().filter(instructors=user)
-        courses = courses[:15]
         courses_count = courses.count()
-        site_requests = Request.objects.filter(Q(owner=user) | Q(masquerade=user))
-        site_requests_count = site_requests.count()
-        site_requests = site_requests[:15]
+        courses = courses[:15]
+        requests = Request.objects.filter(Q(owner=user) | Q(masquerade=user))
+        requests_count = requests.count()
+        requests = requests[:15]
         canvas_sites = CanvasSite.objects.filter(Q(owners=user))
-        canvas_sites = canvas_sites[:15]
         canvas_sites_count = canvas_sites.count()
-        courses = self.get_serializer(
-            courses,
-            many=True,
-            fields=[
-                "course_subject",
-                "course_code",
-                "requested",
-                "instructors",
-                "course_activity",
-                "year",
-                "course_term",
-                "course_primary_subject",
-                "course_number",
-                "course_section",
-                "course_name",
-                "multisection_request",
-                "request",
-                "crosslisted",
-                "requested_override",
-                "associated_request",
-            ],
-        ).data
-        print(courses)
+        canvas_sites = canvas_sites[:15]
+        page = self.paginate_queryset(courses)
+        serializer = self.get_serializer(page, many=True)
+        response = self.get_paginated_response(serializer.data)
+        response.data = {
+            "notice": notice,
+            "requests": requests,
+            "requests_count": requests_count,
+            "courses": response.data,
+            "courses_count": courses_count,
+            "canvas_sites": canvas_sites,
+            "canvas_sites_count": canvas_sites_count,
+            "username": request.user,
+            "autocomplete_canvas_site": CanvasSiteForm(),
+            "style": {"template_pack": "rest_framework/vertical/"},
+        }
 
-        response = Response(
-            {
-                "data": {
-                    "notice": notice,
-                    "site_requests": site_requests,
-                    "site_requests_count": site_requests_count,
-                    "srs_courses": courses,
-                    "srs_courses_count": courses_count,
-                    "filter": CourseFilter,
-                    "canvas_sites": canvas_sites,
-                    "canvas_sites_count": canvas_sites_count,
-                    "username": request.user,
-                    "autocompleteCanvasSite": CanvasSiteForm(),
-                    "style": {"template_pack": "rest_framework/vertical/"},
-                    "autocompleteUser": UserForm(),
-                    "autocompleteSubject": SubjectForm(),
-                    "request": request,
-                    "is_staff": request.user.is_staff,
-                }
-            }
-        )
         return response
 
     def set_session(request):

@@ -7,14 +7,14 @@
 {% endblock %}
 
 {% block content %}
-    {% if data.notice %}
+    {% if notice %}
         <div style="max-width:950px;padding-top:30px;">
             <blockquote class="show">
                 <div style="width:100%;" id="notice">
                     <p class="message">
-                        {{ data.notice.get_html }}
+                        {{ notice.get_html }}
                         {% if staff %}
-                            <a href="{%  url 'admin:course_notice_change'   data.notice.pk %}" style="float:right;"> (change this message) </a>
+                            <a href="{%  url 'admin:course_notice_change'   notice.pk %}" style="float:right;"> (change this message) </a>
                         {% endif %}
                 </div>
                 <p class="default" style="display:none;width: -webkit-fill-available;margin: 0.5rem 0;font-family: Menlo;font-size: 14px;">
@@ -74,10 +74,10 @@
     </div>
     <div class="homepage-container">
         <dl>
-            <dt>Site Requests ({{data.site_requests_count}})</dt>
+            <dt>Site Requests ({{requests_count}})</dt>
             <dd><em>Requests made by you or on your behalf</em></dd>
         </dl>
-        {% if data.site_requests %}
+        {% if requests %}
             <table class="striped-table">
                 <thead>
                     <tr>
@@ -89,7 +89,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for request_instance in data.site_requests %}
+                    {% for request_instance in requests %}
                         <tr>
                             <td><a href="{% url 'UI-request-detail' pk=request_instance.course_requested.course_code %}"> {{request_instance.course_requested}} </a></td>
                             <td>{{request_instance.course_requested.course_name }}</td>
@@ -117,10 +117,10 @@
     </div>
     <div class="homepage-container">
         <dl>
-            <dt>Courses ({{data.srs_courses_count}})</dt>
+            <dt>Courses ({{courses_count}})</dt>
             <dd><em>SRS Course Assignments</em></dd>
         </dl>
-        {% if data.srs_courses %}
+        {% if courses %}
             <table class="striped-table">
                 <thead>
                     <tr>
@@ -132,7 +132,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for course in data.srs_courses %}
+                    {% for course in courses %}
                         <tr>
                             <td>
                                 <a href='{% url "UI-course-detail" course_code=course.course_code %}'>{{ course|course_to_course_code }}</a>
@@ -170,10 +170,10 @@
     </div>
     <div class="homepage-container">
         <dl>
-            <dt>Canvas Sites ({{data.canvas_sites_count}})</dt>
+            <dt>Canvas Sites ({{canvas_sites_count}})</dt>
             <dd><em>Existing Canvas Sites (either an instructor or custom permission)</em></dd>
         </dl>
-        {% if data.canvas_sites %}
+        {% if canvas_sites %}
             <table class="striped-table">
                 <thead>
                     <tr>
@@ -184,7 +184,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for site in data.canvas_sites %}
+                    {% for site in canvas_sites %}
                         <tr>
                             <td>{{site.name}}</td>
                             <td>{{site.sis_course_id}}</td>

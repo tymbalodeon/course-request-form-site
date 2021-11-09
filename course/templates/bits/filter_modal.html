@@ -13,16 +13,16 @@
             <form id="filter-form" action="" method="GET">
                 <div class="modal-body">
                     {{ filter.form.tags.errors }}
-                    {% if autocompleteSubject %}
+                    {% if autocomplete_subject %}
                         <div class="form-group ">
                             <label>Instructor <em>(pennkey)</em></label>
-                            {{ autocompleteUser.username }}
-                            {{ autocompleteUser.media }}
+                            {{ autocomplete_user.username }}
+                            {{ autocomplete_user.media }}
                         </div>
                         <div class="form-group">
                             <label>Subject</label>
-                            {{ autocompleteSubject.abbreviation }}
-                            {{ autocompleteSubject.media }}
+                            {{ autocomplete_subject.abbreviation }}
+                            {{ autocomplete_subject.media }}
                         </div>
                         <div class="form-group">
                             {{ filter.form.term.errors }}
