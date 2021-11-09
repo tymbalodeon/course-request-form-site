@@ -235,6 +235,7 @@ class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
                 ],
             )
             response = self.get_paginated_response(serializer.data)
+            print(response.data)
 
             if request.accepted_renderer.format == "html":
                 response.template_name = "course_list.html"
@@ -843,16 +844,20 @@ class CanvasSiteViewSet(MixedPermissionModelViewSet, ModelViewSet):
         )
 
 
-class HomePage(ViewSet, UserPassesTestMixin):
+class HomePage(UserPassesTestMixin, ModelViewSet):
+    lookup_field = "course_code"
     renderer_classes = [TemplateHTMLRenderer]
     template_name = "home_content.html"
     login_url = "/accounts/login/"
     permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = CourseSerializer
+    filterset_class = CourseFilter
+    queryset = Course.objects.filter(course_schools__visible=True)
 
-    def check_if_user_exists(self):
-        user_name = self.request.user.username
+    def test_func(self):
+        user_name = self.request.user.get_username()
         logger.info(f'Checking Users for "{user_name}"...')
-        user = User.objects.get(username=self.request.user.username)
+        user = User.objects.get(username=self.request.user.get_username())
 
         try:
             if user.profile:
@@ -877,8 +882,11 @@ class HomePage(ViewSet, UserPassesTestMixin):
 
                 return False
 
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
     def get(self, request):
-        self.check_if_user_exists()
+        self.test_func()
 
         try:
             notice = Notice.objects.latest()
@@ -887,32 +895,61 @@ class HomePage(ViewSet, UserPassesTestMixin):
 
         masquerade = request.session["on_behalf_of"]
         user = User.objects.get(username=masquerade) if masquerade else request.user
-        courses = Course.objects.filter(instructors=user, course_schools__visible=True)
-        courses_count = courses.count()
+        courses = self.get_queryset().filter(instructors=user)
         courses = courses[:15]
+        courses_count = courses.count()
         site_requests = Request.objects.filter(Q(owner=user) | Q(masquerade=user))
         site_requests_count = site_requests.count()
         site_requests = site_requests[:15]
         canvas_sites = CanvasSite.objects.filter(Q(owners=user))
-        canvas_sites_count = canvas_sites.count()
         canvas_sites = canvas_sites[:15]
+        canvas_sites_count = canvas_sites.count()
+        courses = self.get_serializer(
+            courses,
+            many=True,
+            fields=[
+                "course_subject",
+                "course_code",
+                "requested",
+                "instructors",
+                "course_activity",
+                "year",
+                "course_term",
+                "course_primary_subject",
+                "course_number",
+                "course_section",
+                "course_name",
+                "multisection_request",
+                "request",
+                "crosslisted",
+                "requested_override",
+                "associated_request",
+            ],
+        ).data
+        print(courses)
 
-        return Response(
+        response = Response(
             {
                 "data": {
                     "notice": notice,
-                    "filter": CourseFilter,
-                    "request": request,
                     "site_requests": site_requests,
                     "site_requests_count": site_requests_count,
                     "srs_courses": courses,
                     "srs_courses_count": courses_count,
+                    "filter": CourseFilter,
                     "canvas_sites": canvas_sites,
                     "canvas_sites_count": canvas_sites_count,
                     "username": request.user,
+                    "autocompleteCanvasSite": CanvasSiteForm(),
+                    "style": {"template_pack": "rest_framework/vertical/"},
+                    "autocompleteUser": UserForm(),
+                    "autocompleteSubject": SubjectForm(),
+                    "request": request,
+                    "is_staff": request.user.is_staff,
                 }
             }
         )
+        return response
 
     def set_session(request):
         on_behalf_of = None

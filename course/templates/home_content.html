@@ -1,4 +1,5 @@
 {% extends "base_generic.html" %}
+{% load rest_framework %}
 {% load template_extra %}
 
 {% block home %}
@@ -133,26 +134,36 @@
                 <tbody>
                     {% for course in data.srs_courses %}
                         <tr>
-                            <td><a href='{% url "UI-course-detail" course_code=course.course_code %}'>{{course}} </a></td>
+                            <td>
+                                <a href='{% url "UI-course-detail" course_code=course.course_code %}'>{{ course|course_to_course_code }}</a>
+                            </td>
                             <td>{{ course.course_name }}</td>
                             <td>{{ course.course_activity }}</td>
                             <td id="instructors">
-                                {{ course.get_instructors }}
+                                {% if course.instructors|length == 0 %} STAFF {% else %}
+                                    {{ course.instructors|join:", "}} {% endif %}
                             </td>
-                            <td style="padding-left:1%;">
-                                {% if course.requested == True %}
-                                    <a  href='{% url "UI-request-detail" pk=course.course_code %}' class="button muted-button" data-toggle="tooltip" data-placement="top" title="click to see details" style="padding: 0.35rem 0.35rem;">Requested</a>
+                            <td style="padding-left:4%;">
+                                {% if course.requested_override == True %}
+                                    <a class="button muted-button" data-toggle="tooltip" data-placement="top" title="Request not in CRF">Requested</a>
+                                {% elif course.requested == True %}
+                                    {% if course.associated_request %}
+                                        <a  href='{% url "UI-request-detail" pk=course.associated_request %}' class="button muted-button" data-toggle="tooltip" data-placement="top" title="click to see details">Requested</a>
+                                    {% else %}
+                                        <a  href='{% url "UI-request-detail" pk=course.course_code %}' class="button muted-button" data-toggle="tooltip" data-placement="top" title="click to see details">Requested</a>
+                                    {% endif %}
                                 {% else %}
-                                    <a type="button" class="button" href="/courses/{{course.course_code}}#RequestForm">
+                                    <button class="button" data-toggle="modal" data-target="#CourseModal" data-course="{{ course.course_code }}">
                                         Request
-                                    </a>
+                                    </button>
                                 {% endif %}
                             </td>
                         </tr>
+                        {% include "bits/quick_request_modal.html" with view_type="home" %}
                     {% endfor %}
                 </tbody>
             </table>
-            <div class="vertical-center"><a href="{% url 'UI-course-list' %}?instructor={% if request.session.on_behalf_of %}{{request.session.on_behalf_of}}{% else %}{{user.username}}{% endif %}">see more </a></div>
+            <div class="vertical-center"><a href="{% url 'UI-course-list' %}?instructor={% if request.session.on_behalf_of %}{{request.session.on_behalf_of}}{% else %}{{user.username}}{% endif %}">see more</a></div>
         {% else %}
             <center><p> No courses for this user... </p></center>
         {% endif %}
@@ -194,8 +205,6 @@
             <center><p> No Canvas Sites for this user... </p></center>
         {% endif %}
     </div>
-    <br>
-    {% include "bits/quick_request_modal.html" with view_type="home" %}
 {% endblock %}
 
 {% block template_page_js %}
