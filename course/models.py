@@ -269,7 +269,9 @@ class Course(Model):
         return (
             "STAFF"
             if not self.instructors.all().exists()
-            else ",\n".join([inst.username for inst in self.instructors.all()])
+            else ", ".join(
+                [instructor.username for instructor in self.instructors.all()]
+            )
         )
 
     def find_sections(self):

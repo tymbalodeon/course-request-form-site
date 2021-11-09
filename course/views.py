@@ -343,46 +343,6 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
         "delete": [IsAdminUser],
     }
 
-    def custom_permissions(self, request_obj, masquerade, instructors):
-        if self.request.user.is_staff:
-            return True
-
-        if self.request.method == "GET":
-            if not masquerade:
-                if (
-                    self.request.user.username == request_obj["owner"]
-                    or self.request.user.username == request_obj["masquerade"]
-                ):
-                    return True
-                else:
-                    raise PermissionDenied(
-                        {"message": "You don't have permission to access"}
-                    )
-            elif (
-                masquerade == request_obj["owner"]
-                or masquerade == request_obj["masquerade"]
-            ):
-                return True
-            else:
-                raise PermissionDenied(
-                    {"message": "You don't have permission to access"}
-                )
-
-        if self.request.method == "POST":
-            if instructors:
-                if self.request.user.username in instructors:
-                    return True
-                elif masquerade and masquerade in instructors:
-                    return True
-                else:
-                    raise PermissionDenied(
-                        {"message": "You don't have permission to access"}
-                    )
-            else:
-                return True
-        else:
-            return False
-
     def create(self, request):
         def update_course(course):
             course.save()
@@ -401,7 +361,11 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
         if instructors == "STAFF":
             instructors = None
 
-        self.custom_permissions(None, masquerade, instructors)
+        if (instructors and self.request.user.get_username() not in instructors) and (
+            masquerade and masquerade not in instructors
+        ):
+            raise PermissionDenied({"message": "You don't have permission to access"})
+
         additional_enrollments_partial = parse_html_list(
             request.data, prefix="additional_enrollments"
         )
@@ -937,6 +901,8 @@ class HomePage(ViewSet, UserPassesTestMixin):
             {
                 "data": {
                     "notice": notice,
+                    "filter": CourseFilter,
+                    "request": request,
                     "site_requests": site_requests,
                     "site_requests_count": site_requests_count,
                     "srs_courses": courses,

@@ -60,9 +60,7 @@ class OpenData:
         else:
             result_data = response_json["result_data"]
 
-        return (
-            result_data if only_data else (result_data, response_json["service_meta"])
-        )
+        return result_data if only_data else (result_data, service_meta)
 
     def get_available_terms(self):
         url = f"{self.domain}course_section_search_parameters/"
