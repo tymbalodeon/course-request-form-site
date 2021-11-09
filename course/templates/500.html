@@ -1,24 +1,5 @@
-{% extends "base_generic.html" %}
+{% extends "error_page.html" %}
 
-{% block pennkey %}
-{% endblock %}
-
-{% block pennkey_error %}
-{% endblock %}
-
-{% block content %}
-    <h1>500 Internal Server Error</h1>
-    <p>
-        Something has gone wrong with the webserver. Please notify Penn Canvas Support at librarycrf@pobox.upenn.edu if you recieve this error.</p>
-    {% if messages %}
-        <div class="bd-callout bd-callout-warning">
-            <ul class="messages">
-                <h5 style="margin-bottom:0px;margin-top:0.5rem;"> Messages </h5>
-                {% for message in messages %}
-                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-    {% endif %}
-    <a href='{{request.META.HTTP_REFERER}}'> <i class="fas fa-arrow-left"></i> Go Back </a>
+{% block status_code %}
+    <h1>500 - Internal Server Error</h1>
 {% endblock %}

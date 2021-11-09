@@ -58,6 +58,10 @@ def get_user_courses(login_id):
 def get_term_id(account_id, sis_term_id, test=False):
     try:
         account = get_canvas_account(account_id, test=test)
+
+        if not account:
+            return None
+
         response = account._requester.request(
             "GET", f"accounts/{account_id}/terms/sis_term_id:{sis_term_id}"
         )

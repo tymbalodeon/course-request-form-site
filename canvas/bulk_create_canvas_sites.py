@@ -244,7 +244,7 @@ def write_request_statuses(year_and_term, school_abbreviation, verbose=True):
 
     courses = [make_rows(course) for course in courses]
 
-    DATA_DIRECTORY = get_data_directory()
+    DATA_DIRECTORY = get_data_directory(DATA_DIRECTORY_NAME)
     COLUMNS = [
         "Section",
         "Title",
@@ -410,7 +410,7 @@ def bulk_create_canvas_sites(
             course_request = request_course(course, reserves)
             sections = None if not include_sections else list(course.sections.all())
             creation_error = create_canvas_sites(
-                course_request, sections=sections, test=test, verbose=False
+                course_request, sections=sections, test=test
             )
 
             if creation_error:

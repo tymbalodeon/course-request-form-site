@@ -159,7 +159,7 @@ MODULES = [
     "crf2",
     "data_warehouse",
     "open_data",
-    "reports",
+    "report",
 ]
 LOGGING = {
     "version": 1,

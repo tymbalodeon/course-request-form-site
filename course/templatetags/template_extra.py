@@ -13,7 +13,7 @@ register = template.Library()
 def delete_query_param(request, key):
     iri = request.get_full_path()
     uri = iri_to_uri(iri)
-    value = remove_query_param(uri, key)
+    value = remove_query_param(uri, key) if uri else None
 
     return escape(value)
 

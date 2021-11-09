@@ -1,0 +1,26 @@
+{% extends "base_generic.html" %}
+
+{% block pennkey %}
+{% endblock %}
+
+{% block pennkey_error %}
+{% endblock %}
+
+{% block content %}
+    {% block status_code %}
+    {% endblock %}
+    <p>
+        Please contact the <a href="mailto: librarycrf@pobox.upenn.edu">Courseware Team</a> for support.
+    </p>
+    {% if messages %}
+        <div class="bd-callout bd-callout-warning">
+            <ul class="messages">
+                <h5 style="margin-bottom:0px;margin-top:0.5rem;">Messages</h5>
+                {% for message in messages %}
+                    <li {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+    <a href='{{request.META.HTTP_REFERER}}'><i class="fas fa-arrow-left"></i>Go Back</a>
+{% endblock %}
