@@ -1070,7 +1070,7 @@ def user_courses(request, username):
     return JsonResponse(response)
 
 
-def auto_complete_canvas_course(request, search_results):
+def autocomplete_canvas_course(request, search_results):
     if request.is_ajax():
         query = unquote(search_results)
         canvas = get_canvas()
@@ -1389,7 +1389,7 @@ def check_data_warehouse_for_course(request):
     return render(request, "admin/dw_lookup.html", {"data": data, "size": size})
 
 
-def auto_complete(request):
+def autocomplete(request):
     if request.is_ajax():
         query = request.GET.get("term", "").capitalize()
         search_results = User.objects.filter(username__startswith=query)
@@ -1402,7 +1402,7 @@ def auto_complete(request):
     return HttpResponse(data, mimetype)
 
 
-def auto_complete_subject(request):
+def autocomplete_subject(request):
     if request.is_ajax():
         query = request.GET.get("term", "").capitalize()
         search_results = Subject.objects.filter(abbreviation__startswith=query)
@@ -1415,7 +1415,7 @@ def auto_complete_subject(request):
     return HttpResponse(data, mimetype)
 
 
-def auto_complete_canvas_site(request):
+def autocomplete_canvas_site(request):
     if request.is_ajax():
         query = request.GET.get("term", "").capitalize()
         search_results = CanvasSite.objects.filter(

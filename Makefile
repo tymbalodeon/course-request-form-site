@@ -21,9 +21,10 @@ else
 NEXT_TERM = A
 NEXT_YEAR := $(shell expr $(YEAR) + 1)
 endif
-LOG_PROGRAM = '$$1==level {for (i = 4; i < 7; i++) $$i=""; gsub(/ {2,}/, " "); print $$0}'
+LOG_PROGRAM = {for (i = 4; i < 7; i++) $$i=""; gsub(/ {2,}/, " "); print}
+LOG_LEVEL_PROGRAM = '$$1==level $(LOG_PROGRAM)'
 LOG_FILE = ./logs/crf.log
-TAIL = $(TAIL)
+TAIL = tail -n 100
 
 all: help
 black: ## Format code
@@ -86,16 +87,16 @@ log-apache: ## Print the tail of the apache log file
 	$(TAIL) /var/log/crf2/crf2_error.log
 
 log: ## Print the tail of the crf log
-	$(TAIL) $(LOG_FILE)
+	awk '$(LOG_PROGRAM)' $(LOG_FILE) | $(TAIL)
 
 log-error: ## Print the tail of only ERROR messages in the crf log
-	awk -v level="[ERROR]" $(LOG_PROGRAM) $(LOG_FILE) | $(TAIL)
+	awk -v level="[ERROR]" $(LOG_LEVEL_PROGRAM) $(LOG_FILE) | $(TAIL)
 
 log-info: ## Print the tail of only  INFO messages in the crf log
-	awk -v level="[INFO]" $(LOG_PROGRAM) $(LOG_FILE) | $(TAIL)
+	awk -v level="[INFO]" $(LOG_LEVEL_PROGRAM) $(LOG_FILE) | $(TAIL)
 
 log-warning: ## Print the tail of only WARNING messages in the crf log
-	awk -v level="[WARNING]" $(LOG_PROGRAM) $(LOG_FILE) | $(TAIL)
+	awk -v level="[WARNING]" $(LOG_LEVEL_PROGRAM) $(LOG_FILE) | $(TAIL)
 
 migrate: ## Migrate the database
 	$(MANAGE) migrate

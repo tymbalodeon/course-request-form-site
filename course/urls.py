@@ -7,7 +7,7 @@ from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.routers import DefaultRouter
 from rest_framework_swagger.views import get_swagger_view
 
-from .auto_complete import CanvasSiteAutocomplete, SubjectAutocomplete, UserAutocomplete
+from .autocomplete import CanvasSiteAutocomplete, SubjectAutocomplete, UserAutocomplete
 from .views import (
     AutoAddViewSet,
     CanvasSiteViewSet,
@@ -19,7 +19,7 @@ from .views import (
     SubjectViewSet,
     UpdateLogViewSet,
     UserViewSet,
-    auto_complete_canvas_course,
+    autocomplete_canvas_course,
     check_data_warehouse_for_course,
     check_open_data_for_course,
     contact,
@@ -200,7 +200,7 @@ urlpatterns = [
         name="logout",
     ),
     path("canvasuser/<username>/", user_courses),
-    path("searchcanvas/<search>/", auto_complete_canvas_course),
+    path("searchcanvas/<search>/", autocomplete_canvas_course),
     path("user-autocomplete/", UserAutocomplete.as_view(), name="user-autocomplete"),
     path(
         "subject-autocomplete/",
