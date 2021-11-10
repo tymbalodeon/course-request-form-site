@@ -115,10 +115,10 @@
                 <nav style="display: none;" >
                     <ul>
                         <li class="title">Main</li>
-                        <li><a class="{% block home %}{% endblock %}" href="/">Home</a></li>
+                        <li><a class="{% block home_nav_link %}{% endblock %}" href="/">Home</a></li>
                         <li><a class="{% block requests_nav_link %}{% endblock %}" href="/requests">Requests</a></li>
                         <li class="title">Browse</li>
-                        <li><a class="{% block courses %}{% endblock %}" href="/courses">Courses</a></li>
+                        <li><a class="{% block courses_nav_link %}{% endblock %}" href="/courses">Courses</a></li>
                         <li><a class="{% block schools_nav_link %}{% endblock %}" href="/schools">Schools</a></li>
                         <li><a class="{% block subjects_nav_link %}{% endblock %}" href="/subjects">Subjects</a></li>
                         {% if staff %}

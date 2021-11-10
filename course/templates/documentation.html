@@ -4,41 +4,61 @@
 
 {% block content %}
     <h1>User Documentation</h1>
-    <h6>**Outdated!**</h6>
+    <h6><mark>**Outdated!**</mark></h6>
     <h4>
-        <a href="https://docs.google.com/document/d/e/2PACX-1vQmPyukmwTmgefEnMPYttYZCzzsF2ZNS_eNtu60fhZDAu32omnLGc7V08qQz7Vt7t5Ab09q3OLP7bnf/pub" target="_blank">
+        <a
+            href="https://docs.google.com/document/d/e/2PACX-1vQmPyukmwTmgefEnMPYttYZCzzsF2ZNS_eNtu60fhZDAu32omnLGc7V08qQz7Vt7t5Ab09q3OLP7bnf/pub"
+            target="_blank"
+        >
             Link to full document
         </a>
     </h4>
     {% if staff %}
-        <h6>Courseware Support:
+        <h6>Courseware Support:</h6>
             <ul>
                 <li>
-                    <a href="https://docs.google.com/document/d/1-VcUr70xOlAPwPH07CB61_CwVDw18QlrE_3KFPhYK7o/edit#" target="_blank">
+                    <a
+                        href="https://docs.google.com/document/d/1-VcUr70xOlAPwPH07CB61_CwVDw18QlrE_3KFPhYK7o/edit#"
+                        target="_blank"
+                    >
                         Link to User edit documentation
                     </a>
                 </li>
                 <li>
-                    <a href="https://docs.google.com/document/d/1bGQBDn9CEJ_-3NpYKYEMTcQX25yppw1FRKetYoOAtnE/edit?usp=sharing" target="_blank">
+                    <a
+                        href="https://docs.google.com/document/d/1bGQBDn9CEJ_-3NpYKYEMTcQX25yppw1FRKetYoOAtnE/edit?usp=sharing"
+                        target="_blank"
+                    >
                         Link to Admin documentation
                     </a>
                 </li>
                 <li>
-                    <a href="https://docs.google.com/document/d/1b5td0NS-r1DB2bFfL3EwhGQshboes8HyFE_TL0er8RE/edit" target="_blank">
+                    <a
+                        href="https://docs.google.com/document/d/1b5td0NS-r1DB2bFfL3EwhGQshboes8HyFE_TL0er8RE/edit"
+                        target="_blank"
+                    >
                         Link to Admin Feedback
                     </a>
                 </li>
             </ul>
-        </h6>
     {% endif %}
-    <p>For any issues or questions please email the <a href="mailto: librarycrf@pobox.upenn.edu?&amp;subject=CRF%20Question">Courseware Team</a>.</p>
-    <iframe src="https://docs.google.com/document/d/e/2PACX-1vQmPyukmwTmgefEnMPYttYZCzzsF2ZNS_eNtu60fhZDAu32omnLGc7V08qQz7Vt7t5Ab09q3OLP7bnf/pub?embedded=true" style="height: 100%;width: 100%;">
+    <p>
+        For any issues or questions please email the
+        <a href="mailto: librarycrf@pobox.upenn.edu?&amp;subject=CRF%20Question">
+            Courseware Team
+        </a>
+        .
+    </p>
+    <iframe
+        src="https://docs.google.com/document/d/e/2PACX-1vQmPyukmwTmgefEnMPYttYZCzzsF2ZNS_eNtu60fhZDAu32omnLGc7V08qQz7Vt7t5Ab09q3OLP7bnf/pub?embedded=true"
+        style="height: 100%;width: 100%;"
+    >
     </iframe>
     <br>
     <br>
     <style>
      .medium-container {
-         height:80%;
+         height: 80%;
      }
     </style>
 {% endblock %}

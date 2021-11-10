@@ -2,15 +2,16 @@
 {% load rest_framework %}
 {% load template_extra %}
 
-{% block courses %}
+{% block courses_nav_link %}
     active
 {% endblock %}
 
 {% block content %}
     <h1>Courses</h1>
     <em>
-        <strong>NOTE: </strong>Courses shown are for the current term
-        (<strong>"{{ current_term }}"</strong>) and upcoming term (<strong>"{{ next_term }}"</strong>) only.
+        <strong>NOTE:</strong> Courses shown are for the current term
+        (<strong>"{{ current_term }}"</strong>) and upcoming term
+        (<strong>"{{ next_term }}"</strong>) only.
     </em>
     <br>
     <br>
@@ -29,25 +30,60 @@
             {% for course in results %}
                 <tr>
                     <td>
-                        <a href='{% url "UI-course-detail" course_code=course.course_code %}'>{{ course|course_to_course_code }}</a>
+                        <a
+                            href="{% url "UI-course-detail" course_code=course.course_code %}"
+                        >
+                            {{ course|course_to_course_code }}
+                        </a>
                     </td>
                     <td>{{ course.course_name }}</td>
                     <td>{{ course.course_activity }}</td>
                     <td id="instructors">
-                        {% if course.instructors|length == 0 %} STAFF {% else %}
-                            {{ course.instructors| join:", "}} {% endif %}
+                        {% if course.instructors|length == 0 %}
+                            STAFF
+                        {% else %}
+                            {{ course.instructors| join:", "}}
+                        {% endif %}
                     </td>
                     <td style="padding-left:4%;">
-                        {% if course.requested_override == True %}
-                            <a class="button muted-button" data-toggle="tooltip" data-placement="top" title="Request not in CRF">Requested</a>
-                        {% elif course.requested == True %}
+                        {% if course.requested_override %}
+                            <a
+                                class="button muted-button"
+                                data-toggle="tooltip"
+                                data-placement="top"
+                                title="Request not in CRF"
+                            >
+                                Requested
+                            </a>
+                        {% elif course.requested %}
                             {% if course.associated_request %}
-                                <a  href='{% url "UI-request-detail" pk=course.associated_request %}' class="button muted-button" data-toggle="tooltip" data-placement="top" title="click to see details">Requested</a>
+                                <a
+                                    href="{% url "UI-request-detail" pk=course.associated_request %}"
+                                    class="button muted-button"
+                                    data-toggle="tooltip"
+                                    data-placement="top"
+                                    title="click to see details"
+                                >
+                                    Requested
+                                </a>
                             {% else %}
-                                <a  href='{% url "UI-request-detail" pk=course.course_code %}' class="button muted-button" data-toggle="tooltip" data-placement="top" title="click to see details">Requested</a>
+                                <a
+                                    href="{% url "UI-request-detail" pk=course.course_code %}"
+                                    class="button muted-button"
+                                    data-toggle="tooltip"
+                                    data-placement="top"
+                                    title="click to see details"
+                                >
+                                    Requested
+                                </a>
                             {% endif %}
                         {% else %}
-                            <button class="button" data-toggle="modal" data-target="#CourseModal" data-course="{{ course.course_code }}">
+                            <button
+                                class="button"
+                                data-toggle="modal"
+                                data-target="#CourseModal"
+                                data-course="{{ course.course_code }}"
+                            >
                                 Request
                             </button>
                         {% endif %}

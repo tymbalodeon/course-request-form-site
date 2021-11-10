@@ -2,7 +2,7 @@
 {% load rest_framework %}
 {% load template_extra %}
 
-{% block home %}
+{% block home_nav_link %}
     active
 {% endblock %}
 
@@ -14,10 +14,18 @@
                     <p class="message">
                         {{ notice.get_html }}
                         {% if staff %}
-                            <a href="{%  url 'admin:course_notice_change'   notice.pk %}" style="float:right;"> (change this message) </a>
+                            <a
+                                href="{% url "admin:course_notice_change" notice.pk %}"
+                                style="float:right;"
+                            >
+                                (change this message)
+                            </a>
                         {% endif %}
                 </div>
-                <p class="default" style="display:none;width: -webkit-fill-available;margin: 0.5rem 0;font-family: Menlo;font-size: 14px;">
+                <p
+                    class="default"
+                    style="display:none;width: -webkit-fill-available;margin: 0.5rem 0;font-family: Menlo;font-size: 14px;"
+                >
                     expand to see message
                 </p>
                 <div class='close-notification' style="height:40px;">
@@ -28,53 +36,63 @@
     {% endif %}
     <div class="homepage-container">
         <dt style="margin-bottom: 1rem;">Contact Info</dt>
-        {% if request.session.on_behalf_of %}
-            {% get_user request.session.on_behalf_of as masq_user %}
-            <dl class="row" style="line-height:1.1;margin-bottom:0;">
-                {% if masq_user.last_name and masq_user.first_name %}
-                    <dt class="col-4 col-md-2 text-right" style="padding-right: 0px;">User: </dt>
-                    <dd class="col-8 col-md-10"> {{masq_user.first_name }} {{masq_user.last_name}} </dd>
-                {% endif %}
-                <dt class="col-4 col-md-2 text-right" style="padding-right: 0px;">Pennkey: </dt>
-                <dd class="col-8 col-md-10"> {{masq_user.username}}</dd>
-                <dt class="col-4 col-md-2 text-right" style="padding-right: 0px;">Penn ID: </dt>
-                <dd class="col-8 col-md-10"> {{ masq_user.profile.penn_id}}</dd>
-                <dt class="col-4 col-md-2 text-right" style="padding-right: 0px;">Email: </dt>
-                <dd class="col-8 col-md-10"> {{ masq_user.email|default:"None" }}</dd>
-            </dl>
-        {% else %}
-            <dl class="row" style="line-height:1.1;margin-bottom:0;">
-                {% if user.first_name and user.last_name %}
-                    <dt class="col-4 col-md-2 text-right" style="padding-right: 0px;">User: </dt>
-                    <dd class="col-8 col-md-10"> {{user.first_name }} {{user.last_name}} </dd>
-                {% endif %}
-                <dt class="col-4 col-md-2 text-right" style="padding-right: 0px;">Pennkey: </dt>
-                <dd class="col-8 col-md-10"> {{user.username}} </dd>
-                <dt class="col-4 col-md-2 text-right" style="padding-right: 0px;">Penn ID: </dt>
-                <dd class="col-8 col-md-10"> {{user.profile.penn_id}}</dd>
-                <dt class="col-4 col-md-2 text-right" style="padding-right: 0px;">Email: </dt>
-                <dd class="col-8 col-md-10"> {{user.email|default:"None" }}</dd>
-            </dl>
-            <p class="text-right" style="margin-bottom:0;font-weight:500;padding-right:25px;">(<a href="{% url 'userinfo' %}" class="" style="">Edit Info</a>)</p>
-        {% endif %}
+        <dl class="row" style="line-height:1.1;margin-bottom:0;">
+            {% if user_account.first_name and user_account.last_name %}
+                <dt class="col-4 col-md-2 text-right" style="padding-right: 0px;">
+                    User:
+                </dt>
+                <dd class="col-8 col-md-10">
+                    {{ user_account.first_name }} {{ user_account.last_name }}
+                </dd>
+            {% endif %}
+            <dt class="col-4 col-md-2 text-right" style="padding-right: 0px;">
+                Pennkey:
+            </dt>
+            <dd class="col-8 col-md-10">{{ user_account.username }}</dd>
+            <dt class="col-4 col-md-2 text-right" style="padding-right: 0px;">
+                Penn ID:
+            </dt>
+            <dd class="col-8 col-md-10">{{ user_account.profile.penn_id }}</dd>
+            <dt class="col-4 col-md-2 text-right" style="padding-right: 0px;">
+                Email:
+            </dt>
+            <dd class="col-8 col-md-10">{{ user_account.email|default:"None" }}</dd>
+        </dl>
+        <p
+            class="text-right"
+            style="margin-bottom:0;font-weight:500;padding-right:25px;"
+        >
+            (<a href="{% url "userinfo" %}" class="" style="">Edit Info</a>)
+        </p>
     </div>
     <div class="homepage-container">
         <dt>Request site on behalf of user</dt>
         <br>
-        <form method="POST" action="{% url 'home' %}" style="max-width:300px;margin:auto">
+        <form method="POST" action="{% url "home" %}" style="max-width:300px;margin:auto">
             {% csrf_token %}
             <label for="name">User's Pennkey</label>
             <div class="input-group mb-3">
-                <input name="on_behalf_of" type="text" class="form-control" placeholder="pennkey" aria-label="User's Pennkey" required>
+                <input
+                    name="on_behalf_of"
+                    type="text"
+                    class="form-control"
+                    placeholder="pennkey"
+                    aria-label="User's Pennkey"
+                    required
+                >
                 <div class="input-group-append">
-                    <button style="border-top-left-radius: 0px;border-bottom-left-radius: 0px;margin-left: -1px;height: 100%;z-index: 0" >Submit</button>
+                    <button
+                        style="border-top-left-radius: 0px;border-bottom-left-radius: 0px;margin-left: -1px;height: 100%;z-index: 0"
+                    >
+                        Submit
+                    </button>
                 </div>
             </div>
         </form>
     </div>
     <div class="homepage-container">
         <dl>
-            <dt>Site Requests ({{requests_count}})</dt>
+            <dt>Site Requests ({{ requests_count }})</dt>
             <dd><em>Requests made by you or on your behalf</em></dd>
         </dl>
         {% if requests %}
@@ -91,17 +109,30 @@
                 <tbody>
                     {% for request_instance in requests %}
                         <tr>
-                            <td><a href="{% url 'UI-request-detail' pk=request_instance.course_requested.course_code %}"> {{request_instance.course_requested}} </a></td>
-                            <td>{{request_instance.course_requested.course_name }}</td>
-                            <td>{{request_instance.owner}}
+                            <td>
+                                <a href="{% url "UI-request-detail" pk=request_instance.course_requested.course_code %}">
+                                    {{ request_instance.course_requested }}
+                                </a></td>
+                            <td>{{ request_instance.course_requested.course_name }}</td>
+                            <td>
+                                {{ request_instance.owner }}
                                 {% if request_instance.masquerade %}
-                                    ({{request_instance.masquerade}})
+                                    ({{ request_instance.masquerade }})
                                 {% endif %}
                             </td>
-                            <td> {{ request_instance.created|time:'h:ia' }} {{ request_instance.created|date:"SHORT_DATE_FORMAT" }}</td>
+                            <td>
+                                {{ request_instance.created|time:'h:ia' }}
+                                {{ request_instance.created|date:"SHORT_DATE_FORMAT" }}
+                            </td>
                             <td>{{request_instance.status}}
                                 {% if request_instance.status == 'LOCKED' %}
-                                    <i class="fas fa-lock" data-toggle="tooltip" data-placement="top" title="" data-original-title="this request will not be processed until unlocked by admin"></i>
+                                    <i
+                                        class="fas fa-lock"
+                                        data-toggle="tooltip"
+                                        data-placement="top"
+                                        title=""
+                                        data-original-title="this request will not be processed until unlocked by admin"
+                                    ></i>
                                 {% endif %}
                             </td>
                         </tr>
@@ -109,15 +140,22 @@
                 </tbody>
             </table>
             <div class="vertical-center">
-                <a href="{% url 'UI-request-list' %}?requestor={% if request.session.on_behalf_of %}{{request.session.on_behalf_of}}{% else %}{{user.username}}{% endif %}">see more </a>
+                <a href="{% url "UI-request-list" %}?requestor={% if request.session.on_behalf_of %}
+                         {{ request.session.on_behalf_of }}
+                {% else %}
+                         {{ user.username }}
+                {% endif %}"
+                >
+                    see more
+                </a>
             </div>
         {% else %}
-            <center><p> No requests for this user... </p></center>
+            <center><p>No requests for this user...</p></center>
         {% endif %}
     </div>
     <div class="homepage-container">
         <dl>
-            <dt>Courses ({{courses_count}})</dt>
+            <dt>Courses ({{ courses_count }})</dt>
             <dd><em>SRS Course Assignments</em></dd>
         </dl>
         {% if courses %}
@@ -135,25 +173,57 @@
                     {% for course in courses %}
                         <tr>
                             <td>
-                                <a href='{% url "UI-course-detail" course_code=course.course_code %}'>{{ course|course_to_course_code }}</a>
+                                <a href="{% url "UI-course-detail" course_code=course.course_code %}">
+                                    {{ course|course_to_course_code }}
+                                </a>
                             </td>
                             <td>{{ course.course_name }}</td>
                             <td>{{ course.course_activity }}</td>
                             <td id="instructors">
-                                {% if course.instructors|length == 0 %} STAFF {% else %}
-                                    {{ course.instructors|join:", "}} {% endif %}
+                                {% if not course.instructors|length %}
+                                    STAFF
+                                {% else %}
+                                    {{ course.instructors|join:", "}}
+                                {% endif %}
                             </td>
                             <td style="padding-left:4%;">
-                                {% if course.requested_override == True %}
-                                    <a class="button muted-button" data-toggle="tooltip" data-placement="top" title="Request not in CRF">Requested</a>
-                                {% elif course.requested == True %}
+                                {% if course.requested_override %}
+                                    <a
+                                        class="button muted-button"
+                                        data-toggle="tooltip"
+                                        data-placement="top"
+                                        title="Request not in CRF"
+                                    >
+                                        Requested
+                                    </a>
+                                {% elif course.requested %}
                                     {% if course.associated_request %}
-                                        <a  href='{% url "UI-request-detail" pk=course.associated_request %}' class="button muted-button" data-toggle="tooltip" data-placement="top" title="click to see details">Requested</a>
+                                        <a
+                                            href="{% url "UI-request-detail" pk=course.associated_request %}"
+                                            class="button muted-button"
+                                            data-toggle="tooltip"
+                                            data-placement="top"
+                                            title="click to see details">i
+                                            Requested
+                                        </a>
                                     {% else %}
-                                        <a  href='{% url "UI-request-detail" pk=course.course_code %}' class="button muted-button" data-toggle="tooltip" data-placement="top" title="click to see details">Requested</a>
+                                        <a
+                                            href="{% url "UI-request-detail" pk=course.course_code %}"
+                                            class="button muted-button"
+                                            data-toggle="tooltip"
+                                            data-placement="top"
+                                            title="click to see details"
+                                        >
+                                            Requested
+                                        </a>
                                     {% endif %}
                                 {% else %}
-                                    <button class="button" data-toggle="modal" data-target="#CourseModal" data-course="{{ course.course_code }}">
+                                    <button
+                                        class="button"
+                                        data-toggle="modal"
+                                        data-target="#CourseModal"
+                                        data-course="{{ course.course_code }}"
+                                    >
                                         Request
                                     </button>
                                 {% endif %}
@@ -163,14 +233,23 @@
                     {% endfor %}
                 </tbody>
             </table>
-            <div class="vertical-center"><a href="{% url 'UI-course-list' %}?instructor={% if request.session.on_behalf_of %}{{request.session.on_behalf_of}}{% else %}{{user.username}}{% endif %}">see more</a></div>
+            <div class="vertical-center">
+                <a href="{% url 'UI-course-list' %}?instructor={% if request.session.on_behalf_of %}
+                         {{ request.session.on_behalf_of }}
+                {% else %}
+                         {{ user.username }}
+                {% endif %}"
+                >
+                    see more
+                </a>
+            </div>
         {% else %}
-            <center><p> No courses for this user... </p></center>
+            <center><p>No courses for this user...</p></center>
         {% endif %}
     </div>
     <div class="homepage-container">
         <dl>
-            <dt>Canvas Sites ({{canvas_sites_count}})</dt>
+            <dt>Canvas Sites ({{ canvas_sites_count }})</dt>
             <dd><em>Existing Canvas Sites (either an instructor or custom permission)</em></dd>
         </dl>
         {% if canvas_sites %}
@@ -186,23 +265,29 @@
                 <tbody>
                     {% for site in canvas_sites %}
                         <tr>
-                            <td>{{site.name}}</td>
-                            <td>{{site.sis_course_id}}</td>
+                            <td>{{ site.name }}</td>
+                            <td>{{ site.sis_course_id }}</td>
                             <td>
                                 {% if site.request_instance %}
-                                    <a href="{% url 'UI-request-detail' site.request_instance %}">request</a>
+                                    <a href="{% url "UI-request-detail" site.request_instance %}">
+                                        request
+                                    </a>
                                 {% else %}
                                     None
                                 {% endif %}
                             </td>
-                            <td>{{site.workflow_state}}</td>
+                            <td>{{ site.workflow_state }}</td>
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
-            <div class="vertical-center"><a href="{% url 'UI-canvas_site-list' %}">See more...</a></div>
+            <div class="vertical-center">
+                <a href="{% url "UI-canvas_site-list" %}">
+                    See more...
+                </a>
+            </div>
         {% else %}
-            <center><p> No Canvas Sites for this user... </p></center>
+            <center><p>No Canvas Sites for this user...</p></center>
         {% endif %}
     </div>
 {% endblock %}

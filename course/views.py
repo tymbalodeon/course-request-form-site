@@ -237,13 +237,10 @@ class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         print_log_message(request, "course", "detail")
-
         response = super(CourseViewSet, self).retrieve(request, *args, **kwargs)
-
         if request.accepted_renderer.format == "html":
             course_instance = self.get_object()
             logger.info(f"- COURSE: {course_instance}")
-
             if course_instance.requested:
                 request_instance = (
                     ""
@@ -269,7 +266,6 @@ class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
                 )
                 this_form.is_valid()
                 request_instance = ""
-
             return Response(
                 {
                     "course": response.data,
@@ -801,47 +797,43 @@ class HomePage(UserPassesTestMixin, ModelViewSet):
         user_name = self.request.user.get_username()
         logger.info(f'Checking Users for "{user_name}"...')
         user = User.objects.get(username=self.request.user.get_username())
-
         try:
             if user.profile:
                 logger.info(f'FOUND user "{user_name}".')
-
                 return True
         except Exception:
             user_data = get_staff_account(penn_key=user.username)
-
             if user_data:
                 user.first_name = user_data["first_name"].title()
                 user.last_name = user_data["last_name"].title()
                 user.email = user_data["email"]
                 Profile.objects.create(user=user, penn_id=user_data["penn_id"])
                 update_user_courses(user.username)
-
                 logger.info(f'CREATED user "{user_name}".')
-
                 return True
             else:
                 logger.error(f'FAILED to create user "{user_name}".')
-
                 return False
 
     def get(self, request):
         self.test_func()
-
         try:
             notice = Notice.objects.latest()
         except Notice.DoesNotExist:
             notice = None
-
         masquerade = request.session["on_behalf_of"]
-        user = User.objects.get(username=masquerade) if masquerade else request.user
-        courses = self.get_queryset().filter(instructors=user)
+        user_account = (
+            User.objects.get(username=masquerade) if masquerade else request.user
+        )
+        courses = self.get_queryset().filter(instructors=user_account)
         courses_count = courses.count()
         courses = courses[:15]
-        requests = Request.objects.filter(Q(owner=user) | Q(masquerade=user))
+        requests = Request.objects.filter(
+            Q(owner=user_account) | Q(masquerade=user_account)
+        )
         requests_count = requests.count()
         requests = requests[:15]
-        canvas_sites = CanvasSite.objects.filter(Q(owners=user))
+        canvas_sites = CanvasSite.objects.filter(Q(owners=user_account))
         canvas_sites_count = canvas_sites.count()
         canvas_sites = canvas_sites[:15]
         page = self.paginate_queryset(courses)
@@ -856,21 +848,18 @@ class HomePage(UserPassesTestMixin, ModelViewSet):
             "canvas_sites": canvas_sites,
             "canvas_sites_count": canvas_sites_count,
             "username": request.user,
+            "user_account": user_account,
             "autocomplete_canvas_site": CanvasSiteForm(),
             "style": {"template_pack": "rest_framework/vertical/"},
         }
-
         return response
 
-    def set_session(request):
+    def set_session(self, request):
         on_behalf_of = None
-
         try:
             on_behalf_of = request.data["on_behalf_of"].lower()
-
             if on_behalf_of:
                 lookup_user = get_user_by_pennkey(on_behalf_of)
-
                 if lookup_user is None:
                     messages_error(
                         request, "Invalid Pennkey -- Pennkey must be Upenn Employee"
@@ -880,15 +869,12 @@ class HomePage(UserPassesTestMixin, ModelViewSet):
                         request,
                         "Invalid Pennkey -- Pennkey cannot be Courseware Team Member",
                     )
-
         except KeyError as error:
             logger.error(f"ERROR: There was a problem setting the session ({error})")
-
         request.session["on_behalf_of"] = on_behalf_of
 
     def post(self, request):
-        HomePage.set_session(request)
-
+        self.set_session(request)
         return redirect(request.META["HTTP_REFERER"])
 
 
