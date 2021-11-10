@@ -1,10 +1,12 @@
-{% extends "base_generic.html" %}
+{% extends "base_authenticated.html" %}
 {% load rest_framework %}
 
 {% block content %}
-    <h1> Subject</h1>
-    {% for key, value in data.items %}
-        <p><b>{{ key }}</b>: {{ value }}</p>
+    <h1>Subject</h1>
+    <ul>
+    {% for key, value in subjects.items %}
+        <li>{{ key|title }}: <b>{{ value }}</b></li>
     {% endfor %}
-    <a href="/subjects/"> Go Back to Subject List </a>
+    </ul>
+    <a href="/subjects/">Go Back to Subject List</a>
 {% endblock %}

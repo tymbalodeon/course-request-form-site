@@ -1,4 +1,4 @@
-{% extends "base_blank.html" %}
+{% extends "base.html" %}
 {% load static %}
 {% load template_extra %}
 
@@ -116,11 +116,11 @@
                     <ul>
                         <li class="title">Main</li>
                         <li><a class="{% block home %}{% endblock %}" href="/">Home</a></li>
-                        <li><a class="{% block requests %}{% endblock %}" href="/requests">Requests</a></li>
+                        <li><a class="{% block requests_nav_link %}{% endblock %}" href="/requests">Requests</a></li>
                         <li class="title">Browse</li>
                         <li><a class="{% block courses %}{% endblock %}" href="/courses">Courses</a></li>
-                        <li><a class="{% block schools %}{% endblock %}" href="/schools">Schools</a></li>
-                        <li><a class="{% block subjects %}{% endblock %}" href="/subjects">Subjects</a></li>
+                        <li><a class="{% block schools_nav_link %}{% endblock %}" href="/schools">Schools</a></li>
+                        <li><a class="{% block subjects_nav_link %}{% endblock %}" href="/subjects">Subjects</a></li>
                         {% if staff %}
                             <li class="title">Admin</li>
                             <li><a href="/admin">Admin Portal</a></li>

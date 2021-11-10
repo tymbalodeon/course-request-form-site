@@ -1,13 +1,13 @@
-{% extends "base_generic.html" %}
+{% extends "base_authenticated.html" %}
 {% load rest_framework %}
 {% load template_extra %}
 
-{% block requests %}
+{% block requests_nav_link %}
     active
 {% endblock %}
 
 {% block content %}
-    <h1> Requests</h1>
+    <h1>Requests</h1>
     {% include "bits/filter_content.html" %}
     <table class="striped-table requestTable">
         <thead>
@@ -20,19 +20,30 @@
             </tr>
         </thead>
         <tbody>
-            {% for request_instance in results %}
+            {% for request in requests %}
                 <tr>
-                    <td><a href="{% url 'UI-request-detail' pk=request_instance.course_requested %}"> {{request_instance.course_info|course_to_course_code}} </a></td>
-                    <td>{{request_instance.course_info.course_name}}</td>
-                    <td>{{request_instance.owner}}
-                        {% if request_instance.masquerade %}
-                            ({{request_instance.masquerade}})
+                    <td>
+                        <a href="{% url "UI-request-detail" pk=request.course_requested %}">
+                            {{ request.course_info|course_to_course_code }}
+                        </a>
+                    </td>
+                    <td>{{ request.course_info.course_name }}</td>
+                    <td>
+                        {{ request.owner }}
+                        {% if request.masquerade %}
+                            ({{ request.masquerade }})
                         {% endif %}
                     </td>
-                    <td>{{ request_instance.created }}</td>
-                    <td>{{request_instance.status}}
-                        {% if request_instance.status == 'LOCKED' %}
-                            <i class="fas fa-lock" data-toggle="tooltip" data-placement="top" title="" data-original-title="this request will not be processed until unlocked by admin"></i>
+                    <td>{{ request.created }}</td>
+                    <td>
+                        {{ request.status }}
+                        {% if request.status == "LOCKED" %}
+                            <i class="fas fa-lock"
+                               data-toggle="tooltip"
+                               data-placement="top"
+                               title=""
+                               data-original-title="this request will not be processed until unlocked by admin"
+                            ></i>
                         {% endif %}
                     </td>
                 </tr>
@@ -45,12 +56,11 @@
 
 {% block template_page_js %}
     <script>
-
-     $('form[method="get"]').submit(function(){
+     $('form[method="get"]').submit(function() {
          $(this).find(':input').each(function() {
-             var inp = $(this);
-             if (!inp.val()) {
-                 inp.remove();
+             var input = $(this);
+             if (!input.val()) {
+                 input.remove();
              }
          });
      });

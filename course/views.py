@@ -426,7 +426,6 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
 
     def list(self, request):
         print_log_message(request, "request", "list")
-
         search_term = get_search_term(request)
         queryset = (
             self.get_queryset().filter(
@@ -437,7 +436,6 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
             else self.get_queryset()
         )
         page = self.paginate_queryset(queryset)
-
         if page is not None:
             serializer = self.get_serializer(
                 page,
@@ -452,25 +450,21 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
                 ],
             )
             response = self.get_paginated_response(serializer.data)
-
             if request.accepted_renderer.format == "html":
                 response.template_name = "request_list.html"
                 response.data = {
-                    "results": response.data,
+                    "requests": response.data,
                     "paginator": self.paginator,
                     "filter": RequestFilter,
                     "autocomplete_user": UserForm(),
                 }
-
             logger.info(response.data["paginator"].page)
-
             return response
 
     def check_request_update_permissions(self, request, response_data):
         request_status = response_data["status"]
         request_owner = response_data["owner"]
         request_masquerade = response_data["masquerade"]
-
         if request_status == "SUBMITTED":
             permissions = {
                 "staff": ["lock", "cancel", "edit", "create"],
@@ -488,46 +482,36 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
             permissions = {"staff": [""], "owner": [""]}
         else:
             permissions = {"staff": [""], "owner": [""]}
-
         if request.session["on_behalf_of"]:
             current_masquerade = request.session["on_behalf_of"]
-
             if current_masquerade == request_owner:
                 return permissions["owner"]
-
         if request.user.is_staff:
             return permissions["staff"]
-
         if request.user.username == request_owner or (
             request.user.username == request_masquerade and request_masquerade != ""
         ):
             return permissions["owner"]
-
         return ""
 
     def retrieve(self, request, *args, **kwargs):
         print_log_message(request, "request", "detail")
-
         response = super(RequestViewSet, self).retrieve(request, *args, **kwargs)
         logger.info(f"- REQUEST: {response.data['course_requested']}")
-
         if request.resolver_match.url_name == "UI-request-detail-success":
             return Response(
-                {"request_instance": response.data},
+                {"request": response.data},
                 template_name="request_success.html",
             )
-
-        if request.accepted_renderer.format == "html":
+        elif request.accepted_renderer.format == "html":
             permissions = self.check_request_update_permissions(request, response.data)
-
             if request.resolver_match.url_name == "UI-request-detail-edit":
                 here = RequestSerializer(
                     self.get_object(), context={"request": request}
                 )
-
                 return Response(
                     {
-                        "request_instance": response.data,
+                        "request": response.data,
                         "permissions": permissions,
                         "request_form": here,
                         "autocomplete_canvas_site": CanvasSiteForm(),
@@ -535,13 +519,13 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
                     },
                     template_name="request_detail_edit.html",
                 )
-
-            return Response(
-                {"request_instance": response.data, "permissions": permissions},
-                template_name="request_detail.html",
-            )
-
-        return response
+            else:
+                return Response(
+                    {"request": response.data, "permissions": permissions},
+                    template_name="request_detail.html",
+                )
+        else:
+            return response
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -677,20 +661,15 @@ class SchoolViewSet(MixedPermissionModelViewSet, ModelViewSet):
 
     def list(self, request):
         print_log_message(request, "school", "list")
-
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
-
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             response = self.get_paginated_response(serializer.data)
-
             if request.accepted_renderer.format == "html":
                 response.template_name = "schools_list.html"
-                response.data = {"results": response.data, "paginator": self.paginator}
-
+                response.data = {"schools": response.data, "paginator": self.paginator}
             logger.info(response.data["paginator"].page)
-
             return response
 
     def update(self, request, **kwargs):
@@ -699,21 +678,16 @@ class SchoolViewSet(MixedPermissionModelViewSet, ModelViewSet):
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-
         if getattr(instance, "_prefetched_objects_cache", None):
             instance._prefetched_objects_cache = {}
-
         return Response(serializer.data)
 
     def retrieve(self, request, *args, **kwargs):
         print_log_message(request, "school", "detail")
-
         response = super(SchoolViewSet, self).retrieve(request, *args, **kwargs)
-
         logger.info(f"- SCHOOL: {response.data['name']}")
-
         return (
-            Response({"data": response.data}, template_name="school_detail.html")
+            Response({"school": response.data}, template_name="school_detail.html")
             if request.accepted_renderer.format == "html"
             else response
         )
@@ -728,38 +702,30 @@ class SubjectViewSet(MixedPermissionModelViewSet, ModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
-
         return Response(
             serializer.data, status=status.HTTP_201_CREATED, headers=headers
         )
 
     def list(self, request):
         print_log_message(request, "subject", "list")
-
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
-
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            response = self.get_paginated_response(serializer.data)
-
-            if request.accepted_renderer.format == "html":
-                response.template_name = "subjects_list.html"
-                response.data = {"results": response.data, "paginator": self.paginator}
-
-            logger.info(response.data["paginator"].page)
-
-            return response
+        if not page:
+            return
+        serializer = self.get_serializer(page, many=True)
+        response = self.get_paginated_response(serializer.data)
+        if request.accepted_renderer.format == "html":
+            response.template_name = "subjects_list.html"
+            response.data = {"subjects": response.data, "paginator": self.paginator}
+        logger.info(response.data["paginator"].page)
+        return response
 
     def retrieve(self, request, *args, **kwargs):
         print_log_message(request, "subject", "detail")
-
         response = super(SubjectViewSet, self).retrieve(request, *args, **kwargs)
-
         logger.info(f"- SUBJECT: {response.data['name']}")
-
         return (
-            Response({"data": response.data}, template_name="subject_detail.html")
+            Response({"subjects": response.data}, template_name="subject_detail.html")
             if request.accepted_renderer.format == "html"
             else response
         )
@@ -1021,18 +987,19 @@ class UpdateLogViewSet(MixedPermissionModelViewSet, ModelViewSet):
 
 
 def user_info(request):
-    form_one = EmailChangeForm(request.user)
-    form_two = UserForm()
-
+    masquerade = request.session["on_behalf_of"]
+    user_account = User.objects.get(username=masquerade) if masquerade else request.user
+    email_change_form = EmailChangeForm(request.user)
     if request.method == "POST":
-        form_one = EmailChangeForm(request.user, request.POST)
-
-        if form_one.is_valid():
-            form_one.save()
-
+        email_change_form = EmailChangeForm(request.user, request.POST)
+        if email_change_form.is_valid():
+            email_change_form.save()
             return redirect("userinfo")
-
-    return render(request, "user_info.html", {"form": form_one, "form2": form_two})
+    return render(
+        request,
+        "user_info.html",
+        {"email_change_form": email_change_form, "user_account": user_account},
+    )
 
 
 def DWHSE_Proxy(request):
