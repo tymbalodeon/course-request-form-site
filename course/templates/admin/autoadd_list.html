@@ -1,6 +1,6 @@
 {% extends "base_authenticated.html" %}
 {% load rest_framework %}
-{% block autoadd %}
+{% block auto_add_nav_link %}
     active
 {% endblock %}
 
@@ -13,7 +13,8 @@
             below.
         </p>
         <button data-toggle="modal" data-target="#auto-add-modal">
-            Create Auto-Add <i class="fas fa-plus"></i>
+            Create Auto-Add
+            <i class="fas fa-plus"></i>
         </button>
         <br>
         <br>
@@ -25,26 +26,30 @@
                     <th>School</th>
                     <th>Subject</th>
                     <th>Role</th>
-                    <th>Edit / Remove</th>
+                    <th>Edit/Remove</th>
                 </tr>
             </thead>
             <tbody>
                 {% for auto_add in auto_adds %}
                     <tr>
-                        <td>{{auto_add.user}}</td>
-                        <td>{{auto_add.school}}</td>
-                        <td>{{auto_add.subject}}</td>
-                        <td>{{auto_add.role }}</td>
+                        <td>{{ auto_add.user }}</td>
+                        <td>{{ auto_add.school }}</td>
+                        <td>{{ auto_add.subject }}</td>
+                        <td>{{ auto_add.role }}</td>
                         <td>
-                            <button data-toggle="modal" data-target="#delete-modal" data-autoadd="{{auto_add.id}}">
-                                Delete <i class="fas fa-trash-alt"></i>
+                            <button
+                                data-toggle="modal"
+                                data-target="#delete-modal"
+                                data-autoadd="{{ auto_add.id }}"
+                            >
+                                Delete
+                                <i class="fas fa-trash-alt"></i>
                             </button>
                         </td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
-
         <div class="modal fade" id="auto-add-modal" role="dialog" aria-labelledby="" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered" role="document">
                 <div class="modal-content">

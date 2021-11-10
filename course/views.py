@@ -2,7 +2,6 @@ from datetime import datetime
 from json import dump, dumps, load
 from logging import getLogger
 from os import mkdir
-from pathlib import Path
 from re import search
 from typing import Dict
 from urllib.parse import unquote
@@ -70,11 +69,11 @@ from .serializers import (
 )
 from .tasks import create_canvas_sites
 from .terms import CURRENT_TERM, CURRENT_YEAR, NEXT_TERM, NEXT_YEAR, get_term_letters
-from .utils import update_user_courses
+from .utils import DATA_DIRECTORY_NAME, get_data_directory, update_user_courses
 
 FIVE_OR_MORE_ALPHABETIC_CHARACTERS = r"[a-z]{5,}"
 SPRING, SUMMER, FALL = get_term_letters()
-TASKS_LOG_PATH = Path("course/static/log")
+TASKS_LOG_PATH = get_data_directory(DATA_DIRECTORY_NAME) / "tasks"
 PROCESS_REQUESTS_LOG = TASKS_LOG_PATH / "processed-requests.json"
 DELETE_REQUESTS_LOG = TASKS_LOG_PATH / "deleted-courses.json"
 CHECK_CANCELED_LOG = TASKS_LOG_PATH / "canceled-courses.json"
@@ -586,19 +585,18 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
         if getattr(instance, "_prefetched_objects_cache", None):
             instance._prefetched_objects_cache = {}
 
-        if "status" in request.data:
-            if request.data["status"] == "LOCKED":
-                admin_lock(
-                    context={
-                        "request_detail_url": request.build_absolute_uri(
-                            reverse(
-                                "UI-request-detail",
-                                kwargs={"pk": request.data["course_requested"]},
-                            )
-                        ),
-                        "course_code": request.data["course_requested"],
-                    }
-                )
+        if "status" in request.data and request.data["status"] == "LOCKED":
+            admin_lock(
+                context={
+                    "request_detail_url": request.build_absolute_uri(
+                        reverse(
+                            "UI-request-detail",
+                            kwargs={"pk": request.data["course_requested"]},
+                        )
+                    ),
+                    "course_code": request.data["course_requested"],
+                }
+            )
 
         if (
             "view_type" in request.data
@@ -754,7 +752,7 @@ class CanvasSiteViewSet(MixedPermissionModelViewSet, ModelViewSet):
             response = self.get_paginated_response(serializer.data)
 
             if request.accepted_renderer.format == "html":
-                response.template_name = "canvassite_list.html"
+                response.template_name = "canvas_site_list.html"
                 response.data = {"results": response.data, "paginator": self.paginator}
 
             return response
@@ -765,7 +763,7 @@ class CanvasSiteViewSet(MixedPermissionModelViewSet, ModelViewSet):
         return (
             Response(
                 {"data": response.data, "autocomplete_user": UserForm()},
-                template_name="canvassite_detail.html",
+                template_name="canvas_site_detail.html",
             )
             if request.accepted_renderer.format == "html"
             else response
@@ -780,7 +778,7 @@ class CanvasSiteViewSet(MixedPermissionModelViewSet, ModelViewSet):
 
         return Response(
             {"data": serializer.data, "autocomplete_user": UserForm()},
-            template_name="canvassite_detail.html",
+            template_name="canvas_site_detail.html",
         )
 
 

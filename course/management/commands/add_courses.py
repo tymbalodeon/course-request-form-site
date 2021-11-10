@@ -11,14 +11,11 @@ from open_data.open_data import get_open_data_connection
 
 def pull_from_local_store():
     print(") Pulling courses from the local store...")
-
     with open("open_data/open_data.json") as json_file:
         courses = json.load(json_file)
-
         for school, subjects in courses["school_subj_map"].items():
             try:
                 school_object = School.objects.get(open_data_abbreviation=school)
-
                 try:
                     for subject in subjects:
                         subject_name = courses["departments"][subject]
@@ -40,27 +37,20 @@ def pull_from_local_store():
 
 def pull_from_open_data(year_and_term):
     print(") Pulling courses from Open Data...")
-
     year, term = split_year_and_term(year_and_term)
     open_data = get_open_data_connection()
     courses = open_data.get_courses_by_term(year_and_term)
     page = 1
-
     while courses is not None:
         print(f"PAGE {page}")
-
         if courses == "ERROR":
             print("ERROR")
-
             return
-
         if isinstance(courses, dict):
             courses = [courses]
-
         for course in courses:
             course["section_id"] = course["section_id"].replace(" ", "")
             course["crosslist_primary"] = course["crosslist_primary"].replace(" ", "")
-
             try:
                 subject = Subject.objects.get(abbreviation=course["course_department"])
             except Exception:
@@ -84,7 +74,6 @@ def pull_from_open_data(year_and_term):
 
             if course["crosslist_primary"]:
                 primary_subject = course["crosslist_primary"][:-6]
-
                 try:
                     primary_subject = Subject.objects.get(abbreviation=primary_subject)
                 except Exception:
@@ -106,9 +95,7 @@ def pull_from_open_data(year_and_term):
 
             else:
                 primary_subject = subject
-
             school = primary_subject.schools
-
             try:
                 activity = Activity.objects.get(abbr=course["activity"])
             except Exception:
@@ -120,7 +107,6 @@ def pull_from_open_data(year_and_term):
                     message = f"Failed to find activity {course['activity']}"
                     logging.getLogger("error_logger").error(message)
                     print(f"- ERROR: {message} ({error})")
-
             try:
                 course_created = Course.objects.update_or_create(
                     course_code=f"{course['section_id']}{year_and_term}",
@@ -138,20 +124,15 @@ def pull_from_open_data(year_and_term):
                         "year": year,
                     },
                 )
-
                 course_object, created = course_created
-
                 print(f"- {'CREATED' if created else 'UPDATED'} {course['section_id']}")
-
                 if course["is_cancelled"]:
                     course_object.delete()
             except Exception as error:
                 logging.getLogger("error_logger").error(error)
                 print(f"- ERROR:{error}")
-
         page += 1
         courses = open_data.next_page()
-
     print("FINISHED")
 
 
@@ -191,24 +172,17 @@ class Command(BaseCommand):
         )
 
     def handle(self, **kwargs):
-
         open_data = kwargs["open_data"]
         data_warehouse = kwargs["data_warehouse"]
         instructors = kwargs["instructors"]
         local = kwargs["local"]
-
         if local or (not open_data and not data_warehouse and not pull_instructors):
             pull_from_local_store()
-
             return
-
         year_and_term = kwargs["term"].upper()
-
         if open_data:
             pull_from_open_data(year_and_term)
-
         if data_warehouse:
             pull_courses(year_and_term)
-
         if instructors:
             pull_instructors(year_and_term)

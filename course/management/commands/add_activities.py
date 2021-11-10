@@ -37,26 +37,21 @@ class Command(BaseCommand):
 
     def handle(self, **kwargs):
         opendata = kwargs["open_data"]
-
         if opendata:
             activities = get_open_data_connection().get_available_activity().items()
         else:
             activities = ACTIVITY_CHOICES
-
             if not activities:
                 return "NO ACTIVITIES FOUND"
-
             for abbreviation, name in activities:
                 try:
                     added = Activity.objects.update_or_create(
                         name=name, abbr=abbreviation
                     )[1]
-
                     print(
                         f"- {'ADDED' if added else 'UPDATED'} activity:"
                         f" {name} ({abbreviation})"
                     )
                 except Exception:
                     print(f"- FAILED to add activity: {name} ({abbreviation})")
-
             print("FINISHED")

@@ -13,13 +13,11 @@ logger = getLogger(__name__)
 def get_email(pennkey):
     try:
         user_email = User.objects.get(username=pennkey).email
-
         if not user_email:
             user_email = None
     except User.DoesNotExist:
         user_email = None
         logger.critical(f"ERROR: Could not find {pennkey} in system.")
-
     return user_email
 
 
@@ -29,7 +27,7 @@ def feedback(context):
     email = EmailMessage(
         subject=f"CRF Feedback from {context['contact_name']}",
         body=content,
-        to=["mfhodges@upenn.edu"],
+        to=[EMAIL],
     )
     email.send()
 
@@ -94,6 +92,8 @@ def autoadd_contact(context):
         body=content,
         to=[user_email] if user_email else [],
     )
+    print("SENDING")
+    print(user_email)
     email.send()
 
 
