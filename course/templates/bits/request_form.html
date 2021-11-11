@@ -151,12 +151,12 @@
                 {% for enrollment in request_instance.additional_enrollments %}
                     <div id="addEnroll-{{ forloop.counter0 }}" class="additional-enrollments">
                         <label class="additional-enrollments-user" for="name">
-                            User (pennkey)
+                            User
                             <input name="additional_enrollments[{{ forloop.counter0 }}][user]" value="{{enrollment.user}}" class="form-control" type="text">
                         </label>
                         <label class="additional-enrollments-role">
                             Role
-                            <select id="choose" name="additional_enrollments[{{ forloop.counter0 }}][role]" >
+                            <select id="choose-{{ forloop.counter0 }}" name="additional_enrollments[{{ forloop.counter0 }}][role]" >
                                 <option disabled>Please select</option>
                                 <option value="TA" {% if enrollment.role == "TA" %} selected {% endif %}>TA</option>
                                 <option value="DES" {% if enrollment.role == "DES" or enrollment.role == "designer" %} selected {% endif %}>Designer</option>
@@ -168,14 +168,14 @@
                     </div>
                 {% endfor %}
             {% else %}
-                <div id="addEnroll-1" class="additional-enrollments">
+                <div id="addEnroll-{{ forloop.counter0 }}" class="additional-enrollments">
                     <label class="additional-enrollments-user">
                         User
-                        <input name="additional_enrollments[0][user]" value="" class="form-control" type="text">
+                        <input name="additional_enrollments[{{ forloop.counter0 }}][user]" value="" class="form-control" type="text">
                     </label>
                     <label class="additional-enrollments-role">
                         Role
-                        <select id="choose" name="additional_enrollments[0][role]" >
+                        <select id="choose-{{ forloop.counter0 }}" name="additional_enrollments[{{ forloop.counter0 }}][role]">
                             <option disabled selected>Please select</option>
                             <option value="TA">TA</option>
                             <option value="DES">Designer</option>
@@ -183,7 +183,10 @@
                             <option value="INST">Instructor</option>
                         </select>
                     </label>
-                    <a class="additional-enrollments-delete" onClick="removeAdditionalEnrollmentRow('additional_enrollments', 'addEnroll-1');"> Delete <i class="fas fa-times"></i></a>
+                    <a class="additional-enrollments-delete" onClick="removeAdditionalEnrollmentRow('additional_enrollments', 'addEnroll-1');">
+                        Delete
+                        <i class="fas fa-times"></i>
+                    </a>
                 </div>
             {% endif %}
         </fieldset>
@@ -214,49 +217,52 @@
 {% endif %}
 
 <script>
-function addAdditionalEnrollmentRow() {
-  const next_enrollment_input_id =
-    document.getElementById("additional_enrollments").childElementCount + 1;
-  const node = document.createElement("DIV");
-  node.setAttribute("id", `addEnroll-${next_enrollment_input_id}`);
-  node.setAttribute("class", "additional-enrollments");
-  const id = `'additional_enrollments','addEnroll-${next_enrollment_input_id}'`;
-  const user = `'additional_enrollments[${next_enrollment_input_id}][user]'`;
-  const role = `'additional_enrollments[${next_enrollment_input_id}][role]'`;
-  node.insertAdjacentHTML(
-    "beforeend",
-    `<label class="additional-enrollments-user">
-         User (pennkey)
-         <input name="${user}" value="" class="form-control" type="text">
-     </label>
-     <label class="additional-enrollments-role">
-          Role
-          <select id="choose" name="${role}">
-              <option disabled selected>Please select</option>
-              <option value="TA">TA</option>
-              <option value="DES">Designer</option>
-              <option value="LIB">Librarian</option>
-          </select>
-      </label>
-      <a class="additional-enrollments-delete" onClick="removeAdditionalEnrollmentRow(${id})">
-          Delete
-          <i class="fas fa-times"></i>
-      </a>`
-  );
-  document.getElementById("additional_enrollments").appendChild(node);
-}
+ function addAdditionalEnrollmentRow() {
+     const nextIdNumber =
+         document.getElementById("additional_enrollments").childElementCount + 1;
+     const nextId = `addEnroll-${nextIdNumber}`
+     const node = document.createElement("DIV");
+     node.setAttribute("id", nextId);
+     node.setAttribute("class", "additional-enrollments");
+     const parentId = 'additional_enrollments';
+     const user = `additional_enrollments[${nextId}][user]`;
+     const role = `additional_enrollments[${nextId}][role]`;
+     node.insertAdjacentHTML(
+         "beforeend",
+         `<label class="additional-enrollments-user">
+              User
+              <input name="${user}" value="" class="form-control" type="text">
+            </label>
+            <label class="additional-enrollments-role">
+                Role
+                <select id="choose-${nextIdNumber}" name="${role}">
+                    <option disabled selected>Please select</option>
+                    <option value="TA">TA</option>
+                    <option value="DES">Designer</option>
+                    <option value="LIB">Librarian</option>
+                </select>
+            </label>
+            <a
+                class="additional-enrollments-delete"
+                onClick="removeAdditionalEnrollmentRow(${parentId}, ${nextId})"
+            >
+                Delete
+                <i class="fas fa-times"></i>
+            </a>`
+     );
+     document.getElementById("additional_enrollments").appendChild(node);
+ }
 
-function removeAdditionalEnrollmentRow(parentDiv, childDiv) {
-  console.log("HELLOW");
-  if (childDiv == parentDiv) {
-    alert("Cannot remove parent div.");
-  } else if (document.getElementById(childDiv)) {
-    const child = document.getElementById(childDiv);
-    const parent = document.getElementById(parentDiv);
-    parent.removeChild(child);
-  } else {
-    alert("Child div has already been removed or does not exist.");
-    return false;
-  }
-}
+ function removeAdditionalEnrollmentRow(parentDiv, childDiv) {
+     if (childDiv == parentDiv) {
+         alert("Cannot remove parent div.");
+     } else if (document.getElementById(childDiv)) {
+         const child = document.getElementById(childDiv);
+         const parent = document.getElementById(parentDiv);
+         parent.removeChild(child);
+     } else {
+         alert("Child div has already been removed or does not exist.");
+         return false;
+     }
+ }
 </script>

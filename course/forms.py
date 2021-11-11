@@ -1,22 +1,14 @@
 from dal.autocomplete import ModelSelect2
 from django.forms import (
-    CharField,
     EmailField,
     EmailInput,
     Form,
     ModelChoiceField,
     ModelForm,
-    Textarea,
     ValidationError,
 )
 
 from .models import CanvasSite, Subject, User
-
-
-class ContactForm(Form):
-    contact_name = CharField(required=True)
-    contact_email = EmailField(required=True)
-    content = CharField(required=True, widget=Textarea)
 
 
 class UserForm(ModelForm):
@@ -87,32 +79,26 @@ class EmailChangeForm(Form):
     def clean_new_email(self):
         old_email = self.user.email
         new_email = self.cleaned_data.get("new_email")
-
         if new_email and old_email and new_email == old_email:
             raise ValidationError(
                 self.error_messages["not_changed"],
                 code="not_changed",
             )
-
         return new_email
 
     def clean_new_email_confirmation(self):
         new_email = self.cleaned_data.get("new_email")
         new_email_confirmation = self.cleaned_data.get("new_email_confirmation")
-
         if new_email and new_email_confirmation and new_email != new_email_confirmation:
             raise ValidationError(
                 self.error_messages["email_mismatch"],
                 code="email_mismatch",
             )
-
         return new_email_confirmation
 
     def save(self, commit=True):
         email = self.cleaned_data["new_email"]
         self.user.email = email
-
         if commit:
             self.user.save()
-
         return self.user

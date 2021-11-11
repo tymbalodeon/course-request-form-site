@@ -77,9 +77,6 @@ install: ## Install the dependencies from the requirements.txt file
 isort: ## Sort imports
 	isort ./
 
-launch: ## Run the app and open the browser
-	open $(LOCAL_PORT) && $(MANAGE) runserver
-
 live: ## Start the livereload server
 	$(MANAGE) livereload
 
@@ -117,6 +114,9 @@ restart: migrations static ## Restart the app
 run: ## Run the app
 	$(MANAGE) runserver
 
+sass: ## Compile the scss files
+	$(MANAGE) sass course/scss/style.scss course/static/css/style.css -t compressed
+
 schools: ## Populate the database with schools
 	$(MANAGE) add_schools
 
@@ -124,8 +124,8 @@ shell: ## Open an app-aware python shell
 	$(MANAGE) shell_plus
 
 .PHONY: static
-static: ## Collect static files
-	$(MANAGE) collectstatic --no-input
+static: sass ## Collect static files
+	$(MANAGE) collectstatic --clear --no-input
 
 start: install migrations superuser populate run ## Run everything necessary to start the project from scratch
 

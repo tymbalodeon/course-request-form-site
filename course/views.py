@@ -22,7 +22,6 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.response import Response
-from rest_framework.reverse import reverse
 from rest_framework.utils.html import parse_html_list
 from rest_framework.viewsets import ModelViewSet
 
@@ -41,8 +40,7 @@ from data_warehouse.data_warehouse import (
 )
 from open_data.open_data import OpenData
 
-from .email_processor import admin_lock, autoadd_contact, feedback
-from .forms import CanvasSiteForm, ContactForm, EmailChangeForm, SubjectForm, UserForm
+from .forms import CanvasSiteForm, EmailChangeForm, SubjectForm, UserForm
 from .models import (
     Activity,
     AutoAdd,
@@ -585,19 +583,6 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
         if getattr(instance, "_prefetched_objects_cache", None):
             instance._prefetched_objects_cache = {}
 
-        if "status" in request.data and request.data["status"] == "LOCKED":
-            admin_lock(
-                context={
-                    "request_detail_url": request.build_absolute_uri(
-                        reverse(
-                            "UI-request-detail",
-                            kwargs={"pk": request.data["course_requested"]},
-                        )
-                    ),
-                    "course_code": request.data["course_requested"],
-                }
-            )
-
         if (
             "view_type" in request.data
             and request.data["view_type"] == "UI-request-detail"
@@ -895,18 +880,6 @@ class AutoAddViewSet(MixedPermissionModelViewSet, ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         response = Response(
             serializer.data, status=status.HTTP_201_CREATED, headers=headers
-        )
-        autoadd_contact(
-            {
-                "user": serializer.data["user"],
-                "role": serializer.data["role"],
-                "school": School.objects.get(
-                    abbreviation=serializer.data["school"]
-                ).name,
-                "subject": Subject.objects.get(
-                    abbreviation=serializer.data["subject"]
-                ).name,
-            }
         )
 
         if request.accepted_renderer.format == "html":
@@ -1382,28 +1355,4 @@ def autocomplete_canvas_site(request):
 
 
 def contact(request):
-    form_class = ContactForm
-
-    if request.method == "POST":
-        form = form_class(data=request.POST)
-
-        if form.is_valid():
-            contact_name = request.POST.get("contact_name", "")
-            contact_email = request.POST.get("contact_email", "")
-            form_content = request.POST.get("content", "")
-            context = {
-                "contact_name": contact_name,
-                "contact_email": contact_email,
-                "form_content": form_content,
-            }
-            feedback(context)
-
-            return redirect("contact")
-
-    return render(
-        request,
-        "contact.html",
-        {
-            "form": form_class,
-        },
-    )
+    return render(request, "contact.html")

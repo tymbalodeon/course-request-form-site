@@ -10,19 +10,13 @@ from config.config import DEBUG_VALUE, LIB_DIR, SECRET_KEY_VALUE
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 SECRET_KEY = SECRET_KEY_VALUE
 DEBUG = DEBUG_VALUE
+ALLOWED_HOSTS = ["*"]
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
-CANVAS_ENVIRONMENT = "PRODUCTION"
-ALLOWED_HOSTS = ["*", "localhost"]
-INTERNAL_IPS = ["127.0.0.1"]
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 LOGOUT_REDIRECT_URL = (
     "/Shibboleth.sso/Logout?return=https://idp.pennkey.upenn.edu/logout"
 )
-EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
-EMAIL_FILE_PATH = "course/static/emails"
-EMAIL_USE_TLS = True
-EMAIL_PORT = 587
 INSTALLED_APPS = [
     "dal",
     "dal_select2",
@@ -111,7 +105,6 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "drf_link_header_pagination.LinkHeaderPagination",
     "PAGE_SIZE": 30,
 }
-
 DEBUG_TOOLBAR_PANELS = [
     "debug_toolbar.panels.versions.VersionsPanel",
     "debug_toolbar.panels.timer.TimerPanel",
@@ -193,7 +186,7 @@ LOGGING = {
 }
 
 if DEBUG:
-    INSTALLED_APPS.append("livereload")
+    INSTALLED_APPS.extend(["livereload", "django_sass"])
     MIDDLEWARE.append("livereload.middleware.LiveReloadScript")
 
     if platform.system() == "Darwin":
