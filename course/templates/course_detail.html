@@ -53,7 +53,7 @@
                     value="{{ course.course_code }}"
                     type="hidden"
                 />
-                {% include "bits/request_form.html" with enrollments=request_instance.additional_enrollments.all %}
+                {% include "bits/request_form.html" with enrollments=request.additional_enrollments.all %}
                 <input type="submit" value="Submit Request" />
             </form>
         </fieldset>

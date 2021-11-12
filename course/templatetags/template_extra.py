@@ -45,12 +45,11 @@ def course_code_to_string(course_code):
 
 @register.filter
 def course_to_course_code(course):
-    term = f'{course["year"]}{course["course_term"]}'
-
     return (
-        f'{course["course_subject"]}-'
-        f'{course["course_number"]}-'
-        f'{course["course_section"]} {term}'
+        f"{course['course_subject']}-"
+        f"{course['course_number']}-"
+        f"{course['course_section']}"
+        f" {course['year']}{course['course_term']}"
     )
 
 

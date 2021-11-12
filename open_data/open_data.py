@@ -2,26 +2,25 @@ from requests import get
 
 from config.config import OPEN_DATA_DOMAIN, OPEN_DATA_ID, OPEN_DATA_KEY
 
+DEFAULT_PARAMS = {
+    "number_of_results_per_page": 30,
+    "page_number": 1,
+}
+
 
 class OpenData:
-    def __init__(self, open_data_id, key, domain):
+    def __init__(self):
         self.headers = {
-            "Authorization-Bearer": open_data_id,
-            "Authorization-Token": key,
+            "Authorization-Bearer": OPEN_DATA_ID,
+            "Authorization-Token": OPEN_DATA_KEY,
         }
-        self.domain = domain
+        self.domain = OPEN_DATA_DOMAIN
         self.uri = ""
-        self.params = {
-            "number_of_results_per_page": 30,
-            "page_number": 1,
-        }
+        self.params = DEFAULT_PARAMS
 
     def clear_settings(self):
         self.uri = ""
-        self.params = {
-            "number_of_results_per_page": 30,
-            "page_number": 1,
-        }
+        self.params = DEFAULT_PARAMS
 
     def set_uri(self, new_uri):
         self.uri = new_uri
@@ -33,7 +32,6 @@ class OpenData:
         current = self.params["page_number"]
         self.add_param("page_number", current + 1)
         result_data, service_meta = self.call_api(only_data=False)
-
         return (
             result_data if service_meta["current_page_number"] == current + 1 else None
         )
@@ -43,7 +41,6 @@ class OpenData:
         response = get(url, headers=self.headers, params=self.params)
         response_json = response.json()
         service_meta = response_json["service_meta"]
-
         if "error_text" in service_meta and service_meta["error_text"]:
             print(service_meta["error_text"])
             return "ERROR"
@@ -59,40 +56,34 @@ class OpenData:
             )
         else:
             result_data = response_json["result_data"]
-
         return result_data if only_data else (result_data, service_meta)
 
     def get_available_terms(self):
         url = f"{self.domain}course_section_search_parameters/"
         response = get(url, headers=self.headers).json()
-
         return [*response["result_data"][0]["available_terms_map"]]
 
     def get_courses_by_term(self, term):
         self.clear_settings()
         self.set_uri("course_section_search")
         self.add_param("term", term)
-
-        return self.call_api(only_data=True)
+        return self.call_api()
 
     def find_school_by_subj(self, subject):
         url = f"{self.domain}course_info/{subject}/"
         params = {"results_per_page": 2}
         response = get(url, headers=self.headers, params=params).json()
-
         return response["result_data"][0]["school_code"]
 
     def get_available_activity(self):
         url = f"{self.domain}course_section_search_parameters/"
         response = get(url, headers=self.headers).json()
-
         return response["result_data"][0]["activity_map"]
 
     def get_available_subj(self):
         url = f"{self.domain}course_section_search_parameters/"
         response = get(url, headers=self.headers).json()
         result = {}
-
         try:
             result = (
                 response["service_meta"]["error_text"]
@@ -101,9 +92,4 @@ class OpenData:
             )
         except Exception as error:
             print(f"- ERROR: Something went wrong ({error})")
-
         return result
-
-
-def get_open_data_connection():
-    return OpenData(OPEN_DATA_ID, OPEN_DATA_KEY, OPEN_DATA_DOMAIN)

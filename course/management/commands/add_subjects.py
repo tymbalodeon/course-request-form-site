@@ -3,7 +3,7 @@ import logging
 from django.core.management.base import BaseCommand
 
 from course.models import School, Subject
-from open_data.open_data import get_open_data_connection
+from open_data.open_data import OpenData
 
 
 class Command(BaseCommand):
@@ -22,7 +22,7 @@ class Command(BaseCommand):
 
         missing_schools = list()
         fails = 0
-        open_data = get_open_data_connection()
+        open_data = OpenData()
         subjects = open_data.get_available_subj()
 
         if type(subjects) != dict:

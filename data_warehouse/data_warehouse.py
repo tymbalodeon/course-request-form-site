@@ -8,7 +8,7 @@ import cx_Oracle
 
 from course import utils
 from course.models import Activity, Course, Profile, School, Subject, User
-from open_data.open_data import get_open_data_connection
+from open_data.open_data import OpenData
 
 ROMAN_NUMERAL_REGEX = (
     r"(?=[MDCLXVI].)M*(C[MD]|D?C{0,3})(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})\)?$"
@@ -346,7 +346,7 @@ def pull_courses(term):
     print(") Pulling courses from the Data Warehouse...")
 
     term = term.upper()
-    open_data = get_open_data_connection()
+    open_data = OpenData()
     cursor = get_cursor()
     cursor.execute(
         """

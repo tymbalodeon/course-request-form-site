@@ -2,11 +2,11 @@ import csv
 import sys
 
 from course.models import Course
-from open_data.open_data import get_open_data_connection
+from open_data.open_data import OpenData
 
 
 def find_crosslistings(year_term):
-    open_data = get_open_data_connection()
+    open_data = OpenData()
     courses = open_data.get_courses_by_term(year_term)
     page = 1
     crosslisting_fix = list()

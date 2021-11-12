@@ -107,25 +107,25 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for request_instance in requests %}
+                    {% for request in requests %}
                         <tr>
                             <td>
-                                <a href="{% url "UI-request-detail" pk=request_instance.course_requested.course_code %}">
-                                    {{ request_instance.course_requested }}
+                                <a href="{% url "UI-request-detail" pk=request.course_requested.course_code %}">
+                                    {{ request.course_requested }}
                                 </a></td>
-                            <td>{{ request_instance.course_requested.course_name }}</td>
+                            <td>{{ request.course_requested.course_name }}</td>
                             <td>
-                                {{ request_instance.owner }}
-                                {% if request_instance.masquerade %}
-                                    ({{ request_instance.masquerade }})
+                                {{ request.owner }}
+                                {% if request.masquerade %}
+                                    ({{ request.masquerade }})
                                 {% endif %}
                             </td>
                             <td>
-                                {{ request_instance.created|time:'h:ia' }}
-                                {{ request_instance.created|date:"SHORT_DATE_FORMAT" }}
+                                {{ request.created|time:'h:ia' }}
+                                {{ request.created|date:"SHORT_DATE_FORMAT" }}
                             </td>
-                            <td>{{request_instance.status}}
-                                {% if request_instance.status == 'LOCKED' %}
+                            <td>{{request.status}}
+                                {% if request.status == 'LOCKED' %}
                                     <i
                                         class="fas fa-lock"
                                         data-toggle="tooltip"
@@ -268,8 +268,8 @@
                             <td>{{ site.name }}</td>
                             <td>{{ site.sis_course_id }}</td>
                             <td>
-                                {% if site.request_instance %}
-                                    <a href="{% url "UI-request-detail" site.request_instance %}">
+                                {% if site.request %}
+                                    <a href="{% url "UI-request-detail" site.request %}">
                                         request
                                     </a>
                                 {% else %}

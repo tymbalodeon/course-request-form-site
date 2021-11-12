@@ -6,7 +6,7 @@ from django.core.management.base import BaseCommand
 from course.models import Activity, Course, School, Subject, User
 from course.utils import split_year_and_term
 from data_warehouse.data_warehouse import pull_courses, pull_instructors
-from open_data.open_data import get_open_data_connection
+from open_data.open_data import OpenData
 
 
 def pull_from_local_store():
@@ -38,7 +38,7 @@ def pull_from_local_store():
 def pull_from_open_data(year_and_term):
     print(") Pulling courses from Open Data...")
     year, term = split_year_and_term(year_and_term)
-    open_data = get_open_data_connection()
+    open_data = OpenData()
     courses = open_data.get_courses_by_term(year_and_term)
     page = 1
     while courses is not None:

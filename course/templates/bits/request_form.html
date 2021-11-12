@@ -102,7 +102,7 @@
                     <tbody>
                         {% for section_code,section_activity,section_requested in course.sections %}
 
-                            {% if section_code in request_instance.additional_sections %}
+                            {% if section_code in request.additional_sections %}
                                 <tr style="background:#B7CEC3;">
                                     <td >
                                         <input  name="additional_sections[{{ forloop.counter0 }}][course_code]" value="{{section_code}}" class="form-control" type="checkbox" checked>
@@ -147,8 +147,8 @@
     {% if course.course_schools != 'GSE' %}
         <p>Batch Enrollment Processes will pull in any Instructors or TAs listed in the Registrar. To add other users to the Canvas site you can specify them below. If you receive an error when trying to add an enrollment, try to proxy as the user in the box at the top of the page to ensure they are a user in the CRF.</p>
         <fieldset id="additional_enrollments" style="border:none;padding-right:0px;padding-left:0px;margin-top:0px;">
-            {% if request_instance.additional_enrollments %}
-                {% for enrollment in request_instance.additional_enrollments %}
+            {% if request.additional_enrollments %}
+                {% for enrollment in request.additional_enrollments %}
                     <div id="addEnroll-{{ forloop.counter0 }}" class="additional-enrollments">
                         <label class="additional-enrollments-user" for="name">
                             User
@@ -212,7 +212,7 @@
     <fieldset>
         <legend><h6 style="margin:0;">Admin</h6></legend>
         <label>Admin Notes</label>
-        <textarea name="admin_additional_instructions" class="form-control"> {{ request_instance.admin_additional_instructions }}</textarea>
+        <textarea name="admin_additional_instructions" class="form-control"> {{ request.admin_additional_instructions }}</textarea>
     </fieldset>
 {% endif %}
 

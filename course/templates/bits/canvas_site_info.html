@@ -2,18 +2,18 @@
 {% load template_extra %}
 
 <fieldset>
-    {% if request_instance.canvas_instance %}
-        <legend>Canvas Site: {{request_instance.canvas_instance.canvas_id}}</legend>
+    {% if request.canvas_instance %}
+        <legend>Canvas Site: {{request.canvas_instance.canvas_id}}</legend>
         <dl class="row" style="line-height:1.1;">
             <dt class="col-4 col-md-3 text-right" style="padding-right: 0px;">Name</dt>
-            <dd class="col-8 col-md-9"> {{request_instance.canvas_instance.name}}</dd>
+            <dd class="col-8 col-md-9"> {{request.canvas_instance.name}}</dd>
             <dt class="col-4 col-md-3 text-right" style="padding-right: 0px;">Workflow State</dt>
-            <dd class="col-8 col-md-9"> {{request_instance.canvas_instance.workflow_state}}</dd>
+            <dd class="col-8 col-md-9"> {{request.canvas_instance.workflow_state}}</dd>
             <dt class="col-4 col-md-3 text-right" style="padding-right: 0px;">SIS Course ID</dt>
-            <dd class="col-8 col-md-9"> {{request_instance.canvas_instance.sis_course_id}}</dd>
+            <dd class="col-8 col-md-9"> {{request.canvas_instance.sis_course_id}}</dd>
         </dl>
-        {% if request_instance.canvas_instance.workflow_state != "deleted" %}
-            <a target="_blank" href="https://canvas.upenn.edu/courses/{{request_instance.canvas_instance.canvas_id}}"> <i class="fas fa-external-link-alt"></i> Open Canvas Site </a>
+        {% if request.canvas_instance.workflow_state != "deleted" %}
+            <a target="_blank" href="https://canvas.upenn.edu/courses/{{request.canvas_instance.canvas_id}}"> <i class="fas fa-external-link-alt"></i> Open Canvas Site </a>
         {% else %}
             <p>(No Canvas Site on File -- This course was likely canceled.)</p>
         {% endif %}

@@ -66,7 +66,15 @@ from .serializers import (
     UserSerializer,
 )
 from .tasks import create_canvas_sites
-from .terms import CURRENT_TERM, CURRENT_YEAR, NEXT_TERM, NEXT_YEAR, get_term_letters
+from .terms import (
+    CURRENT_TERM,
+    CURRENT_YEAR,
+    CURRENT_YEAR_AND_TERM,
+    NEXT_TERM,
+    NEXT_YEAR,
+    NEXT_YEAR_AND_TERM,
+    get_term_letters,
+)
 from .utils import DATA_DIRECTORY_NAME, get_data_directory, update_user_courses
 
 FIVE_OR_MORE_ALPHABETIC_CHARACTERS = r"[a-z]{5,}"
@@ -195,8 +203,6 @@ class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
     def list(self, request):
         print_log_message(request, "course", "list")
 
-        current_term = f"{CURRENT_YEAR}{CURRENT_TERM}"
-        next_term = f"{CURRENT_YEAR if CURRENT_TERM != FALL else NEXT_YEAR}{NEXT_TERM}"
         search_term = get_search_term(request)
         queryset = (
             self.get_queryset().filter(
@@ -224,8 +230,8 @@ class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
                     "autocomplete_subject": SubjectForm(),
                     "autocomplete_canvas_site": CanvasSiteForm(),
                     "style": {"template_pack": "rest_framework/vertical/"},
-                    "current_term": current_term,
-                    "next_term": next_term,
+                    "current_term": CURRENT_YEAR_AND_TERM,
+                    "next_term": NEXT_YEAR_AND_TERM,
                 }
 
             logger.info(response.data["paginator"].page)
@@ -266,7 +272,7 @@ class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
             return Response(
                 {
                     "course": response.data,
-                    "request_instance": request_instance,
+                    "request": request_instance,
                     "request_form": this_form,
                     "autocomplete_canvas_site": CanvasSiteForm(),
                     "is_staff": request.user.is_staff,
@@ -541,14 +547,12 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
             request.data, prefix="additional_sections"
         )
         data_dict = request.data.dict()
-
         if additional_enrollments_partial or additional_sections_partial:
             if additional_enrollments_partial:
                 final_add_enroll = clean_custom_input(additional_enrollments_partial)
                 data_dict["additional_enrollments"] = final_add_enroll
             else:
                 data_dict["additional_enrollments"] = []
-
             if additional_sections_partial:
                 final_add_sects = clean_custom_input(additional_sections_partial)
                 data_dict["additional_sections"] = [
@@ -570,19 +574,14 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
             data["additional_sections"] = []
             serializer = self.get_serializer(instance, data=data, partial=partial)
         serializer.is_valid()
-
         if not serializer.is_valid():
             add_message(request, ERROR, serializer.errors)
-
             raise serializers.ValidationError(serializer.errors)
         else:
             serializer.save(owner=self.request.user)
-
         self.perform_update(serializer)
-
         if getattr(instance, "_prefetched_objects_cache", None):
             instance._prefetched_objects_cache = {}
-
         if (
             "view_type" in request.data
             and request.data["view_type"] == "UI-request-detail"
@@ -595,12 +594,10 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
                     "status": instance.status,
                 },
             )
-
             return Response(
-                {"request_instance": serializer.data, "permissions": permissions},
+                {"request": serializer.data, "permissions": permissions},
                 template_name="request_detail.html",
             )
-
         return Response(serializer.data)
 
 

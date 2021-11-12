@@ -349,7 +349,7 @@ def delete_zoom_events(canvas_course, test):
                 "Zoom event was copied from a previous term and is no longer relevant"
             )
         )
-
+        deleted = deleted.title.encode("ascii", "ignore")
         logger.info(f"\t- Event '{deleted}' deleted.")
 
 

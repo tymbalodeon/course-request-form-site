@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 
 from course.models import Activity
-from open_data.open_data import get_open_data_connection
+from open_data.open_data import OpenData
 
 ACTIVITY_CHOICES = (
     ("LEC", "Lecture"),
@@ -38,7 +38,7 @@ class Command(BaseCommand):
     def handle(self, **kwargs):
         opendata = kwargs["open_data"]
         if opendata:
-            activities = get_open_data_connection().get_available_activity().items()
+            activities = OpenData().get_available_activity().items()
         else:
             activities = ACTIVITY_CHOICES
             if not activities:
