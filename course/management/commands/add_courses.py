@@ -55,7 +55,7 @@ def pull_from_open_data(year_and_term):
                 subject = Subject.objects.get(abbreviation=course["course_department"])
             except Exception:
                 try:
-                    school_code = open_data.find_school_by_subj(
+                    school_code = open_data.get_school_by_subject(
                         course["course_department"]
                     )
                     school = School.objects.get(open_data_abbreviation=school_code)
@@ -78,7 +78,7 @@ def pull_from_open_data(year_and_term):
                     primary_subject = Subject.objects.get(abbreviation=primary_subject)
                 except Exception:
                     try:
-                        school_code = open_data.find_school_by_subj(primary_subject)
+                        school_code = open_data.get_school_by_subject(primary_subject)
                         school = School.objects.get(open_data_abbreviation=school_code)
                         primary_subject = Subject.objects.create(
                             abbreviation=primary_subject,

@@ -38,7 +38,7 @@ class Command(BaseCommand):
     def handle(self, **kwargs):
         opendata = kwargs["open_data"]
         if opendata:
-            activities = OpenData().get_available_activity().items()
+            activities = OpenData().get_available_activities().items()
         else:
             activities = ACTIVITY_CHOICES
             if not activities:

@@ -1247,15 +1247,15 @@ def check_open_data_for_course(request):
             instructor = request.GET.get("instructor", None)
             open_data = OpenData(OPEN_DATA_DOMAIN, OPEN_DATA_ID, OPEN_DATA_KEY)
             open_data.set_uri("course_section_search")
-            open_data.add_param("course_id", course_id)
+            open_data.set_param("course_id", course_id)
 
             if term:
-                open_data.add_param("term", term)
+                open_data.set_param("term", term)
 
-            open_data.add_param("number_of_results_per_page", 5)
+            open_data.set_param("number_of_results_per_page", 5)
 
             if instructor:
-                open_data.add_param("instructor", instructor)
+                open_data.set_param("instructor", instructor)
 
             data["data"] = open_data.call_api()
 

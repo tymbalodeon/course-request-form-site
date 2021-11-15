@@ -399,7 +399,7 @@ def pull_courses(term):
             subject = Subject.objects.get(abbreviation=subject_area)
         except Exception:
             try:
-                school_code = open_data.find_school_by_subj(subject_area)
+                school_code = open_data.get_school_by_subject(subject_area)
                 school = School.objects.get(open_data_abbreviation=school_code)
                 subject = Subject.objects.create(
                     abbreviation=subject_area, name=subject_area, schools=school
@@ -421,7 +421,7 @@ def pull_courses(term):
                 primary_subject = Subject.objects.get(abbreviation=p_subj)
             except Exception:
                 try:
-                    school_code = open_data.find_school_by_subj(p_subj)
+                    school_code = open_data.get_school_by_subject(p_subj)
                     school = School.objects.get(open_data_abbreviation=school_code)
                     primary_subject = Subject.objects.create(
                         abbreviation=p_subj, name=p_subj, schools=school

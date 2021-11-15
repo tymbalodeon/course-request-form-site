@@ -25,12 +25,12 @@ class OpenData:
     def set_uri(self, new_uri):
         self.uri = new_uri
 
-    def add_param(self, key, value):
+    def set_param(self, key, value):
         self.params[key] = value
 
     def next_page(self):
         current = self.params["page_number"]
-        self.add_param("page_number", current + 1)
+        self.set_param("page_number", current + 1)
         result_data, service_meta = self.call_api(only_data=False)
         return (
             result_data if service_meta["current_page_number"] == current + 1 else None
@@ -66,21 +66,21 @@ class OpenData:
     def get_courses_by_term(self, term):
         self.clear_settings()
         self.set_uri("course_section_search")
-        self.add_param("term", term)
+        self.set_param("term", term)
         return self.call_api()
 
-    def find_school_by_subj(self, subject):
+    def get_school_by_subject(self, subject):
         url = f"{self.domain}course_info/{subject}/"
         params = {"results_per_page": 2}
         response = get(url, headers=self.headers, params=params).json()
         return response["result_data"][0]["school_code"]
 
-    def get_available_activity(self):
+    def get_available_activities(self):
         url = f"{self.domain}course_section_search_parameters/"
         response = get(url, headers=self.headers).json()
         return response["result_data"][0]["activity_map"]
 
-    def get_available_subj(self):
+    def get_available_subjects(self):
         url = f"{self.domain}course_section_search_parameters/"
         response = get(url, headers=self.headers).json()
         result = {}

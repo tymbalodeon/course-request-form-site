@@ -32,14 +32,12 @@ def course_code_to_string(course_code):
     year = course_code[-5:] if includes_year else ""
     section = course_code[:-5][-3:] if includes_year else course_code[-3:]
     course = course_code[:-8][-3:] if includes_year else course_code[:-3][-3:]
-
     if course_code[2].isnumeric():
         subject = course_code[:2]
     elif course_code[3].isnumeric():
         subject = course_code[:3]
     else:
         subject = course_code[:4]
-
     return f"{subject}-{course}-{section}{' ' if year else ''}{year}"
 
 
@@ -86,5 +84,4 @@ def truncate_course_name(value, max_length):
         return value
     else:
         words = value.split()
-
         return get_longest_whole_words(words, max_length)

@@ -112,11 +112,6 @@ class CanvasSite(Model):
         return "\n".join([owner.username for owner in self.added_permissions.all()])
 
 
-class CourseManager(Manager):
-    def has_request(self):
-        return super().get_queryset().filter(requested=True)
-
-
 class Course(Model):
     SPRING, SUMMER, FALL = get_term_letters()
     TERM_CHOICES = ((SPRING, "Spring"), (SUMMER, "Summer"), (FALL, "Fall"))
@@ -158,7 +153,6 @@ class Course(Model):
     updated = DateTimeField(auto_now=True)
     year = CharField(max_length=4, blank=False)
     objects = Manager()
-    CourseManager = CourseManager()
 
     class Meta:
         ordering = ["-year", "course_code"]
@@ -173,15 +167,14 @@ class Course(Model):
             ]
         )
 
-    def find_requested(self):
-        if self.requested_override is True:
+    def get_requested(self):
+        if self.requested_override:
             return True
         else:
             try:
                 request = Request.objects.get(course_requested=self.course_code)
             except Exception:
                 request = None
-
             return bool(
                 request or self.multisection_request or self.crosslisted_request
             )
@@ -190,7 +183,7 @@ class Course(Model):
         self.requested = requested
         self.save()
 
-    def find_crosslisted(self):
+    def get_crosslisted(self):
         cross_courses = Course.objects.filter(
             Q(course_primary_subject=self.course_primary_subject)
             & Q(course_number=self.course_number)
@@ -198,7 +191,6 @@ class Course(Model):
             & Q(course_term=self.course_term)
             & Q(year=self.year)
         )
-
         for course in cross_courses:
             self.crosslisted.add(course)
             self.save()
@@ -211,15 +203,12 @@ class Course(Model):
             & Q(course_term=self.course_term)
             & Q(year=self.year)
         )
-
         for course in cross_courses:
             course.requested_override = self.requested_override
-
         try:
             request = Request.objects.get(course_requested=self.course_code)
         except Exception:
             request = None
-
         if request:
             for course in cross_courses:
                 course.crosslisted_request = request
@@ -232,14 +221,12 @@ class Course(Model):
             f"{self.year}"
             f"{self.course_term}"
         )
-
         if self._state.adding is True:
             super().save(*args, **kwargs)
         else:
             if not (int(self.course_section) >= 300 and int(self.course_section) < 400):
                 self.sections.set(self.find_sections())
-
-            self.requested = self.find_requested()
+            self.requested = self.get_requested()
             self.update_crosslists()
             super().save(*args, **kwargs)
 
@@ -256,7 +243,6 @@ class Course(Model):
 
             if not request and self.requested:
                 logger.warning(f"Request NOT FOUND for {self.course_code} ({error}).")
-
             return request
 
     def get_subjects(self):

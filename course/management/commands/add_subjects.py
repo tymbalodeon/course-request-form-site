@@ -23,7 +23,7 @@ class Command(BaseCommand):
         missing_schools = list()
         fails = 0
         open_data = OpenData()
-        subjects = open_data.get_available_subj()
+        subjects = open_data.get_available_subjects()
 
         if type(subjects) != dict:
             print(f"- ERROR: {subjects}")
@@ -37,7 +37,7 @@ class Command(BaseCommand):
 
                     if not Subject.objects.filter(abbreviation=abbreviation).exists():
                         try:
-                            school_code = open_data.find_school_by_subj(abbreviation)
+                            school_code = open_data.get_school_by_subject(abbreviation)
                             school_name = School.objects.get(
                                 open_data_abbreviation=school_code
                             )
@@ -51,7 +51,7 @@ class Command(BaseCommand):
                             )
                             print(f"{index_display} ADDED {name} ({abbreviation}).")
                         except Exception as error:
-                            school_code = open_data.find_school_by_subj(abbreviation)
+                            school_code = open_data.get_school_by_subject(abbreviation)
                             missing_schools.append(school_code)
                             index_display = (
                                 f"{index_display} ERROR: FAILED to add {abbreviation}"
