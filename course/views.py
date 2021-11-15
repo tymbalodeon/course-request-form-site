@@ -131,7 +131,6 @@ class MixedPermissionModelViewSet(AccessMixin, ModelViewSet):
     def handle_no_permission(self):
         if self.raise_exception or self.request.user.is_authenticated:
             raise PermissionDenied(self.get_permission_denied_message())
-
         return redirect_to_login(
             self.request.get_full_path(),
             self.get_login_url(),
@@ -202,7 +201,6 @@ class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
 
     def list(self, request):
         print_log_message(request, "course", "list")
-
         search_term = get_search_term(request)
         queryset = (
             self.get_queryset().filter(
@@ -213,18 +211,15 @@ class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
             else self.filter_queryset(self.get_queryset())
         )
         page = self.paginate_queryset(queryset)
-
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             response = self.get_paginated_response(serializer.data)
-
             if request.accepted_renderer.format == "html":
                 response.template_name = "course_list.html"
                 response.data = {
                     "results": response.data,
                     "paginator": self.paginator,
                     "filter": CourseFilter,
-                    "request": request,
                     "is_staff": request.user.is_staff,
                     "autocomplete_user": UserForm(),
                     "autocomplete_subject": SubjectForm(),
@@ -233,9 +228,7 @@ class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
                     "current_term": CURRENT_YEAR_AND_TERM,
                     "next_term": NEXT_YEAR_AND_TERM,
                 }
-
             logger.info(response.data["paginator"].page)
-
             return response
 
     def retrieve(self, request, *args, **kwargs):
@@ -272,7 +265,7 @@ class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
             return Response(
                 {
                     "course": response.data,
-                    "request": request_instance,
+                    "request_instance": request_instance,
                     "request_form": this_form,
                     "autocomplete_canvas_site": CanvasSiteForm(),
                     "is_staff": request.user.is_staff,
@@ -499,18 +492,18 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
         logger.info(f"- REQUEST: {response.data['course_requested']}")
         if request.resolver_match.url_name == "UI-request-detail-success":
             return Response(
-                {"request": response.data},
+                {"request_instance": response.data},
                 template_name="request_success.html",
             )
         elif request.accepted_renderer.format == "html":
             permissions = self.check_request_update_permissions(request, response.data)
             if request.resolver_match.url_name == "UI-request-detail-edit":
                 here = RequestSerializer(
-                    self.get_object(), context={"request": request}
+                    self.get_object(), context={"request_instance": request}
                 )
                 return Response(
                     {
-                        "request": response.data,
+                        "request_instance": response.data,
                         "permissions": permissions,
                         "request_form": here,
                         "autocomplete_canvas_site": CanvasSiteForm(),
@@ -520,7 +513,7 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
                 )
             else:
                 return Response(
-                    {"request": response.data, "permissions": permissions},
+                    {"request_instance": response.data, "permissions": permissions},
                     template_name="request_detail.html",
                 )
         else:
@@ -595,7 +588,7 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
                 },
             )
             return Response(
-                {"request": serializer.data, "permissions": permissions},
+                {"request_instance": serializer.data, "permissions": permissions},
                 template_name="request_detail.html",
             )
         return Response(serializer.data)
