@@ -3,24 +3,24 @@
 
 <dl class="row" style="line-height:1.1;">
     <dt class="col-4 col-md-3 text-right" style="padding-right: 0px;">Status</dt>
-    <dd class="col-8 col-md-9"> {{ request.status }}</dd>
+    <dd class="col-8 col-md-9"> {{ request_instance.status }}</dd>
     <dt class="col-4 col-md-3 text-right" style="padding-right: 0px;">Requester</dt>
-    <dd class="col-8 col-md-9"> {{ request.owner }}
-        {% if request.masquerade %}
-            (as {{ request.masquerade}})
+    <dd class="col-8 col-md-9"> {{ request_instance.owner }}
+        {% if request_instance.masquerade %}
+            (as {{ request_instance.masquerade}})
         {% endif %}
     </dd>
     <dt class="col-4 col-md-3 text-right" style="padding-right: 0px;">Created</dt>
-    <dd class="col-8 col-md-9"> {{request.created}}</dd>
+    <dd class="col-8 col-md-9"> {{request_instance.created}}</dd>
     <dt class="col-4 col-md-3 text-right" style="padding-right: 0px;">Updated</dt>
-    <dd class="col-8 col-md-9"> {{ request.updated }}</dd>
+    <dd class="col-8 col-md-9"> {{ request_instance.updated }}</dd>
 </dl>
 
-{% if request.course_info.crosslisted %}
+{% if request_instance.course_info.crosslisted %}
 
     <div class="row" style="padding:0px 0px 0px 20px;">
         <dt class="" style="padding-right: 0px;">Request includes Crosslistings:</dt>
-        <dd class="" style="padding-left: 10px;"> {{ request.course_info.crosslisted| join:", " }}</dd>
+        <dd class="" style="padding-left: 10px;"> {{ request_instance.course_info.crosslisted| join:", " }}</dd>
     </div>
 
 {% endif %}
@@ -28,7 +28,7 @@
 <div class="form-group">
     <fieldset>
         <legend><h6 style="margin:0;">Title override</h6></legend>
-        <input name="title_override" class="form-control" type="text" value="{{ request.title_override }}" disabled>
+        <input name="title_override" class="form-control" type="text" value="{{ request_instance.title_override }}" disabled>
     </fieldset>
 </div>
 
@@ -37,7 +37,7 @@
     <div class="form-group ">
         <fieldset>
             <legend><h6 style="margin:0;">LPS online</h6></legend>
-            <input name="lps_online" class="form-control" type="text" value="{{ request.lps_online }}" disabled>
+            <input name="lps_online" class="form-control" type="text" value="{{ request_instance.lps_online }}" disabled>
         </fieldset>
     </div>
 
@@ -46,13 +46,13 @@
 <div class="form-group ">
     <fieldset>
         <legend><h6 style="margin:0;">Copy from existing site</h6></legend>
-        <input name="copy_from_course" class="form-control" type="text" value="{{ request.copy_from_course }}" disabled>
+        <input name="copy_from_course" class="form-control" type="text" value="{{ request_instance.copy_from_course }}" disabled>
 
-        {% if request.copy_from_course %}
+        {% if request_instance.copy_from_course %}
             <br>
             <dl class="row" style="line-height:1.1;">
                 <dt class="col-4 col-md-3 text-right" style="padding-right: 0px;">Exclude announcements</dt>
-                <dd class="col-8 col-md-9">{{ request.exclude_announcements }}</dd>
+                <dd class="col-8 col-md-9">{{ request_instance.exclude_announcements }}</dd>
             </dl>
         {% endif %}
 
@@ -78,7 +78,7 @@
                     </thead>
                     <tbody>
                         {% for section_code,section_activity,section_requested in course.sections %}
-                            {% if section_code in request.additional_sections %}
+                            {% if section_code in request_instance.additional_sections %}
                                 <tr style="background:#B7CEC3;">
                                     <td > {{section_code|course_code_to_string}}</td> <td> {{section_activity}} </td> <td> In Request </td>
                                 </tr>
@@ -106,7 +106,7 @@
     <br>
     <dl class="row" style="line-height:1.1;">
         <dt class="col-4 col-md-3 text-right" style="padding-right: 0px;">Reserves</dt>
-        <dd class="col-8 col-md-9"> {{ request.reserves }}</dd>
+        <dd class="col-8 col-md-9"> {{ request_instance.reserves }}</dd>
     </dl>
 </fieldset>
 
@@ -116,7 +116,7 @@
         <p>Batch Enrollment Processes will pull in any Instructors or TAs listed in the Registrar. To add other users to the Canvas site you can specify them below.</p>
         <br>
         <div>
-            {% if request.additional_enrollments %}
+            {% if request_instance.additional_enrollments %}
                 <div class="contain-table vertical-center">
                     <table style="max-width:500px;">
                         <thead>
@@ -151,6 +151,6 @@
 <div class="form-group">
     <fieldset>
         <legend><h6 style="margin:0;">Additional instructions</h6></legend>
-        <textarea name="additional_instructions" class="form-control" disabled>{{ request.additional_instructions }}</textarea>
+        <textarea name="additional_instructions" class="form-control" disabled>{{ request_instance.additional_instructions }}</textarea>
     </fieldset>
 </div>
