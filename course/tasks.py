@@ -13,7 +13,7 @@ from canvas.api import (
     get_term_id,
     get_user_by_sis,
 )
-from course.terms import CURRENT_YEAR_AND_TERM
+from course.terms import CURRENT_YEAR_AND_TERM, NEXT_YEAR_AND_TERM
 from data_warehouse.data_warehouse import (
     daily_sync,
     delete_canceled_courses,
@@ -40,12 +40,13 @@ logger = getLogger(__name__)
 
 
 @task()
-def sync_all(term=CURRENT_YEAR_AND_TERM):
-    start = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    daily_sync(term)
-    end = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    with open("course/static/log/night_sync.log", "a") as log:
-        log.write(f"Daily sync completed for {term}: {start} - {end} \n")
+def sync_all():
+    for term in [CURRENT_YEAR_AND_TERM, NEXT_YEAR_AND_TERM]:
+        start = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        daily_sync(term)
+        end = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with open("course/static/log/night_sync.log", "a") as log:
+            log.write(f"Daily sync completed for {term}: {start} - {end} \n")
 
 
 @task()
