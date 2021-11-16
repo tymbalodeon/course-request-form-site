@@ -53,7 +53,6 @@ def sync_crf_canvas_sites(year_and_term):
 
 def update_user_courses(penn_key):
     canvas_courses = get_user_courses(penn_key)
-
     for canvas_course in canvas_courses:
         try:
             course = CanvasSite.objects.update_or_create(
@@ -67,7 +66,7 @@ def update_user_courses(penn_key):
             print(f"FAILED to add course {canvas_course} ({error}).")
 
 
-def process_canvas():
+def update_all_users_courses():
     for user in User.objects.all():
         print(f") Adding courses for {user.username}...")
         update_user_courses(user.username)

@@ -586,11 +586,11 @@ def delete_canceled_courses(
             course_code,
             term,
             subject_area,
-            xc_code,
+            crosslist_code,
         ) in cursor:
             course_code = course_code.replace(" ", "")
             subject_area = subject_area.replace(" ", "")
-            xc_code = xc_code.replace(" ", "")
+            crosslist_code = crosslist_code.replace(" ", "")
             try:
                 course = Course.objects.get(course_code=course_code)
                 if course.requested:
@@ -623,6 +623,6 @@ def delete_canceled_courses(
 def daily_sync(term=CURRENT_YEAR_AND_TERM):
     pull_courses(term)
     pull_instructors(term)
-    utils.process_canvas()
+    utils.update_all_users_courses()
     utils.sync_crf_canvas_sites(term)
     delete_canceled_courses(term)
