@@ -8,6 +8,7 @@ import cx_Oracle
 
 from course import utils
 from course.models import Activity, Course, Profile, School, Subject, User
+from course.terms import CURRENT_YEAR_AND_TERM
 from open_data.open_data import OpenData
 
 ROMAN_NUMERAL_REGEX = (
@@ -23,7 +24,6 @@ def get_cursor():
     connection = cx_Oracle.connect(
         values["user"], values["password"], values["service"]
     )
-
     return connection.cursor()
 
 
@@ -31,10 +31,8 @@ def format_title(title):
     eras = ["Bc", "Bce", "Ce", "Ad"]
     title = title.upper()
     roman_numeral = findall(ROMAN_NUMERAL_REGEX, title)
-
     if roman_numeral:
         title = sub(ROMAN_NUMERAL_REGEX, "", title)
-
     title = capwords(title)
 
     def capwords_with_divider(title, divider):
@@ -43,43 +41,33 @@ def format_title(title):
         def sentence_case_title(title):
             characters = [character for character in title]
             characters[0] = characters[0].upper()
-
             return "".join(characters)
 
         titles = [sentence_case_title(title) for title in titles]
-
         return divider.join(titles)
 
     dividers = ["/", "-", ":"]
-
     for divider in dividers:
         if divider in title:
             title = capwords_with_divider(title, divider)
-
             if divider == ":" and findall(r":[^ ]", title):
                 title = sub(r":", ": ", title)
-
     if roman_numeral:
         roman_numeral_string = "".join([str(value) for value in roman_numeral[0]])
         title = f"{title} {roman_numeral_string}"
-
     for era in eras:
         if title.endswith(era):
             title = title.replace(era, era.upper())
-
     return title
 
 
 def get_staff_account(penn_key=None, penn_id=None):
     cursor = get_cursor()
-
     if not penn_key and not penn_id:
         print("Checking Data Warehouse: NO PENNKEY OR PENN ID PROVIDED.")
-
         return False
     elif penn_key:
         print(f"Checking Data Warehouse for pennkey {penn_key}...")
-
         cursor.execute(
             """
             SELECT
@@ -91,13 +79,11 @@ def get_staff_account(penn_key=None, penn_id=None):
             """,
             pennkey=penn_key,
         )
-
         for first_name, last_name, email, dw_penn_id in cursor:
             print(
                 f'FOUND "{penn_key}": {first_name} {last_name} ({dw_penn_id})'
                 f" {email.strip()}"
             )
-
             return {
                 "first_name": first_name,
                 "last_name": last_name,
@@ -106,7 +92,6 @@ def get_staff_account(penn_key=None, penn_id=None):
             }
     elif penn_id:
         print(f"Checking Data Warehouse for penn id {penn_id}...")
-
         cursor.execute(
             """
             SELECT
@@ -118,13 +103,11 @@ def get_staff_account(penn_key=None, penn_id=None):
             """,
             penn_id=penn_id,
         )
-
-        for first_name, last_name, email, dw_penn_key in cursor:
+        for first_name, last_name, email, penn_key in cursor:
             print(
-                f'FOUND "{penn_id}": {first_name} {last_name} ({dw_penn_key})'
+                f'FOUND "{penn_id}": {first_name} {last_name} ({penn_key})'
                 f" {email.strip()}"
             )
-
             return {
                 "first_name": first_name,
                 "last_name": last_name,
@@ -136,12 +119,10 @@ def get_staff_account(penn_key=None, penn_id=None):
 def get_user_by_pennkey(pennkey):
     if isinstance(pennkey, str):
         pennkey = pennkey.lower()
-
     try:
         user = User.objects.get(username=pennkey)
     except User.DoesNotExist:
         account_values = get_staff_account(penn_key=pennkey)
-
         if account_values:
             first_name = account_values["first_name"].title()
             last_name = account_values["last_name"].title()
@@ -156,7 +137,6 @@ def get_user_by_pennkey(pennkey):
         else:
             user = None
             print(f'FAILED to create Profile for "{pennkey}".')
-
     return user
 
 
@@ -168,11 +148,9 @@ def get_course(section, term=None, verbose=True):
         .replace(" ", "")
         .upper()
     )
-
     if len(section) > 10:
         term = section[-5:]
         section = section[:-5]
-
     cursor = get_cursor()
     cursor.execute(
         """
@@ -211,16 +189,13 @@ def get_course(section, term=None, verbose=True):
         """,
         section=section,
     )
-
     if verbose:
         print(
             "course_code, section_id, course_term, subject_area, school, xc, xc_code,"
             " activity, section_dept, section_division, title, status, rev,"
             " instructor(s)\n"
         )
-
     results = list()
-
     for (
         course_code,
         section_id,
@@ -255,25 +230,24 @@ def get_course(section, term=None, verbose=True):
                     rev,
                     instructors,
                 )
-            else:
-                results.append(
-                    [
-                        course_code,
-                        section_id,
-                        course_term,
-                        subject_area,
-                        school,
-                        xc,
-                        xc_code,
-                        activity,
-                        section_dept,
-                        section_division,
-                        title,
-                        status,
-                        rev,
-                        instructors,
-                    ]
-                )
+            results.append(
+                [
+                    course_code,
+                    section_id,
+                    course_term,
+                    subject_area,
+                    school,
+                    xc,
+                    xc_code,
+                    activity,
+                    section_dept,
+                    section_division,
+                    title,
+                    status,
+                    rev,
+                    instructors,
+                ]
+            )
         elif course_term == term:
             if verbose:
                 print(
@@ -292,30 +266,28 @@ def get_course(section, term=None, verbose=True):
                     rev,
                     instructors,
                 )
-            else:
-                results.append(
-                    [
-                        course_code,
-                        section_id,
-                        course_term,
-                        subject_area,
-                        school,
-                        xc,
-                        xc_code,
-                        activity,
-                        section_dept,
-                        section_division,
-                        title,
-                        status,
-                        rev,
-                        instructors,
-                    ]
-                )
-
+            results.append(
+                [
+                    course_code,
+                    section_id,
+                    course_term,
+                    subject_area,
+                    school,
+                    xc,
+                    xc_code,
+                    activity,
+                    section_dept,
+                    section_division,
+                    title,
+                    status,
+                    rev,
+                    instructors,
+                ]
+            )
     return results
 
 
-def get_instructor(pennkey, term):
+def get_instructor(pennkey, term=CURRENT_YEAR_AND_TERM):
     cursor = get_cursor()
     cursor.execute(
         """
@@ -336,15 +308,20 @@ def get_instructor(pennkey, term):
         pennkey=pennkey,
         term=term,
     )
-
     for first_name, last_name, pennkey, penn_id, email, section_id, term in cursor:
-        print("first name, last name, pennkey, penn id, email, section, term\n")
-        print(first_name, last_name, pennkey, penn_id, email, section_id, term)
+        return {
+            "first name": first_name,
+            "last name": last_name,
+            "pennkey": pennkey,
+            "penn id": penn_id,
+            "email": email,
+            "section": section_id,
+            "term": term,
+        }
 
 
-def pull_courses(term):
+def pull_courses(term=CURRENT_YEAR_AND_TERM):
     print(") Pulling courses from the Data Warehouse...")
-
     term = term.upper()
     open_data = OpenData()
     cursor = get_cursor()
@@ -379,22 +356,20 @@ def pull_courses(term):
         """,
         term=term,
     )
-
     for (
         course_code,
         term,
         subject_area,
         school,
-        xc,
-        xc_code,
+        crosslist,
+        crosslist_code,
         activity,
         title,
     ) in cursor:
         course_code = course_code.replace(" ", "")
         subject_area = subject_area.replace(" ", "")
-        xc_code = xc_code.replace(" ", "")
+        crosslist_code = crosslist_code.replace(" ", "")
         primary_crosslist = ""
-
         try:
             subject = Subject.objects.get(abbreviation=subject_area)
         except Exception:
@@ -410,13 +385,10 @@ def pull_courses(term):
                 )
                 subject = ""
                 print(f"{course_code}: Subject {subject_area} not found ({error})")
-
-        if xc:
-            if xc == "S":
-                primary_crosslist = xc_code + term
-
-            p_subj = xc_code[:-6]
-
+        if crosslist:
+            if crosslist == "S":
+                primary_crosslist = f"{crosslist_code}{term}"
+            p_subj = crosslist_code[:-6]
             try:
                 primary_subject = Subject.objects.get(abbreviation=p_subj)
             except Exception:
@@ -434,12 +406,10 @@ def pull_courses(term):
                     print(f"{course_code}: Primary subject not found")
         else:
             primary_subject = subject
-
         if primary_subject:
             school = primary_subject.schools
         else:
             school = ""
-
         try:
             activity = Activity.objects.get(abbr=activity)
         except Exception:
@@ -449,12 +419,10 @@ def pull_courses(term):
                 getLogger("error_logger").error("couldnt find activity %s ", activity)
                 activity = ""
                 print(f"{course_code}: Activity not found")
-
         course_number_and_section = course_code[:-5][-6:]
         course_number = course_number_and_section[:3]
         section_number = course_number_and_section[-3:]
         year = term[:4]
-
         try:
             title = format_title(title) if title else title
             created = Course.objects.update_or_create(
@@ -473,22 +441,18 @@ def pull_courses(term):
                     "year": year,
                 },
             )[1]
-
             print(
                 f"- Added course {course_code}"
                 if created
                 else f"- Updated course {course_code}"
             )
-
         except Exception as error:
             print(f"- ERROR: Failed to add or update course {course_code} ({error})")
-
     print("FINISHED")
 
 
-def pull_instructors(term):
+def pull_instructors(term=CURRENT_YEAR_AND_TERM):
     print(") Pulling instructors...")
-
     term = term.upper()
     cursor = get_cursor()
     cursor.execute(
@@ -525,12 +489,9 @@ def pull_instructors(term):
         """,
         term=term,
     )
-
     NEW_INSTRUCTOR_VALUES = dict()
-
     for first_name, last_name, pennkey, penn_id, email, section_id in cursor:
         course_code = (section_id + term).replace(" ", "")
-
         if not pennkey:
             message = (
                 f"- ERROR: (section: {section_id}) Failed to create account for"
@@ -541,7 +502,6 @@ def pull_instructors(term):
         else:
             try:
                 course = Course.objects.get(course_code=course_code)
-
                 if not course.requested:
                     try:
                         instructor = User.objects.get(username=pennkey)
@@ -559,7 +519,6 @@ def pull_instructors(term):
                         except Exception as error:
                             error_message = error
                             instructor = None
-
                     if instructor:
                         try:
                             NEW_INSTRUCTOR_VALUES[course_code].append(instructor)
@@ -576,31 +535,27 @@ def pull_instructors(term):
                 message = f"- ERROR: Failed to find course {course_code}"
                 getLogger("error_logger").error(message)
                 print(message)
-
     for course_code, instructors in NEW_INSTRUCTOR_VALUES.items():
         try:
             course = Course.objects.get(course_code=course_code)
             course.instructors.clear()
-
             for instructor in instructors:
                 course.instructors.add(instructor)
-
             course.save()
-
             print(
                 f"- Updated {course_code} with instructors:"
                 f" {', '.join([instructor.username for instructor in instructors])}"
             )
-
         except Exception as error:
             message = f"- ERROR: Failed to add new instructor(s) to course ({error})"
             getLogger("error_logger").error(message)
             print(message)
-
     print("FINISHED")
 
 
-def delete_canceled_courses(term):
+def delete_canceled_courses(
+    term=CURRENT_YEAR_AND_TERM, log_path="course/static/log/canceled_courses.log"
+):
     cursor = get_cursor()
     cursor.execute(
         """
@@ -608,7 +563,7 @@ def delete_canceled_courses(term):
             cs.section_id || cs.term section,
             cs.term,
             cs.subject_area subject_id,
-            cs.xlist_primary,
+            cs.xlist_primary
         FROM dwadmin.course_section cs
         WHERE
             cs.activity IN (
@@ -625,16 +580,13 @@ def delete_canceled_courses(term):
             )
         AND cs.status IN ('X')
         AND cs.tuition_school NOT IN ('WH', 'LW')
-        AND cs.term= :term
+        AND cs.term = :term
         """,
         term=term,
     )
-
     start = datetime.now().strftime("%Y-%m-%d")
-
-    with open("course/static/log/deleted_courses_issues.log", "a") as log:
+    with open(log_path, "a") as log:
         log.write(f"-----{start}-----\n")
-
         for (
             course_code,
             term,
@@ -644,23 +596,19 @@ def delete_canceled_courses(term):
             course_code = course_code.replace(" ", "")
             subject_area = subject_area.replace(" ", "")
             xc_code = xc_code.replace(" ", "")
-
             try:
                 course = Course.objects.get(course_code=course_code)
-
                 if course.requested:
                     try:
                         canvas_site = course.request.canvas_instance
                     except Exception:
                         print(f"- No main request for {course.course_code}.")
-
                         if course.multisection_request:
                             canvas_site = course.multisection_request.canvas_instance
                         elif course.crosslisted_request:
                             canvas_site = course.crosslisted_request.canvas_instance
                         else:
                             canvas_site = None
-
                     if canvas_site and canvas_site.workflow_state != "deleted":
                         log.write(f"- Canvas site already exists for {course_code}.\n")
                     else:
@@ -673,11 +621,11 @@ def delete_canceled_courses(term):
                     course.delete()
             except Exception:
                 print(
-                    "- The canceled course {course_code} doesn't exist in the CRF yet."
+                    f"- The canceled course {course_code} doesn't exist in the CRF yet."
                 )
 
 
-def daily_sync(term):
+def daily_sync(term=CURRENT_YEAR_AND_TERM):
     pull_courses(term)
     pull_instructors(term)
     utils.process_canvas()

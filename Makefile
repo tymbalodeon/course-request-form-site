@@ -136,4 +136,8 @@ superuser: ## Create a user with admin privileges
 	$(MANAGE) createsuperuser
 
 test: ## Run the test suite
+ifdef module
+	$(MANAGE) $(TEST).test_$(module) -v 2
+else
 	$(MANAGE) $(TEST) -v 2
+endif

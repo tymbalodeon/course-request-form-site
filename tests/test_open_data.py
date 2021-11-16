@@ -73,7 +73,7 @@ class OpenDataTest(TestCase):
             "term_session",
             "third_party_links",
         }
-        self.assertIsNotNone(set(next(iter(courses)).keys()), course_keys)
+        self.assertSetEqual(set(next(iter(courses)).keys()), course_keys)
 
     def test_next_page(self):
         default_page_number = DEFAULT_PARAMS["page_number"]

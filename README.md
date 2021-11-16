@@ -48,6 +48,10 @@ _This README uses these aliases. Actual commands can be seen in the Makefile its
 To log in as an admin: [http://localhost:8000/admin/](http://localhost:8000/admin/)  
 To log in as a non-admin user: [http://localhost:8000/accounts/login/](http://localhost:8000/accounts/login/)
 
+### Pre-Commit
+
+Tests are included in the pre-commit hooks. Because some of these tests are for the Data Warehouse connection, _you must be on the GlobalProtect VPN to make a commit_!
+
 ## Server
 
 ### Access Requirements
@@ -78,10 +82,9 @@ Log paths:
 
 - /var/log/crf2/crf2_access.log
 - /var/log/crf2/crf2_error.log
-- /home/django/crf2/logs/ (`pull_instructors`)
 - /var/log/celery/ (`pull_courses`)
 
-To quickly check the most recent activity in the "crf2_error.log": `make log`
+To quickly check the most recent activity: `make log`
 
 ## Workflow
 
