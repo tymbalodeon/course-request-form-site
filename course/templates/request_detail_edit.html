@@ -15,42 +15,42 @@
         </ul>
     {% endif %}
     <fieldset id="RequestForm">
-        <legend>EDITING Request for {{ request.course_info|course_to_course_code }}</legend>
+        <legend>EDITING Request for {{ request_instance.course_info|course_to_course_code }}</legend>
         <dl class="row" style="line-height:1.1;">
             <dt class="col-4 col-md-3 text-right" style="padding-right: 0px;">Status</dt>
-            <dd class="col-8 col-md-9"> {{ request.status }}</dd>
+            <dd class="col-8 col-md-9"> {{ request_instance.status }}</dd>
             <dt class="col-4 col-md-3 text-right" style="padding-right: 0px;">Requestor</dt>
-            <dd class="col-8 col-md-9"> {{ request.owner }}
-                {% if request.masquerade %}
-                    (as {{ request.masquerade }})
+            <dd class="col-8 col-md-9"> {{ request_instance.owner }}
+                {% if request_instance.masquerade %}
+                    (as {{ request_instance.masquerade }})
                 {% endif %}
             </dd>
             <dt class="col-4 col-md-3 text-right" style="padding-right: 0px;">Created</dt>
-            <dd class="col-8 col-md-9"> {{ request.created }}</dd>
+            <dd class="col-8 col-md-9"> {{ request_instance.created }}</dd>
             <dt class="col-4 col-md-3 text-right" style="padding-right: 0px;">Updated</dt>
-            <dd class="col-8 col-md-9"> {{ request.updated }}</dd>
+            <dd class="col-8 col-md-9"> {{ request_instance.updated }}</dd>
         </dl>
-        {% if request.course_info.crosslisted %}
+        {% if request_instance.course_info.crosslisted %}
             <div class="row" style="padding:0px 0px 0px 20px;">
                 <dt class="" style="padding-right: 0px;">Request includes Crosslistings:</dt>
                 <dd class="" style="padding-left: 10px;">
-                    {{ request.course_info.crosslisted| join:", " }}
+                    {{ request_instance.course_info.crosslisted| join:", " }}
                 </dd>
             </div>
         {% endif %}
         <form
             enctype="application/json"
-            action="{% url "UI-request-detail" pk=request.course_requested %}"
+            action="{% url "UI-request-detail" pk=request_instance.course_requested %}"
             method="put"
             id="RequestForm"
         >
             {% csrf_token %}
             <input name="view_type" class="form-control" type="hidden" value="UI-request-detail">
-            <input name="course_requested" value="{{ request.course_requested }}" type="hidden">
-            {% include "bits/request_form.html" with course=request.course_info %}
+            <input name="course_requested" value="{{ request_instance.course_requested }}" type="hidden">
+            {% include "bits/request_form.html" with course=request_instance.course_info %}
             <input type="submit" value="Update Request" />
         </form>
     </fieldset>
-    {% include "bits/course_info.html" with course=request.course_info %}
-    {% include "bits/canvas_site_info.html" with course=request.course_info copy_from_course=request.copy_from_course %}
+    {% include "bits/course_info.html" with course=request_instance.course_info %}
+    {% include "bits/canvas_site_info.html" with course=request_instance.course_info copy_from_course=request_instance.copy_from_course %}
 {% endblock %}
