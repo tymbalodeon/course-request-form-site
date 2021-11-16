@@ -10,10 +10,6 @@ from course.models import Activity, Course, Profile, School, Subject, User
 from course.terms import CURRENT_YEAR_AND_TERM
 from open_data.open_data import OpenData
 
-ROMAN_NUMERAL_REGEX = (
-    r"(?=[MDCLXVI].)M*(C[MD]|D?C{0,3})(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})\)?$"
-)
-
 
 def get_cursor():
     config = ConfigParser()
@@ -26,12 +22,16 @@ def get_cursor():
 
 
 def format_title(title):
-    words_to_capitalize = ["Bc", "Bce", "Ce", "Ad", "Ai"]
+    roman_numeral_regex = (
+        r"(?=[MDCLXVI].)M*(C[MD]|D?C{0,3})(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})\)?$"
+    )
+    decade_regex = r"\d{4}S"
+    words_to_capitalize = ["Bc", "Bce", "Ce", "Ad", "Ai", "Snf"]
     dividers = ["/", "-", ":"]
 
     def capitalize_roman_numerals(title):
         title = title.upper()
-        roman_numerals = search(ROMAN_NUMERAL_REGEX, title)
+        roman_numerals = search(roman_numeral_regex, title)
         if roman_numerals:
             roman_numerals = roman_numerals.group()
             title_base = sub(roman_numerals, "", title)
@@ -48,6 +48,11 @@ def format_title(title):
         title = divider.join([capitalize_roman_numerals(title) for title in titles])
         if divider == ":" and findall(r":[^ ]", title):
             title = sub(r":", ": ", title)
+    decade = search(decade_regex, title)
+    if decade:
+        decade = decade.group()
+        year = decade[:-1]
+        title = sub(decade, f"{year}s", title)
     return title
 
 

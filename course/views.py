@@ -32,7 +32,6 @@ from canvas.api import (
     get_canvas,
     get_user_by_sis,
 )
-from config.config import OPEN_DATA_DOMAIN, OPEN_DATA_ID, OPEN_DATA_KEY
 from data_warehouse.data_warehouse import (
     get_course,
     get_staff_account,
@@ -1229,41 +1228,33 @@ def quick_config(request):
 
 
 def check_open_data_for_course(request):
-    data = {}
+    courses = {}
     size = 0
-    logger.warning(f"Course lookup failed: {request}")
-
     if request.GET:
         try:
             course_id = request.GET.get("course_id", None)
             term = request.GET.get("term", None)
             instructor = request.GET.get("instructor", None)
-            open_data = OpenData(OPEN_DATA_DOMAIN, OPEN_DATA_ID, OPEN_DATA_KEY)
+            open_data = OpenData()
             open_data.set_uri("course_section_search")
             open_data.set_param("course_id", course_id)
-
             if term:
                 open_data.set_param("term", term)
-
             open_data.set_param("number_of_results_per_page", 5)
-
             if instructor:
                 open_data.set_param("instructor", instructor)
-
-            data["data"] = open_data.call_api()
-
-            if isinstance(data["data"], list):
-                size = len(data["data"])
+            courses["courses"] = open_data.call_api() or "COURSE(S) NOT FOUND"
+            if isinstance(courses["courses"], list):
+                size = len(courses["courses"])
             else:
                 size = 1
         except Exception as error:
             logger.error(f"ERROR (OpenData): {error}")
-
-    return render(request, "admin/course_lookup.html", {"data": data, "size": size})
+    return render(request, "admin/course_lookup.html", {"data": courses, "size": size})
 
 
 def check_data_warehouse_for_course(request):
-    data = {}
+    courses = {}
     size = 0
     if request.GET:
         try:
@@ -1286,17 +1277,17 @@ def check_data_warehouse_for_course(request):
             results = get_course(course_code, verbose=False)
             if results:
                 size = len(results)
+                courses = {"courses": dict()}
                 for course in results:
                     course_code = course[0]
-                    data["data"][course_code] = dict()
-
+                    courses["courses"][course_code] = dict()
                     for index, item in enumerate(course[1:]):
-                        data["data"][course_code][headers[index]] = item
+                        courses["courses"][course_code][headers[index]] = item
             else:
-                data["data"] = "COURSE NOT FOUND"
+                courses = {"courses": "COURSE(S) NOT FOUND"}
         except Exception as error:
             logger.error(f"ERROR (Data Warehouse): {error}")
-    return render(request, "admin/dw_lookup.html", {"data": data, "size": size})
+    return render(request, "admin/dw_lookup.html", {"data": courses, "size": size})
 
 
 def autocomplete(request):
