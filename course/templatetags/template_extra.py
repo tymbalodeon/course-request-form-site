@@ -14,7 +14,6 @@ def delete_query_param(request, key):
     iri = request.get_full_path()
     uri = iri_to_uri(iri)
     value = remove_query_param(uri, key) if uri else None
-
     return escape(value)
 
 
@@ -73,7 +72,6 @@ def get_markdown_id(location):
 def truncate_course_name(value, max_length):
     def get_longest_whole_words(words, max_length):
         phrase = " ".join(words)
-
         return (
             get_longest_whole_words(words[:-1], max_length)
             if len(phrase) > max_length
