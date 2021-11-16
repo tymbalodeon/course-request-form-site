@@ -23,7 +23,8 @@ def get_data_directory(data_directory_name):
     return data_directory_parent
 
 
-def sync_crf_canvas_sites(year_and_term):
+def sync_crf_canvas_sites(year_and_term, logger=logger):
+    logger.info("Updating site info for {term} courses...")
     year, term = split_year_and_term(year_and_term)
     canvas_sites = Request.objects.filter(~Q(canvas_instance__isnull=True)).filter(
         status="COMPLETED",
@@ -47,9 +48,10 @@ def sync_crf_canvas_sites(year_and_term):
             )
             crf_canvas_site.workflow_state = "deleted"
             crf_canvas_site.save()
+    logger.info("FINISHED")
 
 
-def update_user_courses(penn_key):
+def update_user_courses(penn_key, logger=logger):
     canvas_courses = get_user_courses(penn_key)
     for canvas_course in canvas_courses:
         try:
@@ -67,7 +69,7 @@ def update_user_courses(penn_key):
             logger.error(f"FAILED to add course {canvas_course} ({error}).")
 
 
-def update_all_users_courses():
+def update_all_users_courses(logger=logger):
     for user in User.objects.all():
         logger.info(f") Adding courses for {user.username}...")
-        update_user_courses(user.username)
+        update_user_courses(user.username, logger=logger)

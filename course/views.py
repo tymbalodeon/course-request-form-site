@@ -28,6 +28,7 @@ from rest_framework.viewsets import ModelViewSet
 from canvas.api import (
     MAIN_ACCOUNT_ID,
     CanvasException,
+    create_canvas_sites,
     create_canvas_user,
     get_canvas,
     get_user_by_sis,
@@ -64,7 +65,6 @@ from .serializers import (
     UpdateLogSerializer,
     UserSerializer,
 )
-from .tasks import create_canvas_sites
 from .terms import (
     CURRENT_TERM,
     CURRENT_YEAR,

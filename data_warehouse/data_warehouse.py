@@ -275,7 +275,7 @@ def get_instructor(pennkey, term=CURRENT_YEAR_AND_TERM):
         }
 
 
-def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM):
+def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
     logger.info(") Pulling courses from the Data Warehouse...")
     term = term.upper()
     open_data = OpenData()
@@ -403,7 +403,7 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM):
     logger.info("FINISHED")
 
 
-def get_data_warehouse_instructors(term=CURRENT_YEAR_AND_TERM):
+def get_data_warehouse_instructors(term=CURRENT_YEAR_AND_TERM, logger=logger):
     logger.info(") Pulling instructors...")
     term = term.upper()
     cursor = get_cursor()
@@ -502,7 +502,9 @@ def get_data_warehouse_instructors(term=CURRENT_YEAR_AND_TERM):
 
 
 def delete_data_warehouse_canceled_courses(
-    term=CURRENT_YEAR_AND_TERM, log_path="course/static/log/canceled_courses.log"
+    term=CURRENT_YEAR_AND_TERM,
+    log_path="course/static/log/canceled_courses.log",
+    logger=logger,
 ):
     cursor = get_cursor()
     cursor.execute(
