@@ -9,6 +9,8 @@ from course.models import Activity, Course, Profile, School, Subject, User
 from course.terms import CURRENT_YEAR_AND_TERM
 from open_data.open_data import OpenData
 
+logger = getLogger(__name__)
+
 
 def get_cursor():
     config = ConfigParser()
@@ -57,10 +59,10 @@ def format_title(title):
 def get_staff_account(penn_key=None, penn_id=None):
     cursor = get_cursor()
     if not penn_key and not penn_id:
-        print("Checking Data Warehouse: NO PENNKEY OR PENN ID PROVIDED.")
+        logger.warning("Checking Data Warehouse: NO PENNKEY OR PENN ID PROVIDED.")
         return False
     elif penn_key:
-        print(f"Checking Data Warehouse for pennkey {penn_key}...")
+        logger.info(f"Checking Data Warehouse for pennkey {penn_key}...")
         cursor.execute(
             """
             SELECT
@@ -73,7 +75,7 @@ def get_staff_account(penn_key=None, penn_id=None):
             pennkey=penn_key,
         )
         for first_name, last_name, email, dw_penn_id in cursor:
-            print(
+            logger.info(
                 f'FOUND "{penn_key}": {first_name} {last_name} ({dw_penn_id})'
                 f" {email.strip()}"
             )
@@ -84,7 +86,7 @@ def get_staff_account(penn_key=None, penn_id=None):
                 "penn_id": dw_penn_id,
             }
     elif penn_id:
-        print(f"Checking Data Warehouse for penn id {penn_id}...")
+        logger.info(f"Checking Data Warehouse for penn id {penn_id}...")
         cursor.execute(
             """
             SELECT
@@ -97,7 +99,7 @@ def get_staff_account(penn_key=None, penn_id=None):
             penn_id=penn_id,
         )
         for first_name, last_name, email, penn_key in cursor:
-            print(
+            logger.info(
                 f'FOUND "{penn_id}": {first_name} {last_name} ({penn_key})'
                 f" {email.strip()}"
             )
@@ -126,14 +128,14 @@ def get_user_by_pennkey(pennkey):
                 email=account_values["email"],
             )
             Profile.objects.create(user=user, penn_id=account_values["penn_id"])
-            print(f'CREATED Profile for "{pennkey}".')
+            logger.info(f'CREATED Profile for "{pennkey}".')
         else:
             user = None
-            print(f'FAILED to create Profile for "{pennkey}".')
+            logger.error(f'FAILED to create Profile for "{pennkey}".')
     return user
 
 
-def get_course(section, term=None, verbose=True):
+def get_course(section, term=None):
     section = (
         section.replace("SRS_", "")
         .replace("_", "")
@@ -182,12 +184,6 @@ def get_course(section, term=None, verbose=True):
         """,
         section=section,
     )
-    if verbose:
-        print(
-            "course_code, section_id, course_term, subject_area, school, xc, xc_code,"
-            " activity, section_dept, section_division, title, status, rev,"
-            " instructor(s)\n"
-        )
     results = list()
     for (
         course_code,
@@ -206,23 +202,6 @@ def get_course(section, term=None, verbose=True):
         instructors,
     ) in cursor:
         if not term:
-            if verbose:
-                print(
-                    course_code,
-                    section_id,
-                    course_term,
-                    subject_area,
-                    school,
-                    xc,
-                    xc_code,
-                    activity,
-                    section_dept,
-                    section_division,
-                    title,
-                    status,
-                    rev,
-                    instructors,
-                )
             results.append(
                 [
                     course_code,
@@ -242,23 +221,6 @@ def get_course(section, term=None, verbose=True):
                 ]
             )
         elif course_term == term:
-            if verbose:
-                print(
-                    course_code,
-                    section_id,
-                    course_term,
-                    subject_area,
-                    school,
-                    xc,
-                    xc_code,
-                    activity,
-                    section_dept,
-                    section_division,
-                    title,
-                    status,
-                    rev,
-                    instructors,
-                )
             results.append(
                 [
                     course_code,
@@ -314,7 +276,7 @@ def get_instructor(pennkey, term=CURRENT_YEAR_AND_TERM):
 
 
 def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM):
-    print(") Pulling courses from the Data Warehouse...")
+    logger.info(") Pulling courses from the Data Warehouse...")
     term = term.upper()
     open_data = OpenData()
     cursor = get_cursor()
@@ -373,11 +335,10 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM):
                     abbreviation=subject_area, name=subject_area, schools=school
                 )
             except Exception as error:
-                getLogger("error_logger").error(
-                    f"couldnt find subject {subject_area}: {error}"
-                )
                 subject = ""
-                print(f"{course_code}: Subject {subject_area} not found ({error})")
+                logger.error(
+                    f"{course_code}: Subject {subject_area} not found ({error})"
+                )
         if crosslist:
             if crosslist == "S":
                 primary_crosslist = f"{crosslist_code}{term}"
@@ -392,11 +353,8 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM):
                         abbreviation=p_subj, name=p_subj, schools=school
                     )
                 except Exception as error:
-                    getLogger("error_logger").error(
-                        f"couldnt find subject {p_subj}: {error}"
-                    )
                     primary_subject = ""
-                    print(f"{course_code}: Primary subject not found")
+                    logger.error(f"{course_code}: Primary subject not found ({error})")
         else:
             primary_subject = subject
         if primary_subject:
@@ -409,9 +367,8 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM):
             try:
                 activity = Activity.objects.create(abbr=activity, name=activity)
             except Exception:
-                getLogger("error_logger").error("couldnt find activity %s ", activity)
                 activity = ""
-                print(f"{course_code}: Activity not found")
+                logger.error(f"{course_code}: Activity not found")
         course_number_and_section = course_code[:-5][-6:]
         course_number = course_number_and_section[:3]
         section_number = course_number_and_section[-3:]
@@ -434,18 +391,20 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM):
                     "year": year,
                 },
             )[1]
-            print(
+            logger.info(
                 f"- Added course {course_code}"
                 if created
                 else f"- Updated course {course_code}"
             )
         except Exception as error:
-            print(f"- ERROR: Failed to add or update course {course_code} ({error})")
-    print("FINISHED")
+            logger.error(
+                f"- ERROR: Failed to add or update course {course_code} ({error})"
+            )
+    logger.info("FINISHED")
 
 
 def get_data_warehouse_instructors(term=CURRENT_YEAR_AND_TERM):
-    print(") Pulling instructors...")
+    logger.info(") Pulling instructors...")
     term = term.upper()
     cursor = get_cursor()
     cursor.execute(
@@ -487,11 +446,10 @@ def get_data_warehouse_instructors(term=CURRENT_YEAR_AND_TERM):
         course_code = (section_id + term).replace(" ", "")
         if not pennkey:
             message = (
-                f"- ERROR: (section: {section_id}) Failed to create account for"
+                f"(section: {section_id}) Failed to create account for"
                 f" {first_name} {last_name} (missing pennkey)"
             )
-            getLogger("error_logger").error(message)
-            print(message)
+            logger.error(message)
         else:
             try:
                 course = Course.objects.get(course_code=course_code)
@@ -519,15 +477,13 @@ def get_data_warehouse_instructors(term=CURRENT_YEAR_AND_TERM):
                             NEW_INSTRUCTOR_VALUES[course_code] = [instructor]
                     else:
                         message = (
-                            f"- ERROR: (section: {section_id}) Failed to create account"
+                            f"(section: {section_id}) Failed to create account"
                             f" for: {first_name} {last_name} ({error_message})"
                         )
-                        getLogger("error_logger").error(message)
-                        print(message)
+                        logger.error(message)
             except Exception:
-                message = f"- ERROR: Failed to find course {course_code}"
-                getLogger("error_logger").error(message)
-                print(message)
+                message = f"Failed to find course {course_code}"
+                logger.error(message)
     for course_code, instructors in NEW_INSTRUCTOR_VALUES.items():
         try:
             course = Course.objects.get(course_code=course_code)
@@ -535,15 +491,14 @@ def get_data_warehouse_instructors(term=CURRENT_YEAR_AND_TERM):
             for instructor in instructors:
                 course.instructors.add(instructor)
             course.save()
-            print(
+            logger.info(
                 f"- Updated {course_code} with instructors:"
                 f" {', '.join([instructor.username for instructor in instructors])}"
             )
         except Exception as error:
-            message = f"- ERROR: Failed to add new instructor(s) to course ({error})"
-            getLogger("error_logger").error(message)
-            print(message)
-    print("FINISHED")
+            message = f"Failed to add new instructor(s) to course ({error})"
+            logger.error(message)
+    logger.info("FINISHED")
 
 
 def delete_data_warehouse_canceled_courses(
@@ -595,7 +550,7 @@ def delete_data_warehouse_canceled_courses(
                     try:
                         canvas_site = course.request.canvas_instance
                     except Exception:
-                        print(f"- No main request for {course.course_code}.")
+                        logger.info(f"- No main request for {course.course_code}.")
                         if course.multisection_request:
                             canvas_site = course.multisection_request.canvas_instance
                         elif course.crosslisted_request:
@@ -610,9 +565,9 @@ def delete_data_warehouse_canceled_courses(
                             f" {course_code}.\n"
                         )
                 else:
-                    print(") Deleting {course_code}...")
+                    logger.info(") Deleting {course_code}...")
                     course.delete()
             except Exception:
-                print(
+                logger.info(
                     f"- The canceled course {course_code} doesn't exist in the CRF yet."
                 )

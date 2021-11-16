@@ -1,3 +1,4 @@
+from logging import getLogger
 from os import mkdir
 from pathlib import Path
 
@@ -8,6 +9,7 @@ from canvas.api import get_canvas, get_user_courses
 from .models import CanvasSite, Request, User
 
 DATA_DIRECTORY_NAME = "data"
+logger = getLogger(__name__)
 
 
 def split_year_and_term(year_and_term):
@@ -40,7 +42,9 @@ def sync_crf_canvas_sites(year_and_term):
                 crf_canvas_site.workflow_state = site.workflow_state
                 crf_canvas_site.save()
         except Exception:
-            print("ERROR: Failed to find Canvas site: {crf_canvas_site.sis_course_id}")
+            logger.error(
+                "ERROR: Failed to find Canvas site: {crf_canvas_site.sis_course_id}"
+            )
             crf_canvas_site.workflow_state = "deleted"
             crf_canvas_site.save()
 
@@ -49,7 +53,7 @@ def update_user_courses(penn_key):
     canvas_courses = get_user_courses(penn_key)
     for canvas_course in canvas_courses:
         try:
-            course = CanvasSite.objects.update_or_create(
+            course, created = CanvasSite.objects.update_or_create(
                 canvas_id=str(canvas_course.id),
                 defaults={
                     "workflow_state": canvas_course.workflow_state,
@@ -57,12 +61,13 @@ def update_user_courses(penn_key):
                     "name": canvas_course.name,
                 },
             )
-            course[0].owners.add(User.objects.get(username=penn_key))
+            course.owners.add(User.objects.get(username=penn_key))
+            logger.info(f"{'CREATED' if created else 'UPDATED'} {course}.")
         except Exception as error:
-            print(f"FAILED to add course {canvas_course} ({error}).")
+            logger.error(f"FAILED to add course {canvas_course} ({error}).")
 
 
 def update_all_users_courses():
     for user in User.objects.all():
-        print(f") Adding courses for {user.username}...")
+        logger.info(f") Adding courses for {user.username}...")
         update_user_courses(user.username)
