@@ -25,8 +25,8 @@ def format_title(title):
     roman_numeral_regex = (
         r"(?=[MDCLXVI].)M*(C[MD]|D?C{0,3})(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})\)?$"
     )
-    decade_regex = r"\d{4}S"
-    words_to_capitalize = ["Bc", "Bce", "Ce", "Ad", "Ai", "Snf"]
+    numbers_regex = r"\d(?:S|Nd|Rd|Th|)"
+    words_to_capitalize = ["Bc", "Bce", "Ce", "Ad", "Ai", "Snf", "Asl"]
     dividers = ["/", "-", ":"]
 
     def capitalize_roman_numerals(title):
@@ -48,11 +48,10 @@ def format_title(title):
         title = divider.join([capitalize_roman_numerals(title) for title in titles])
         if divider == ":" and findall(r":[^ ]", title):
             title = sub(r":", ": ", title)
-    decade = search(decade_regex, title)
-    if decade:
-        decade = decade.group()
-        year = decade[:-1]
-        title = sub(decade, f"{year}s", title)
+    numbers = findall(numbers_regex, title)
+    if numbers:
+        for number in numbers:
+            title = sub(number, number.lower(), title)
     return title
 
 
