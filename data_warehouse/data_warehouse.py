@@ -5,7 +5,6 @@ from re import findall, search, sub
 
 import cx_Oracle
 
-from course import utils
 from course.models import Activity, Course, Profile, School, Subject, User
 from course.terms import CURRENT_YEAR_AND_TERM
 from open_data.open_data import OpenData
@@ -314,7 +313,7 @@ def get_instructor(pennkey, term=CURRENT_YEAR_AND_TERM):
         }
 
 
-def pull_courses(term=CURRENT_YEAR_AND_TERM):
+def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM):
     print(") Pulling courses from the Data Warehouse...")
     term = term.upper()
     open_data = OpenData()
@@ -445,7 +444,7 @@ def pull_courses(term=CURRENT_YEAR_AND_TERM):
     print("FINISHED")
 
 
-def pull_instructors(term=CURRENT_YEAR_AND_TERM):
+def get_data_warehouse_instructors(term=CURRENT_YEAR_AND_TERM):
     print(") Pulling instructors...")
     term = term.upper()
     cursor = get_cursor()
@@ -547,7 +546,7 @@ def pull_instructors(term=CURRENT_YEAR_AND_TERM):
     print("FINISHED")
 
 
-def delete_canceled_courses(
+def delete_data_warehouse_canceled_courses(
     term=CURRENT_YEAR_AND_TERM, log_path="course/static/log/canceled_courses.log"
 ):
     cursor = get_cursor()
@@ -617,11 +616,3 @@ def delete_canceled_courses(
                 print(
                     f"- The canceled course {course_code} doesn't exist in the CRF yet."
                 )
-
-
-def daily_sync(term=CURRENT_YEAR_AND_TERM):
-    pull_courses(term)
-    pull_instructors(term)
-    utils.update_all_users_courses()
-    utils.sync_crf_canvas_sites(term)
-    delete_canceled_courses(term)

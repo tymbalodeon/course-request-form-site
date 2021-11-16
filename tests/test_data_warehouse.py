@@ -7,7 +7,7 @@ from config.config import EMAIL, USERNAME
 from course.models import User
 from course.terms import CURRENT_YEAR_AND_TERM
 from data_warehouse.data_warehouse import (
-    delete_canceled_courses,
+    delete_data_warehouse_canceled_courses,
     format_title,
     get_course,
     get_instructor,
@@ -66,7 +66,7 @@ class DataWarehouseTest(TestCase):
 
     def test_delete_canceled_courses(self):
         log_path = Path.cwd() / "test_canceled_courses.log"
-        delete_canceled_courses(log_path=log_path)
+        delete_data_warehouse_canceled_courses(log_path=log_path)
         with open(log_path) as log:
             lines = log.readlines()
             self.assertIsNotNone(lines)

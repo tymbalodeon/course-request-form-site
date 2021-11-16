@@ -15,9 +15,9 @@ from canvas.api import (
 )
 from course.terms import CURRENT_YEAR_AND_TERM, NEXT_YEAR_AND_TERM
 from data_warehouse.data_warehouse import (
-    daily_sync,
-    delete_canceled_courses,
-    pull_instructors,
+    delete_data_warehouse_canceled_courses,
+    get_data_warehouse_courses,
+    get_data_warehouse_instructors,
 )
 
 from .models import CanvasSite, Course, Request, User
@@ -43,7 +43,11 @@ logger = getLogger(__name__)
 def sync_all():
     for term in [CURRENT_YEAR_AND_TERM, NEXT_YEAR_AND_TERM]:
         start = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        daily_sync(term)
+        get_data_warehouse_courses(term)
+        get_data_warehouse_instructors(term)
+        update_all_users_courses()
+        sync_crf_canvas_sites(term)
+        delete_data_warehouse_canceled_courses(term)
         end = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         with open("course/static/log/night_sync.log", "a") as log:
             log.write(f"Daily sync completed for {term}: {start} - {end} \n")
@@ -51,7 +55,7 @@ def sync_all():
 
 @task()
 def sync_instructors(term):
-    pull_instructors(term)
+    get_data_warehouse_instructors(term)
 
 
 @task()
@@ -68,7 +72,7 @@ def sync_canvas_sites(term):
 
 @task()
 def sync_canceled_courses(term):
-    delete_canceled_courses(term)
+    delete_data_warehouse_canceled_courses(term)
 
 
 @task()

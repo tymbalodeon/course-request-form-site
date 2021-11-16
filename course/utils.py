@@ -16,10 +16,8 @@ def split_year_and_term(year_and_term):
 
 def get_data_directory(data_directory_name):
     data_directory_parent = Path.cwd() / data_directory_name
-
     if not data_directory_parent.exists():
         mkdir(data_directory_parent)
-
     return data_directory_parent
 
 
@@ -31,17 +29,13 @@ def sync_crf_canvas_sites(year_and_term):
         course_requested__course_term=term,
     )
     canvas = get_canvas()
-
     for canvas_site in canvas_sites:
         crf_canvas_site = canvas_site.canvas_instance
-
         try:
             site = canvas.get_course(crf_canvas_site.canvas_id)
-
             if site.name != crf_canvas_site.name:
                 crf_canvas_site.name = site.name
                 crf_canvas_site.save()
-
             if site.workflow_state != crf_canvas_site.workflow_state:
                 crf_canvas_site.workflow_state = site.workflow_state
                 crf_canvas_site.save()
@@ -57,9 +51,11 @@ def update_user_courses(penn_key):
         try:
             course = CanvasSite.objects.update_or_create(
                 canvas_id=str(canvas_course.id),
-                workflow_state=canvas_course.workflow_state,
-                sis_course_id=canvas_course.sis_course_id,
-                name=canvas_course.name,
+                defaults={
+                    "workflow_state": canvas_course.workflow_state,
+                    "sis_course_id": canvas_course.sis_course_id,
+                    "name": canvas_course.name,
+                },
             )
             course[0].owners.add(User.objects.get(username=penn_key))
         except Exception as error:

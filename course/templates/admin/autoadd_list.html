@@ -101,9 +101,7 @@
             </div>
         </div>
         {% if paginator %}
-            <nav aria-label="Page navigation" class="vertical-center">
-                {% get_pagination_html paginator %}
-            </nav>
+            {% include "../bits/paginator.html" %}
         {% endif %}
     </div>
 {% endblock %}

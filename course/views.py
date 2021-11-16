@@ -870,24 +870,19 @@ class AutoAddViewSet(MixedPermissionModelViewSet, ModelViewSet):
         response = Response(
             serializer.data, status=status.HTTP_201_CREATED, headers=headers
         )
-
         if request.accepted_renderer.format == "html":
             response.template_name = "admin/autoadd_list.html"
-
             return redirect("UI-autoadd-list")
         else:
             return response
 
     def list(self, request):
         print_log_message(request, "auto-added user", "list")
-
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
-
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             response = self.get_paginated_response(serializer.data)
-
             if request.accepted_renderer.format == "html":
                 response.template_name = "admin/autoadd_list.html"
                 response.data = {
@@ -896,19 +891,15 @@ class AutoAddViewSet(MixedPermissionModelViewSet, ModelViewSet):
                     "serializer": AutoAddSerializer,
                     "user_form": UserForm(),
                 }
-
             logger.info(response.data["paginator"].page)
-
             return response
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         self.perform_destroy(instance)
         response = Response(status=status.HTTP_204_NO_CONTENT)
-
         if "UI" in request.data and request.data["UI"] == "true":
             response.template_name = "admin/autoadd_list.html"
-
             return redirect("UI-autoadd-list")
         else:
             return response
