@@ -1265,7 +1265,6 @@ def check_open_data_for_course(request):
 def check_data_warehouse_for_course(request):
     data = {}
     size = 0
-
     if request.GET:
         try:
             headers = [
@@ -1285,10 +1284,8 @@ def check_data_warehouse_for_course(request):
             ]
             course_code = request.GET.get("course_code")
             results = get_course(course_code, verbose=False)
-
             if results:
                 size = len(results)
-
                 for course in results:
                     course_code = course[0]
                     data["data"][course_code] = dict()
@@ -1299,7 +1296,6 @@ def check_data_warehouse_for_course(request):
                 data["data"] = "COURSE NOT FOUND"
         except Exception as error:
             logger.error(f"ERROR (Data Warehouse): {error}")
-
     return render(request, "admin/dw_lookup.html", {"data": data, "size": size})
 
 

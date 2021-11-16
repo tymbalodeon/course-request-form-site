@@ -1,8 +1,7 @@
 from configparser import ConfigParser
 from datetime import datetime
 from logging import getLogger
-from re import findall, sub
-from string import capwords
+from re import findall, search, sub
 
 import cx_Oracle
 
@@ -14,7 +13,6 @@ from open_data.open_data import OpenData
 ROMAN_NUMERAL_REGEX = (
     r"(?=[MDCLXVI].)M*(C[MD]|D?C{0,3})(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})\)?$"
 )
-ERA_REGEX = r"\s((B?C{1}E?)|(AD))(\s|$)"
 
 
 def get_cursor():
@@ -28,36 +26,28 @@ def get_cursor():
 
 
 def format_title(title):
-    eras = ["Bc", "Bce", "Ce", "Ad"]
-    title = title.upper()
-    roman_numeral = findall(ROMAN_NUMERAL_REGEX, title)
-    if roman_numeral:
-        title = sub(ROMAN_NUMERAL_REGEX, "", title)
-    title = capwords(title)
-
-    def capwords_with_divider(title, divider):
-        titles = title.split(divider)
-
-        def sentence_case_title(title):
-            characters = [character for character in title]
-            characters[0] = characters[0].upper()
-            return "".join(characters)
-
-        titles = [sentence_case_title(title) for title in titles]
-        return divider.join(titles)
-
+    words_to_capitalize = ["Bc", "Bce", "Ce", "Ad", "Ai"]
     dividers = ["/", "-", ":"]
+
+    def capitalize_roman_numerals(title):
+        title = title.upper()
+        roman_numerals = search(ROMAN_NUMERAL_REGEX, title)
+        if roman_numerals:
+            roman_numerals = roman_numerals.group()
+            title_base = sub(roman_numerals, "", title)
+            title = f"{title_base.title()}{roman_numerals}"
+        else:
+            title = title.title()
+        for word in words_to_capitalize:
+            if word in title.split():
+                title = title.replace(word, word.upper())
+        return title
+
     for divider in dividers:
-        if divider in title:
-            title = capwords_with_divider(title, divider)
-            if divider == ":" and findall(r":[^ ]", title):
-                title = sub(r":", ": ", title)
-    if roman_numeral:
-        roman_numeral_string = "".join([str(value) for value in roman_numeral[0]])
-        title = f"{title} {roman_numeral_string}"
-    for era in eras:
-        if title.endswith(era):
-            title = title.replace(era, era.upper())
+        titles = title.split(divider)
+        title = divider.join([capitalize_roman_numerals(title) for title in titles])
+        if divider == ":" and findall(r":[^ ]", title):
+            title = sub(r":", ": ", title)
     return title
 
 
