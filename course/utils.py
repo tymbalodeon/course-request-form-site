@@ -37,11 +37,20 @@ def sync_crf_canvas_sites(year_and_term, logger=logger):
         try:
             site = canvas.get_course(crf_canvas_site.canvas_id)
             if site.name != crf_canvas_site.name:
+                logger.info(
+                    f"Changing name for {crf_canvas_site.sis_course_id} from"
+                    f" {crf_canvas_site.name} to {site.name}"
+                )
                 crf_canvas_site.name = site.name
                 crf_canvas_site.save()
             if site.workflow_state != crf_canvas_site.workflow_state:
+                logger.info(
+                    f"Changing workflow_state for {crf_canvas_site.sis_course_id} from"
+                    f" {crf_canvas_site.workflow_state} to {site.workflow_state}"
+                )
                 crf_canvas_site.workflow_state = site.workflow_state
                 crf_canvas_site.save()
+            logger.info(f"SYNCED Canvas site for {crf_canvas_site.sis_course_id}")
         except Exception as error:
             logger.error(
                 "ERROR: Failed to find Canvas site:"
