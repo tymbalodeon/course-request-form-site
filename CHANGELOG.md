@@ -1,6 +1,6 @@
 # CHANGELOG
 
-[AX] = "Admin experience" (Changes relevant mainly to admin users)
+[AX] = "Admin experience" (Changes relevant mainly to admin users)  
 [DX] = "Developer experience" (Changes relevant mainly to developers)
 
 ## 2021-11-17
