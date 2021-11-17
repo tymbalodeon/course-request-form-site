@@ -10,7 +10,7 @@ class UserAutocomplete(autocomplete.Select2QuerySetView):
             return User.objects.none()
         query_set = User.objects.all()
         if self.q:
-            return query_set.filter(username__contains=self.q)[:8]
+            return query_set.filter(username__contains=self.q)
         else:
             return User.objects.none()
 
@@ -24,7 +24,7 @@ class SubjectAutocomplete(autocomplete.Select2QuerySetView):
             return Subject.objects.none()
         query_set = Subject.objects.all()
         if self.q:
-            return query_set.filter(abbreviation__contains=self.q)[:8]
+            return query_set.filter(abbreviation__contains=self.q)
         else:
             return Subject.objects.none()
 
@@ -47,7 +47,7 @@ class CanvasSiteAutocomplete(autocomplete.Select2QuerySetView):
         query_set = CanvasSite.objects.filter(
             Q(owners=user) | Q(added_permissions=self.request.user)
         ).order_by("-canvas_id")
-        return query_set.filter(name__contains=self.q)[:8] if self.q else query_set
+        return query_set.filter(name__contains=self.q) if self.q else query_set
 
     def get_result_value(self, result):
         return str(result.canvas_id)
