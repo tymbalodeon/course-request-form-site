@@ -165,11 +165,9 @@ LOGGING = {
             )
         },
     },
-    "filters": {"require_debug_true": {"()": "django.utils.log.RequireDebugTrue"}},
     "handlers": {
         "console": {
             "level": "INFO",
-            "filters": ["require_debug_true"],
             "class": "logging.StreamHandler",
         },
         "crf": {
