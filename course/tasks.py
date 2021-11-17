@@ -15,19 +15,26 @@ LOGGER = get_task_logger(__name__)
 TERMS = [CURRENT_YEAR_AND_TERM, NEXT_YEAR_AND_TERM]
 
 
+def get_args(celery, term=None):
+    args = [term] if term else []
+    if celery:
+        args.append(LOGGER)
+    return args
+
+
 @task()
-def sync_all(terms=TERMS):
-    LOGGER.info("STARTING SYNC")
+def sync_all(terms=TERMS, celery=True):
     if isinstance(terms, str):
         terms = [terms]
     for term in terms:
-        get_data_warehouse_courses(term, logger=LOGGER)
-        get_data_warehouse_instructors(term, logger=LOGGER)
-        sync_crf_canvas_sites(term, logger=LOGGER)
-        delete_data_warehouse_canceled_courses(term, logger=LOGGER)
-    update_all_users_courses(logger=LOGGER)
+        args = get_args(celery, term)
+        get_data_warehouse_courses(*args)
+        get_data_warehouse_instructors(*args)
+        sync_crf_canvas_sites(*args)
+        delete_data_warehouse_canceled_courses(*args)
+    args = get_args(celery)
+    update_all_users_courses(*args)
     delete_canceled_requests()
-    LOGGER.info("COMPLETED SYNC")
 
 
 @task()
