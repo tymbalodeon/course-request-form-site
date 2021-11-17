@@ -316,7 +316,6 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
     def create(self, request):
         def update_course(course):
             course.save()
-
             if course.crosslisted:
                 for crosslisted in course.crosslisted.all():
                     crosslisted.request = course.request
@@ -327,15 +326,12 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
         )
         course = Course.objects.get(course_code=request.data["course_requested"])
         instructors = course.get_instructors()
-
         if instructors == "STAFF":
             instructors = None
-
         if (instructors and self.request.user.get_username() not in instructors) and (
             masquerade and masquerade not in instructors
         ):
             raise PermissionDenied({"message": "You don't have permission to access"})
-
         additional_enrollments_partial = parse_html_list(
             request.data, prefix="additional_enrollments"
         )
@@ -369,7 +365,6 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
             and request.data["view_type"] == "UI-course-list"
             else None
         )
-
         request_data["copy_from_course"] = (
             request.data["name"] if "name" in request.data else None
         )
@@ -384,19 +379,15 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
         )
         serializer = self.get_serializer(data=request_data)
         is_valid = serializer.is_valid()
-
         if not is_valid:
             for error in serializer.errors:
                 add_message(request, ERROR, error)
-
             raise serializers.ValidationError()
-
         serializer.validated_data["masquerade"] = masquerade
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         course = Course.objects.get(course_code=request.data["course_requested"])
         update_course(course)
-
         if "view_type" in request.data:
             if request.data["view_type"] == "UI-course-list":
                 return redirect("UI-course-list")
@@ -424,7 +415,7 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
                 | Q(course_requested__course_name__contains=search_term)
             )
             if search_term
-            else self.get_queryset()
+            else self.filter_queryset(self.get_queryset())
         )
         page = self.paginate_queryset(queryset)
         if page is not None:

@@ -24,8 +24,8 @@ def get_data_directory(data_directory_name):
 
 
 def sync_crf_canvas_sites(year_and_term, logger=logger):
-    logger.info("Updating site info for {term} courses...")
     year, term = split_year_and_term(year_and_term)
+    logger.info(f"Updating site info for {term} courses...")
     canvas_sites = Request.objects.filter(~Q(canvas_instance__isnull=True)).filter(
         status="COMPLETED",
         course_requested__year=year,
@@ -42,9 +42,10 @@ def sync_crf_canvas_sites(year_and_term, logger=logger):
             if site.workflow_state != crf_canvas_site.workflow_state:
                 crf_canvas_site.workflow_state = site.workflow_state
                 crf_canvas_site.save()
-        except Exception:
+        except Exception as error:
             logger.error(
-                "ERROR: Failed to find Canvas site: {crf_canvas_site.sis_course_id}"
+                "ERROR: Failed to find Canvas site:"
+                f" {crf_canvas_site.sis_course_id} ({error})"
             )
             crf_canvas_site.workflow_state = "deleted"
             crf_canvas_site.save()
