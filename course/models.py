@@ -174,7 +174,7 @@ class Course(Model):
             try:
                 request = Request.objects.get(course_requested=self.course_code)
             except Exception:
-                request = None
+                request = False
             return bool(
                 request or self.multisection_request or self.crosslisted_request
             )
