@@ -66,7 +66,7 @@
                                     data-toggle="modal"
                                     data-target="#SchoolModal"
                                     data-school="{{ school.name }}"
-                                    data-abbr="{{ school.abbreviation }}"
+                                    data-abbreviation="{{ school.abbreviation }}"
                                     data-id="{{ school.id }}"
                                     data-visible="false"
                                 >
@@ -79,7 +79,7 @@
                                     data-toggle="modal"
                                     data-target="#SchoolModal"
                                     data-school="{{ school.name }}"
-                                    data-abbr="{{ school.abbreviation }}"
+                                    data-abbreviation="{{ school.abbreviation }}"
                                     data-id="{{ school.id }}"
                                     data-visible="true">
                                     <b>ADD ALL</b>
@@ -117,15 +117,16 @@
                 <form id="form" action="" data-method="PUT" enctype="multipart/form-data">
                     {% csrf_token %}
                     <div class="modal-body">
-                        <p>
-                            Are you sure that you want to change the visibility? This will change the visibility
-                            of all of the subjects associated with this school too.
-                        </p>
+                        <p>Are you sure that you want to change the visibility?</p>
+                        <em>
+                            This will change the visibility of all of the
+                            subjects associated with this school too.
+                        </em>
                     </div>
                     <div class="modal-footer">
-                        <input name="name" type="hidden" class="form-control" type="text" value="">
-                        <input name="abbreviation" type="hidden" class="form-control" type="text" value="">
-                        <input name="visible" type="hidden" class="form-control" type="text" value="">
+                        <input name="name" type="hidden" class="form-control" type="text" value="" hidden>
+                        <input name="abbreviation" type="hidden" class="form-control" type="text" value="" hidden>
+                        <input name="visible" type="hidden" class="form-control" type="text" value="" hidden>
                         <button type="submit" value="save" style="font-weight: 600;">Submit</button>
                     </div>
                 </form>
@@ -145,14 +146,14 @@
          const button = $(event.relatedTarget)
          const school = button.data('school')
          const id = button.data('id')
-         const visibility = button.data('visibility')
+         const visible = button.data('visible')
          const abbreviation = button.data('abbreviation')
          $('#form').attr('action', `/schools/${abbreviation}/`)
          const modal = $(this)
          modal.find('.modal-title').text(`Change Visibility for: ${school}`)
-         modal.find(".modal-footer input[name='name']").val(school)
-         modal.find(".modal-footer input[name='abbreviation']").val(abbreviation)
-         modal.find(".modal-footer input[name='visible']").val(visibility)
+         modal.find('.modal-footer input[name="name"]').val(school)
+         modal.find('.modal-footer input[name="abbreviation"]').val(abbreviation)
+         modal.find('.modal-footer input[name="visible"]').val(visible)
      })
     </script>
 {% endblock %}

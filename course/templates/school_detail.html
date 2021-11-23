@@ -10,7 +10,8 @@
                 <b>REMOVE ALL</b>
                 <i class="fas fa-minus-square"></i>
             {% else %}
-                <b>ADD</b><i class="fas fa-plus-square"></i>
+                <b>ADD</b>
+                <i class="fas fa-plus-square"></i>
             {% endif %}
         </button>
     {% endif %}
@@ -49,7 +50,7 @@
                                     data-toggle="modal"
                                     data-target="#subjectModal"
                                     data-subject="{{ subject.name }}"
-                                    data-abbr="{{ subject.abbreviation }}"
+                                    data-abbreviation="{{ subject.abbreviation }}"
                                     data-id="{{ subject.id }}"
                                     data-visible="false"
                                 >
@@ -62,7 +63,7 @@
                                     data-toggle="modal"
                                     data-target="#subjectModal"
                                     data-subject="{{ subject.name }}"
-                                    data-abbr="{{ subject.abbreviation }}"
+                                    data-abbreviation="{{ subject.abbreviation }}"
                                     data-id="{{ subject.id }}"
                                     data-visible="true"
                                 >
@@ -105,9 +106,9 @@
                         <p>Are you sure you want to change the visibility?</p>
                     </div>
                     <div class="modal-footer">
-                        <input name="name" type="hidden" class="form-control" type="text" value="">
-                        <input name="abbreviation" type="hidden" class="form-control" type="text" value="">
-                        <input name="visibility" type="hidden" class="form-control" type="text" value="">
+                        <input name="name" type="hidden" class="form-control" type="text" value="" hidden>
+                        <input name="abbreviation" type="hidden" class="form-control" type="text" value="" hidden>
+                        <input name="visible" type="hidden" class="form-control" type="text" value="" hidden>
                         <button type="submit" value="save" style="font-weight: 600;">Submit</button>
                     </div>
                 </form>
@@ -144,6 +145,7 @@
                             class="form-control"
                             type="text"
                             value="{{ school.name }}"
+                            hidden
                         >
                         <input
                             name="abbreviation"
@@ -151,13 +153,16 @@
                             class="form-control"
                             type="text"
                             value="{{ school.abbreviation }}"
+                            hidden
                         >
                         <input
                             name="visible"
                             type="hidden"
                             class="form-control"
                             type="text"
-                            value={% if school.visible %} "false" {% else %} "true" {% endif %}>
+                            value={% if school.visible %} "false" {% else %} "true" {% endif %}
+                            hidden
+                            >
                         <button type="submit" value="save" style="font-weight: 600;">Submit</button>
                     </div>
                 </form>
@@ -176,14 +181,14 @@
          const button = $(event.relatedTarget)
          const subject = button.data('subject')
          const id = button.data('id')
-         const visibility = button.data('visibility')
+         const visible = button.data('visible')
          const abbreviation = button.data('abbreviation')
          $('#form').attr('action', `/subjects/${abbreviation}/`)
          const modal = $(this)
          modal.find('.modal-title').text(`Change Visibility for: ${subject}`)
          modal.find(".modal-footer input[name='name']").val(subject)
          modal.find(".modal-footer input[name='abbreviation']").val(abbreviation)
-         modal.find(".modal-footer input[name='visible']").val(visibility)
+         modal.find(".modal-footer input[name='visible']").val(visible)
      });
     </script>
 {% endblock %}

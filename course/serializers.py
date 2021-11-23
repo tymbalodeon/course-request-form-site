@@ -433,7 +433,6 @@ class SchoolSerializer(ModelSerializer):
             "canvas_subaccount", instance.canvas_subaccount
         )
         instance.save()
-
         return instance
 
 
