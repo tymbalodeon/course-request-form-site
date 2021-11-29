@@ -77,7 +77,7 @@ def get_staff_account(penn_key=None, penn_id=None):
         for first_name, last_name, email, dw_penn_id in cursor:
             logger.info(
                 f'FOUND "{penn_key}": {first_name} {last_name} ({dw_penn_id})'
-                f" {email.strip()}"
+                f" {email.strip() if email else email}"
             )
             return {
                 "first_name": first_name,
@@ -101,7 +101,7 @@ def get_staff_account(penn_key=None, penn_id=None):
         for first_name, last_name, email, penn_key in cursor:
             logger.info(
                 f'FOUND "{penn_id}": {first_name} {last_name} ({penn_key})'
-                f" {email.strip()}"
+                f" {email.strip() if email else email}"
             )
             return {
                 "first_name": first_name,
