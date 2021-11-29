@@ -7,6 +7,7 @@ from course.models import (
     Course,
     Notice,
     PageContent,
+    Request,
     School,
     Subject,
     User,
@@ -107,6 +108,42 @@ class CourseTest(TestCase):
     def test_str(self):
         course = Course.objects.get(course_code=self.course_code)
         self.assertEqual(str(course), self.course_str)
+
+    def test_get_requested(self):
+        course = Course.objects.get(course_code=self.course_code)
+        self.assertFalse(course.get_requested())
+        course.requested_override = True
+        course.save
+        self.assertTrue(course.get_requested())
+        course.requested_override = False
+        course.save
+        Request.objects.create(
+            course_requested=course, owner=User.objects.get(username=USERNAME)
+        )
+        self.assertTrue(course.get_requested())
+
+    def test_get_crosslisted(self):
+        course = Course.objects.get(course_code=self.course_code)
+        self.assertFalse(course.crosslisted.all().exists())
+        Course.objects.create(
+            course_code=self.course_code,
+            course_subject=Subject.objects.create(
+                name=SCHOOL_NAME, abbreviation="TEST"
+            ),
+            course_number=self.course_number,
+            course_section=self.course_section,
+            year=self.year,
+            course_term=self.course_term,
+            course_activity=Activity.objects.get(abbr=ACTIVITY_ABBR),
+            course_primary_subject=Subject.objects.get(
+                abbreviation=SUBJECT_ABBREVIATION
+            ),
+            course_schools=School.objects.get(abbreviation=SCHOOL_ABBREVIATION),
+            owner=User.objects.get(username=USERNAME),
+        )
+        course.get_crosslisted()
+        course = Course.objects.get(course_code=self.course_code)
+        self.assertTrue(course.crosslisted.all().exists())
 
 
 class NoticeTest(TestCase):

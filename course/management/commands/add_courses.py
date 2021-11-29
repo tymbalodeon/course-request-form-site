@@ -1,18 +1,23 @@
-import json
-import logging
+from json import load
+from logging import getLogger
 
 from django.core.management.base import BaseCommand
 
 from course.models import Activity, Course, School, Subject, User
 from course.utils import split_year_and_term
-from data_warehouse.data_warehouse import pull_courses, pull_instructors
+from data_warehouse.data_warehouse import (
+    get_data_warehouse_courses,
+    get_data_warehouse_instructors,
+)
 from open_data.open_data import OpenData
+
+logger = getLogger(__name__)
 
 
 def pull_from_local_store():
-    print(") Pulling courses from the local store...")
+    logger.info(") Pulling courses from the local store...")
     with open("open_data/open_data.json") as json_file:
-        courses = json.load(json_file)
+        courses = load(json_file)
         for school, subjects in courses["school_subj_map"].items():
             try:
                 school_object = School.objects.get(open_data_abbreviation=school)
@@ -25,26 +30,28 @@ def pull_from_local_store():
                             visible=True,
                             defaults={"schools": school_object},
                         )
-                        print(
+                        logger.info(
                             f"- {'CREATED' if created else 'UPDATED'} subject:"
                             f" {subject_object}."
                         )
                 except Exception as error:
-                    print(f"- ERROR: Failed to create subject {subject} ({error})")
+                    logger.error(
+                        f"- ERROR: Failed to create subject {subject} ({error})"
+                    )
             except Exception as error:
-                print(f"- ERROR: Failed to locate school {school} ({error})")
+                logger.error(f"- ERROR: Failed to locate school {school} ({error})")
 
 
-def pull_from_open_data(year_and_term):
-    print(") Pulling courses from Open Data...")
+def get_open_data_courses(year_and_term, logger=logger):
+    logger.info(") Pulling courses from Open Data...")
     year, term = split_year_and_term(year_and_term)
     open_data = OpenData()
     courses = open_data.get_courses_by_term(year_and_term)
     page = 1
     while courses is not None:
-        print(f"PAGE {page}")
+        logger.info(f"PAGE {page}")
         if courses == "ERROR":
-            print("ERROR")
+            logger.error("ERROR")
             return
         if isinstance(courses, dict):
             courses = [courses]
@@ -69,8 +76,7 @@ def pull_from_open_data(year_and_term):
                         "Failed to find and create subject"
                         f" {course['course_department']}"
                     )
-                    logging.getLogger("error_logger").error(message)
-                    print(f"- ERROR: {message} ({error})")
+                    logger.error(f"{message} ({error})")
 
             if course["crosslist_primary"]:
                 primary_subject = course["crosslist_primary"][:-6]
@@ -90,8 +96,7 @@ def pull_from_open_data(year_and_term):
                             "Failed to find and create primary subject"
                             f" {course['course_department']}"
                         )
-                        logging.getLogger("error_logger").error(message)
-                        print(f"- ERROR: {message} ({error})")
+                        logger.error(f"{message} ({error})")
 
             else:
                 primary_subject = subject
@@ -105,8 +110,7 @@ def pull_from_open_data(year_and_term):
                     )
                 except Exception as error:
                     message = f"Failed to find activity {course['activity']}"
-                    logging.getLogger("error_logger").error(message)
-                    print(f"- ERROR: {message} ({error})")
+                    logger.error(f"{message} ({error})")
             try:
                 course_created = Course.objects.update_or_create(
                     course_code=f"{course['section_id']}{year_and_term}",
@@ -125,15 +129,16 @@ def pull_from_open_data(year_and_term):
                     },
                 )
                 course_object, created = course_created
-                print(f"- {'CREATED' if created else 'UPDATED'} {course['section_id']}")
+                logger.info(
+                    f"- {'CREATED' if created else 'UPDATED'} {course['section_id']}"
+                )
                 if course["is_cancelled"]:
                     course_object.delete()
             except Exception as error:
-                logging.getLogger("error_logger").error(error)
-                print(f"- ERROR:{error}")
+                logger.error(error)
         page += 1
         courses = open_data.next_page()
-    print("FINISHED")
+    logger.info("FINISHED")
 
 
 class Command(BaseCommand):
@@ -176,13 +181,15 @@ class Command(BaseCommand):
         data_warehouse = kwargs["data_warehouse"]
         instructors = kwargs["instructors"]
         local = kwargs["local"]
-        if local or (not open_data and not data_warehouse and not pull_instructors):
+        if local or (
+            not open_data and not data_warehouse and not get_data_warehouse_instructors
+        ):
             pull_from_local_store()
             return
         year_and_term = kwargs["term"].upper()
         if open_data:
-            pull_from_open_data(year_and_term)
+            get_open_data_courses(year_and_term)
         if data_warehouse:
-            pull_courses(year_and_term)
+            get_data_warehouse_courses(year_and_term)
         if instructors:
-            pull_instructors(year_and_term)
+            get_data_warehouse_instructors(year_and_term)

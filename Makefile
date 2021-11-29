@@ -86,6 +86,9 @@ log-apache: ## Print the tail of the apache log file
 log: ## Print the tail of the crf log
 	awk '$(LOG_PROGRAM)' $(LOG_FILE) | $(TAIL)
 
+log-celery: ## Print the tail of the celery log file
+	$(TAIL) /var/log/celery/worker.log
+
 log-error: ## Print the tail of only ERROR messages in the crf log
 	awk -v level="[ERROR]" $(LOG_LEVEL_PROGRAM) $(LOG_FILE) | $(TAIL)
 

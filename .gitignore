@@ -12,3 +12,4 @@ data/
 htmlcov/
 .coverage
 course/static/css
+course/static/log/*

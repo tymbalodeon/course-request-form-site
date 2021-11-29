@@ -120,7 +120,7 @@
                     <div class="modal-footer">
                         <input name="name" type="hidden" class="form-control" type="text" value="">
                         <input name="abbreviation" type="hidden" class="form-control" type="text" value="">
-                        <input name="visibility" type="hidden" class="form-control" type="text" value="">
+                        <input name="visible" type="hidden" class="form-control" type="text" value="">
                         <button type="submit" value="save" style="font-weight: 600;">Submit</button>
                     </div>
                 </form>
@@ -140,14 +140,14 @@
          const button = $(event.relatedTarget)
          const subject = button.data('subject')
          const id = button.data('id')
-         const visibility = button.data('visibility')
+         const visible = button.data('visible')
          const abbreviation = button.data('abbr')
          $('#form').attr('action', `/subjects/${abbr}/`)
          const modal = $(this)
          modal.find('.modal-title').text(`Change Visibility for: ${subject}`)
          modal.find(".modal-footer input[name='name']").val(subject)
          modal.find(".modal-footer input[name='abbreviation']").val(abbreviation)
-         modal.find(".modal-footer input[name='visible']").val(visibility)
+         modal.find(".modal-footer input[name='visible']").val(visible)
      });
     </script>
 {% endblock %}

@@ -1,5 +1,19 @@
 # CHANGELOG
 
+[AX] = "Admin experience" (Changes relevant mainly to admin users)  
+[DX] = "Developer experience" (Changes relevant mainly to developers)
+
+## 2021-11-17
+
+### Added
+
+- Pull courses from Open Data as well as DW in the daily sync
+
+### Fixed
+
+- [AX] Data Warehouse Lookup
+- [DX] livereload (requires string instead of Path object for template dirs settings)
+
 ## 2021-11-16
 
 ### Added

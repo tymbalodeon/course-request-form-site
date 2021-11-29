@@ -152,12 +152,9 @@
 
         <script type="text/javascript">
          var totalSummary = {{summary_total|safe}};
-         console.log(totalSummary)
          totalSummary['course_requested__course_schools__abbreviation']='TOTAL';
-         console.log(totalSummary)
          var stockData = {{summary|safe}};
          stockData.push(totalSummary);
-         console.log(stockData)
          function convertArrayOfObjectsToCSV(args) {
              var result, ctr, keys, columnDelimiter, lineDelimiter, data;
              data = args.data || null;

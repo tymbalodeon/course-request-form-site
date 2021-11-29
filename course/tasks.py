@@ -1,6 +1,7 @@
 from celery import task
 from celery.utils.log import get_task_logger
 
+from course.management.commands.add_courses import get_open_data_courses
 from course.terms import CURRENT_YEAR_AND_TERM, NEXT_YEAR_AND_TERM
 from data_warehouse.data_warehouse import (
     delete_data_warehouse_canceled_courses,
@@ -28,6 +29,7 @@ def sync_all(terms=TERMS, celery=True):
         terms = [terms]
     for term in terms:
         args = get_args(celery, term)
+        get_open_data_courses(*args)
         get_data_warehouse_courses(*args)
         get_data_warehouse_instructors(*args)
         sync_crf_canvas_sites(*args)

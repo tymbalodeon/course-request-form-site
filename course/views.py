@@ -1256,7 +1256,7 @@ def check_data_warehouse_for_course(request):
                 "instructors",
             ]
             course_code = request.GET.get("course_code")
-            results = get_course(course_code, verbose=False)
+            results = get_course(course_code)
             if results:
                 size = len(results)
                 courses = {"courses": dict()}
