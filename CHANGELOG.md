@@ -3,6 +3,12 @@
 [AX] = "Admin experience" (Changes relevant mainly to admin users)  
 [DX] = "Developer experience" (Changes relevant mainly to developers)
 
+## 2021-11-29
+
+### Fixed
+
+- Error when data from Data Warehouse has null value for email
+
 ## 2021-11-17
 
 ### Added
