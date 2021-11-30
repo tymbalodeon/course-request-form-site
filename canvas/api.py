@@ -240,36 +240,36 @@ def enroll_user(request, canvas_course, user, role, course_section_id, test):
                 test=test,
             )
             add_request_process_notes(f"created account for user: {username}", request)
-        except Exception:
+        except Exception as error:
             add_request_process_notes(
-                f"failed to create account for user: {username}",
-                request,
+                f"failed to create account for user: {username} ({error})", request
             )
-    elif role == "LIB" or role == "librarian":
+    enrollment = {
+        "enrollment_state": "active",
+    }
+    if canvas_course.id != course_section_id:
+        enrollment["course_section_id"] = course_section_id
+    if role == "LIB" or role == "librarian":
+        enrollment["role_id"] = LIBRARIAN_ROLE_ID
         try:
             canvas_course.enroll_user(
-                canvas_user.id,
+                canvas_user,
                 ENROLLMENT_TYPES[role],
-                enrollment={
-                    "course_section_id": course_section_id,
-                    "role_id": LIBRARIAN_ROLE_ID,
-                    "enrollment_state": "active",
-                },
+                enrollment=enrollment,
             )
-        except Exception:
-            add_request_process_notes(f"failed to add user: {user}", request)
+        except Exception as error:
+            add_request_process_notes(f"failed to add user: {user} ({error})", request)
     else:
         try:
             canvas_course.enroll_user(
-                canvas_user.id,
+                canvas_user,
                 ENROLLMENT_TYPES[role],
-                enrollment={
-                    "course_section_id": course_section_id,
-                    "enrollment_state": "active",
-                },
+                enrollment=enrollment,
             )
-        except Exception:
-            add_request_process_notes(f"failed to add user: {username}", request)
+        except Exception as error:
+            add_request_process_notes(
+                f"failed to add user: {username} ({error})", request
+            )
 
 
 def set_reserves(request, canvas_course):

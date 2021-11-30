@@ -827,11 +827,13 @@ class HomePage(UserPassesTestMixin, ModelViewSet):
                     messages_error(
                         request, "Invalid Pennkey -- Pennkey must be Upenn Employee"
                     )
+                    on_behalf_of = None
                 elif lookup_user.is_staff is True:
                     messages_error(
                         request,
                         "Invalid Pennkey -- Pennkey cannot be Courseware Team Member",
                     )
+                    on_behalf_of = None
         except KeyError as error:
             logger.error(f"ERROR: There was a problem setting the session ({error})")
         request.session["on_behalf_of"] = on_behalf_of
