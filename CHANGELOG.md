@@ -3,6 +3,12 @@
 [AX] = "Admin experience" (Changes relevant mainly to admin users)  
 [DX] = "Developer experience" (Changes relevant mainly to developers)
 
+## 2021-12-01
+
+### Fixed
+
+- [AX] Create Canvas Sites failing when no sections are present
+
 ## 2021-11-30
 
 ### Fixed
