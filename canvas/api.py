@@ -210,14 +210,14 @@ def handle_sections(
             enroll_user(
                 request,
                 canvas_course,
+                section["course_section"].id,
                 user,
                 "instructor",
-                section["course_section"].id,
                 test,
             )
 
 
-def enroll_user(request, canvas_course, user, role, course_section_id, test):
+def enroll_user(request, canvas_course, section, user, role, test):
     try:
         username = user.username
         penn_id = user.profile.penn_id
@@ -244,11 +244,7 @@ def enroll_user(request, canvas_course, user, role, course_section_id, test):
             add_request_process_notes(
                 f"failed to create account for user: {username} ({error})", request
             )
-    enrollment = {
-        "enrollment_state": "active",
-    }
-    if canvas_course.id != course_section_id:
-        enrollment["course_section_id"] = course_section_id
+    enrollment = {"enrollment_state": "active", "course_section_id": section}
     if role == "LIB" or role == "librarian":
         enrollment["role_id"] = LIBRARIAN_ROLE_ID
         try:
@@ -442,13 +438,14 @@ def create_canvas_sites(requested_courses=None, sections=None, test=False):
             sections,
             test,
         )
+        section = next(section for section in canvas_course.get_sections()).id
         for enrollment in serialized.data["additional_enrollments"]:
             enroll_user(
                 request,
                 canvas_course,
+                section,
                 enrollment["user"],
                 enrollment["role"],
-                canvas_course.id,
                 test,
             )
         if serialized.data["reserves"]:
@@ -467,7 +464,6 @@ def create_canvas_sites(requested_courses=None, sections=None, test=False):
         request.canvas_instance = canvas_site
         add_site_owners(canvas_course, canvas_site)
         request.status = "COMPLETED"
-        request.process_notes = ""
         request.save()
         logger.info(
             f"UPDATED Canvas site: {canvas_course}"
