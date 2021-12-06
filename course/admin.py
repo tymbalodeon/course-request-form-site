@@ -189,7 +189,9 @@ class RequestAdmin(admin.ModelAdmin):
         )
 
     def additional_sections(self, instance):
-        return instance.additional_sections.course_code
+        sections = list(Course.objects.filter(multisection_request=instance))
+        sections = [section.course_code for section in sections]
+        return ", ".join(sections) if sections else "-"
 
     def requestors(self, obj):
         if obj.masquerade != "":
