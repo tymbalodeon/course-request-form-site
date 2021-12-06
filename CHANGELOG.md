@@ -7,7 +7,7 @@
 
 ### Changed
 
-- Re-worded Mult-Section instructions to make it clear that sections will be grouped in the same site
+- Re-worded Multi-Section instructions to make it clear that sections will be grouped in the same site
 - No longer display Multi-Section part of form if no sections are available
 
 ## 2021-12-01
