@@ -3,6 +3,12 @@
 [AX] = "Admin experience" (Changes relevant mainly to admin users)  
 [DX] = "Developer experience" (Changes relevant mainly to developers)
 
+## 2021-12-07
+
+### Changed
+
+- No longer limit title overrides to 45 characters (increased to 255)
+
 ## 2021-12-06
 
 ### Changed

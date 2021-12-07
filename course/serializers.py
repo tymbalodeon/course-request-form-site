@@ -226,7 +226,7 @@ class RequestSerializer(DynamicFieldsModelSerializer):
     title_override = CharField(
         allow_null=True,
         required=False,
-        max_length=45,
+        max_length=255,
         style={"base_template": "input.html"},
     )
     lps_online = BooleanField(default=False)
