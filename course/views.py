@@ -479,10 +479,6 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         print_log_message(request, "request", "detail")
         response = super(RequestViewSet, self).retrieve(request, *args, **kwargs)
-        from pprint import PrettyPrinter
-
-        pp = PrettyPrinter()
-        pp.pprint(response.data)
         logger.info(f"- REQUEST: {response.data['course_requested']}")
         if request.resolver_match.url_name == "UI-request-detail-success":
             return Response(
