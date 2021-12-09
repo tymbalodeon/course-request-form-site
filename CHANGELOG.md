@@ -3,6 +3,25 @@
 [AX] = "Admin experience" (Changes relevant mainly to admin users)  
 [DX] = "Developer experience" (Changes relevant mainly to developers)
 
+## 2021-12-07
+
+### Changed
+
+- No longer limit title overrides to 45 characters (increased to 255)
+
+## 2021-12-06
+
+### Changed
+
+- Re-worded Multi-Section instructions to make it clear that sections will be grouped in the same site
+- No longer display Multi-Section part of form if no sections are available
+
+## 2021-12-01
+
+### Fixed
+
+- [AX] Create Canvas Sites failing when no sections are present
+
 ## 2021-11-30
 
 ### Fixed

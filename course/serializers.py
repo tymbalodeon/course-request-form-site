@@ -226,7 +226,7 @@ class RequestSerializer(DynamicFieldsModelSerializer):
     title_override = CharField(
         allow_null=True,
         required=False,
-        max_length=45,
+        max_length=255,
         style={"base_template": "input.html"},
     )
     lps_online = BooleanField(default=False)
@@ -256,24 +256,18 @@ class RequestSerializer(DynamicFieldsModelSerializer):
             for enrollment in enrollments:
                 print(f"Checking Users for {enrollment['user']}...")
                 user = get_user_by_pennkey(enrollment["user"])
-
                 if user is None:
                     print(f"FAILED to find User {enrollment['user']}.")
 
         data = dict(data)
-
         if data.get("title_override", None) == "":
             data["title_override"] = None
-
         if data.get("course_requested", None) == "":
             data["course_requested"] = None
-
         if data.get("reserves", None) is None:
             data["reserves"] = False
-
         if data.get("additional_enrollments", None) is not None:
             check_for_crf_account(data["additional_enrollments"])
-
         return super(RequestSerializer, self).to_internal_value(data)
 
     def validate(self, data):
@@ -294,7 +288,6 @@ class RequestSerializer(DynamicFieldsModelSerializer):
                             )
                         }
                     )
-
         return data
 
     def create(self, validated_data):
@@ -304,7 +297,6 @@ class RequestSerializer(DynamicFieldsModelSerializer):
             school=validated_data["course_requested"].course_schools
         ).filter(subject=validated_data["course_requested"].course_subject)
         request_object = Request.objects.create(**validated_data)
-
         if add_enrolls_data:
             for enroll_data in add_enrolls_data:
                 AdditionalEnrollment.objects.create(
@@ -318,32 +310,25 @@ class RequestSerializer(DynamicFieldsModelSerializer):
                 AdditionalEnrollment.objects.create(
                     course_request=request_object, **enroll_data
                 )
-
         if add_sections_data:
             for section_data in add_sections_data:
                 section = Course.objects.get(course_code=section_data.course_code)
                 section.multisection_request = request_object
                 section.save()
-
         course = validated_data["course_requested"]
-
         if course.crosslisted.all():
             for crosslisted_course in course.crosslisted.all():
                 if course != crosslisted_course:
                     crosslisted_course.crosslisted_request = request_object
                     crosslisted_course.save()
-
         return request_object
 
     def update(self, instance, validated_data):
         new_status = validated_data.get("status", None)
-
         if new_status:
             instance.status = new_status
             instance.save()
-
             return instance
-
         instance.status = validated_data.get("status", instance.status)
         instance.title_override = validated_data.get(
             "title_override", instance.title_override
@@ -359,7 +344,6 @@ class RequestSerializer(DynamicFieldsModelSerializer):
             "admin_additional_instructions", instance.admin_additional_instructions
         )
         add_enrolls_data = validated_data.get("additional_enrollments")
-
         if add_enrolls_data:
             AdditionalEnrollment.objects.filter(course_request=instance).delete()
 
@@ -367,24 +351,19 @@ class RequestSerializer(DynamicFieldsModelSerializer):
                 AdditionalEnrollment.objects.update_or_create(
                     course_request=instance, **enroll_data
                 )
-
         add_sections_data = validated_data.get("additional_sections")
         c_data = instance.additional_sections.all()
-
         if add_sections_data or instance.additional_sections.all():
             for course in c_data:
                 course.multisection_request = None
                 course.requested = False
                 course.save()
             instance.additional_sections.clear()
-
             for section_data in add_sections_data:
                 section = Course.objects.get(course_code=section_data.course_code)
                 section.multisection_request = instance
                 section.save()
-
         instance.save()
-
         return instance
 
 

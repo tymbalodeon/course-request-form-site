@@ -5,7 +5,8 @@
     <legend><h6 style="margin:0;">Title</h6></legend>
     <p>
         The default title is provided below. If you wish to modify it, please
-        provide the new value in the box below.</p>
+        provide the new value in the box below.
+    </p>
     <br>
     <mark>
         <em>**Do not include the course code--this will be added automatically.**</em>
@@ -76,19 +77,23 @@
     </div>
 </blockquote>
 
-<fieldset>
-    <legend><h6 style="margin:0;">Multi-Section Course Sites</h6></legend>
-    <div class="form-group ">
-        <p style="font-size:0.9rem;">Sections of a course can share a single Canvas site. In addition to specifying the additional sections below please write them in the Additional Instructions section.
-            <i class="fas fa-info-circle" data-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample"></i>
-        </p>
-        <div class="collapse" id="collapseExample">
-            <p style="font-size:0.9rem;"> If you are teaching a large introductory course or several sections of a course, you can have the sections broken out into a single site.
-                Please select all sections you would like included. If a course is gray-ed out that means it has been already requested in another course request and therefore cannot be added to this one
+{% if course.sections %}
+    <fieldset>
+        <legend><h6 style="margin:0;">Multi-Section Course Sites</h6></legend>
+        <div class="form-group ">
+            <p style="font-size:0.9rem;">
+                If you are teaching several sections of a course, you can have the
+                sections included together in a single Canvas site. Please select
+                all sections you would like included in this site request. Grayed
+                out sections have already been requested and therefore cannot be
+                included in this request.
             </p>
-        </div>
-        <br>
-        {% if course.sections %}
+            <br>
+            <mark>
+                <em>**Do NOT select sections if you wish to make a separate Canvas site for them. Make a separate request instead!**</em>
+            </mark>
+            <br>
+            <br>
             <div class="contain-table vertical-center">
                 <table style="max-width:500px;">
                     <thead>
@@ -100,40 +105,60 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for section_code,section_activity,section_requested in course.sections %}
-
+                        {% for section_code, section_activity, section_requested in course.sections %}
                             {% if section_code in request.additional_sections %}
                                 <tr style="background:#B7CEC3;">
-                                    <td >
-                                        <input  name="additional_sections[{{ forloop.counter }}][course_code]" value="{{section_code}}" class="form-control" type="checkbox" checked>
+                                    <td>
+                                        <input
+                                            name="additional_sections[{{ forloop.counter }}][course_code]"
+                                            value="{{section_code}}"
+                                            class="form-control"
+                                            type="checkbox"
+                                            checked
+                                        >
                                     </td>
-                                    <td> {{section_code|course_code_to_string}}</td> <td> {{section_activity}} </td> <td> In Request</td>
+                                    <td>{{ section_code|course_code_to_string }}</td>
+                                    <td>{{ section_activity }}</td>
+                                    <td>In Request</td>
                                 </tr>
                             {% elif section_requested %}
                                 <tr style="background:#e9ecef;">
                                     <td>
                                         <span tabindex="0" data-toggle="tooltip" title="Disabled tooltip">
-                                            <input  name="additional_sections[{{ forloop.counter }}][course_code]" value="{{section_code}}" class="form-control" type="checkbox" disabled>
+                                            <input
+                                                name="additional_sections[{{ forloop.counter }}][course_code]"
+                                                value="{{section_code}}"
+                                                class="form-control"
+                                                type="checkbox"
+                                                disabled
+                                            >
                                         </span>
                                     </td>
-                                    <td> {{section_code|course_code_to_string}}</td> <td> {{section_activity}} </td> <td> Already Requested</td>
+                                    <td>{{ section_code|course_code_to_string }}</td>
+                                    <td>{{ section_activity }}</td>
+                                    <td>Already Requested</td>
                                 </tr>
                             {% else %}
-                                <tr >
-                                    <td >
-                                        <input  name="additional_sections[{{ forloop.counter }}][course_code]" value="{{section_code}}" class="form-control" type="checkbox">
+                                <tr>
+                                    <td>
+                                        <input
+                                            name="additional_sections[{{ forloop.counter }}][course_code]"
+                                            value="{{section_code}}"
+                                            class="form-control"
+                                            type="checkbox"
+                                        >
                                     </td>
-                                    <td> {{section_code|course_code_to_string}}</td> <td> {{section_activity}} </td> <td> None</td>
+                                    <td>{{ section_code|course_code_to_string }}</td>
+                                    <td>{{ section_activity }}</td>
+                                    <td>None</td>
                                 </tr>
                             {% endif %}
                         {% endfor %}
                     </tbody>
                 </table>
-        {% else %}
-                <center><i><p>There are no other sections associated with this course. </p></i></center>
-        {% endif %}
             </div>
-</fieldset>
+    </fieldset>
+{% endif %}
 
 <fieldset>
     <legend><h6 style="margin:0;">Library Services</h6></legend>

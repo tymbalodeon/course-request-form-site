@@ -438,7 +438,9 @@ def create_canvas_sites(requested_courses=None, sections=None, test=False):
             sections,
             test,
         )
-        section = next(section for section in canvas_course.get_sections()).id
+        section = next(
+            (section for section in canvas_course.get_sections()), canvas_course
+        ).id
         for enrollment in serialized.data["additional_enrollments"]:
             enroll_user(
                 request,
