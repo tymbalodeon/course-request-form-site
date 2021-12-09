@@ -3,6 +3,12 @@
 [AX] = "Admin experience" (Changes relevant mainly to admin users)  
 [DX] = "Developer experience" (Changes relevant mainly to developers)
 
+## 2021-12-08
+
+### Fixed
+
+- Additional enrollments in request form page
+
 ## 2021-12-07
 
 ### Changed
