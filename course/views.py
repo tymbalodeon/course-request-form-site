@@ -1207,7 +1207,6 @@ def quick_config(request):
                         "link": f"https://canvas.upenn.edu/courses/{course_id}",
                     }
                     data["Info"]["User"] = {"pennkey": pennkey}
-
         return render(request, "admin/quickconfig.html", {"data": data})
 
 

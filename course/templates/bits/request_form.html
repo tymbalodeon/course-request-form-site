@@ -105,7 +105,7 @@
                             {% if section_code in request.additional_sections %}
                                 <tr style="background:#B7CEC3;">
                                     <td >
-                                        <input  name="additional_sections[{{ forloop.counter0 }}][course_code]" value="{{section_code}}" class="form-control" type="checkbox" checked>
+                                        <input  name="additional_sections[{{ forloop.counter }}][course_code]" value="{{section_code}}" class="form-control" type="checkbox" checked>
                                     </td>
                                     <td> {{section_code|course_code_to_string}}</td> <td> {{section_activity}} </td> <td> In Request</td>
                                 </tr>
@@ -113,7 +113,7 @@
                                 <tr style="background:#e9ecef;">
                                     <td>
                                         <span tabindex="0" data-toggle="tooltip" title="Disabled tooltip">
-                                            <input  name="additional_sections[{{ forloop.counter0 }}][course_code]" value="{{section_code}}" class="form-control" type="checkbox" disabled>
+                                            <input  name="additional_sections[{{ forloop.counter }}][course_code]" value="{{section_code}}" class="form-control" type="checkbox" disabled>
                                         </span>
                                     </td>
                                     <td> {{section_code|course_code_to_string}}</td> <td> {{section_activity}} </td> <td> Already Requested</td>
@@ -121,7 +121,7 @@
                             {% else %}
                                 <tr >
                                     <td >
-                                        <input  name="additional_sections[{{ forloop.counter0 }}][course_code]" value="{{section_code}}" class="form-control" type="checkbox">
+                                        <input  name="additional_sections[{{ forloop.counter }}][course_code]" value="{{section_code}}" class="form-control" type="checkbox">
                                     </td>
                                     <td> {{section_code|course_code_to_string}}</td> <td> {{section_activity}} </td> <td> None</td>
                                 </tr>
@@ -149,14 +149,14 @@
         <fieldset id="additional_enrollments" style="border:none;padding-right:0px;padding-left:0px;margin-top:0px;">
             {% if request.additional_enrollments %}
                 {% for enrollment in request.additional_enrollments %}
-                    <div id="addEnroll-{{ forloop.counter0 }}" class="additional-enrollments">
+                    <div id="addEnroll-{{ forloop.counter }}" class="additional-enrollments">
                         <label class="additional-enrollments-user" for="name">
                             User
-                            <input name="additional_enrollments[{{ forloop.counter0 }}][user]" value="{{enrollment.user}}" class="form-control" type="text">
+                            <input name="additional_enrollments[{{ forloop.counter }}][user]" value="{{enrollment.user}}" class="form-control" type="text">
                         </label>
                         <label class="additional-enrollments-role">
                             Role
-                            <select id="choose-{{ forloop.counter0 }}" name="additional_enrollments[{{ forloop.counter0 }}][role]" >
+                            <select id="choose-{{ forloop.counter }}" name="additional_enrollments[{{ forloop.counter0 }}][role]" >
                                 <option disabled>Please select</option>
                                 <option value="TA" {% if enrollment.role == "TA" %} selected {% endif %}>TA</option>
                                 <option value="DES" {% if enrollment.role == "DES" or enrollment.role == "designer" %} selected {% endif %}>Designer</option>
@@ -164,18 +164,18 @@
                                 <option value="INST" {% if enrollment.role == "INST" or enrollment.role == "instructor" %} selected {% endif %}>Instructor</option>
                             </select>
                         </label>
-                        <a class="additional-enrollments-delete" onClick="removeAdditionalEnrollmentRow('additional_enrollments', 'addEnroll-{{ forloop.counter0 }}');"> Delete <i class="fas fa-times"></i></a>
+                        <a class="additional-enrollments-delete" onClick="removeAdditionalEnrollmentRow('additional_enrollments', 'addEnroll-{{ forloop.counter }}');"> Delete <i class="fas fa-times"></i></a>
                     </div>
                 {% endfor %}
             {% else %}
-                <div id="addEnroll-{{ forloop.counter0 }}" class="additional-enrollments">
+                <div id="addEnroll-1" class="additional-enrollments">
                     <label class="additional-enrollments-user">
                         User
-                        <input name="additional_enrollments[{{ forloop.counter0 }}][user]" value="" class="form-control" type="text">
+                        <input name="additional_enrollments[1][user]" value="" class="form-control" type="text">
                     </label>
                     <label class="additional-enrollments-role">
                         Role
-                        <select id="choose-{{ forloop.counter0 }}" name="additional_enrollments[{{ forloop.counter0 }}][role]">
+                        <select id="choose-1" name="additional_enrollments[1][role]">
                             <option disabled selected>Please select</option>
                             <option value="TA">TA</option>
                             <option value="DES">Designer</option>
@@ -225,8 +225,8 @@
      node.setAttribute("id", nextId);
      node.setAttribute("class", "additional-enrollments");
      const parentId = 'additional_enrollments';
-     const user = `additional_enrollments[${nextId}][user]`;
-     const role = `additional_enrollments[${nextId}][role]`;
+     const user = `additional_enrollments[${nextIdNumber}][user]`;
+     const role = `additional_enrollments[${nextIdNumber}][role]`;
      node.insertAdjacentHTML(
          "beforeend",
          `<label class="additional-enrollments-user">
@@ -244,7 +244,7 @@
             </label>
             <a
                 class="additional-enrollments-delete"
-                onClick="removeAdditionalEnrollmentRow(${parentId}, ${nextId})"
+                onClick="removeAdditionalEnrollmentRow('${parentId}', '${nextId}')"
             >
                 Delete
                 <i class="fas fa-times"></i>
@@ -254,6 +254,7 @@
  }
 
  function removeAdditionalEnrollmentRow(parentDiv, childDiv) {
+     console.log(parentDiv, childDiv)
      if (childDiv == parentDiv) {
          alert("Cannot remove parent div.");
      } else if (document.getElementById(childDiv)) {

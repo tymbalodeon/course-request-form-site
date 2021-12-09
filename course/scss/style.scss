@@ -971,10 +971,18 @@ textarea.has-error:active {
   &-user {
     width: 54%;
     margin-right: 1%;
+
+    input {
+      height: 44px;
+    }
   }
 
   &-role {
     width: 34%;
+
+    select {
+      height: 44px;
+    }
   }
 
   &-delete {
