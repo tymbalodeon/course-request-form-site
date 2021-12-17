@@ -5,6 +5,10 @@
 
 ## 2021-12-17
 
+### Changed
+
+- Wording for copy from content to make it clear that you can only select YOUR courses from dropdown
+
 ### Fixed
 
 - Restore Instructor as option in additional enrollments
