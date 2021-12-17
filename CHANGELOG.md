@@ -3,6 +3,12 @@
 [AX] = "Admin experience" (Changes relevant mainly to admin users)  
 [DX] = "Developer experience" (Changes relevant mainly to developers)
 
+## 2021-12-17
+
+### Fixed
+
+- Restore Instructor as option in additional enrollments
+
 ## 2021-12-08
 
 ### Fixed
