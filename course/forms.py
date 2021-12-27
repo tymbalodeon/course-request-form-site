@@ -1,4 +1,5 @@
 from dal.autocomplete import ModelSelect2
+from django.db.models import Q
 from django.forms import (
     EmailField,
     EmailInput,
@@ -38,7 +39,7 @@ class SubjectForm(ModelForm):
 class CanvasSiteForm(ModelForm):
     name = ModelChoiceField(
         label="content_copy",
-        queryset=CanvasSite.objects.all(),
+        queryset=CanvasSite.objects.filter(~Q(workflow_state="deleted")),
         required=False,
         widget=ModelSelect2(
             url="canvas_site-autocomplete",
