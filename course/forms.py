@@ -39,7 +39,6 @@ class SubjectForm(ModelForm):
 class CanvasSiteForm(ModelForm):
     name = ModelChoiceField(
         label="content_copy",
-        queryset=CanvasSite.objects.filter(~Q(workflow_state="deleted")),
         required=False,
         widget=ModelSelect2(
             url="canvas_site-autocomplete",
@@ -51,6 +50,12 @@ class CanvasSiteForm(ModelForm):
     class Meta:
         model = CanvasSite
         fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super(CanvasSiteForm, self).__init__(*args, **kwargs)
+        self.fields["name"].queryset = CanvasSite.objects.filter(
+            ~Q(workflow_state="deleted")
+        )
 
 
 class EmailChangeForm(Form):
