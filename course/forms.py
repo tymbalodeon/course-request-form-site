@@ -52,12 +52,6 @@ class CanvasSiteForm(ModelForm):
         model = CanvasSite
         fields = "__all__"
 
-    def __init__(self, *args, **kwargs):
-        super(CanvasSiteForm, self).__init__(*args, **kwargs)
-        self.fields["name"].queryset = CanvasSite.objects.filter(
-            ~Q(workflow_state="deleted")
-        )
-
 
 class EmailChangeForm(Form):
     error_messages = {
