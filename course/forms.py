@@ -39,6 +39,7 @@ class SubjectForm(ModelForm):
 class CanvasSiteForm(ModelForm):
     name = ModelChoiceField(
         label="content_copy",
+        queryset=CanvasSite.objects.all(),
         required=False,
         widget=ModelSelect2(
             url="canvas_site-autocomplete",
