@@ -83,8 +83,29 @@ live: ## Start the livereload server
 log-apache: ## Print the tail of the apache log file
 	$(TAIL) /var/log/crf2/crf2_error.log
 
-log: ## Print the tail of the crf log
+log: ## Print the tail of the today's crf log
 	awk '$(LOG_PROGRAM)' $(LOG_FILE) | $(TAIL)
+
+log-all-error: ## Print the tail of all crf ERROR messages
+ERROR = "\[ERROR\]"
+ifdef lines
+	grep -r $(ERROR) | tail -n $(lines)
+else
+	grep -r $(ERROR) | tail -n 70
+
+log-all-info: ## Print the tail of all crf INFO messages
+INFO = "\[INFO\]"
+ifdef lines
+	grep -r $(INFO) | tail -n $(lines)
+else
+	grep -r $(INFO) | tail -n 70
+
+log-all-warning: ## Print the tail of all crf WARNING messages
+WARNING = "\[WARNING\]"
+ifdef lines
+	grep -r $(WARNING) | tail -n $(lines)
+else
+	grep -r $(WARNING) | tail -n 70
 
 log-celery: ## Print the tail of the celery log file
 	$(TAIL) /var/log/celery/worker.log
