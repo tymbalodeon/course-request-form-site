@@ -24,7 +24,10 @@ endif
 LOG_PROGRAM = {for (i = 4; i < 7; i++) $$i=""; gsub(/ {2,}/, " "); print}
 LOG_LEVEL_PROGRAM = '$$1==level $(LOG_PROGRAM)'
 LOG_FILE = ./logs/crf.log
-TAIL = tail -n 100
+TAIL = tail -n 70
+ERROR = "\[ERROR\]"
+INFO = "\[INFO\]"
+WARNING = "\[WARNING\]"
 
 all: help
 black: ## Format code
@@ -87,25 +90,22 @@ log: ## Print the tail of the today's crf log
 	awk '$(LOG_PROGRAM)' $(LOG_FILE) | $(TAIL)
 
 log-all-error: ## Print the tail of all crf ERROR messages
-ERROR = "\[ERROR\]"
 ifdef lines
 	grep -r $(ERROR) | tail -n $(lines)
 else
-	grep -r $(ERROR) | tail -n 70
+	grep -r $(ERROR) | $(TAIL)
 
 log-all-info: ## Print the tail of all crf INFO messages
-INFO = "\[INFO\]"
 ifdef lines
 	grep -r $(INFO) | tail -n $(lines)
 else
-	grep -r $(INFO) | tail -n 70
+	grep -r $(INFO) | $(TAIL)
 
 log-all-warning: ## Print the tail of all crf WARNING messages
-WARNING = "\[WARNING\]"
 ifdef lines
 	grep -r $(WARNING) | tail -n $(lines)
 else
-	grep -r $(WARNING) | tail -n 70
+	grep -r $(WARNING) | $(TAIL)
 
 log-celery: ## Print the tail of the celery log file
 	$(TAIL) /var/log/celery/worker.log
