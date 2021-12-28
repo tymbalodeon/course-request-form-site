@@ -94,18 +94,21 @@ ifdef lines
 	grep -r $(ERROR) | tail -n $(lines)
 else
 	grep -r $(ERROR) | $(TAIL)
+endif
 
 log-all-info: ## Print the tail of all crf INFO messages
 ifdef lines
 	grep -r $(INFO) | tail -n $(lines)
 else
 	grep -r $(INFO) | $(TAIL)
+endif
 
 log-all-warning: ## Print the tail of all crf WARNING messages
 ifdef lines
 	grep -r $(WARNING) | tail -n $(lines)
 else
 	grep -r $(WARNING) | $(TAIL)
+endif
 
 log-celery: ## Print the tail of the celery log file
 	$(TAIL) /var/log/celery/worker.log
