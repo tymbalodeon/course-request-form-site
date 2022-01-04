@@ -11,10 +11,10 @@ TERM := $(shell if (( $(MONTH) > 8 )); \
 					then echo "B"; \
 				else echo "A"; \
 				fi)
-ifeq (TERM, A)
+ifeq ($(TERM), A)
 NEXT_TERM = B
 NEXT_YEAR = $(YEAR)
-else ifeq (TERM, B)
+else ifeq ($(TERM), B)
 NEXT_TERM = C
 NEXT_YEAR = $(YEAR)
 else
