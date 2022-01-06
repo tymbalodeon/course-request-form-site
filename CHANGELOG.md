@@ -3,6 +3,18 @@
 [AX] = "Admin experience" (Changes relevant mainly to admin users)  
 [DX] = "Developer experience" (Changes relevant mainly to developers)
 
+## 2021-12-28
+
+### Fixed
+
+- "Copy from course" dropdown now excludes deleted Canvas courses
+
+## 2021-12-27
+
+### Fixed
+
+- List of available courses to copy no longer includes deleted courses
+
 ## 2021-12-17
 
 ### Changed

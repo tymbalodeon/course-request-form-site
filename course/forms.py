@@ -1,4 +1,5 @@
 from dal.autocomplete import ModelSelect2
+from django.db.models import Q
 from django.forms import (
     EmailField,
     EmailInput,

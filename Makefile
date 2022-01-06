@@ -11,10 +11,10 @@ TERM := $(shell if (( $(MONTH) > 8 )); \
 					then echo "B"; \
 				else echo "A"; \
 				fi)
-ifeq (TERM, A)
+ifeq ($(TERM), A)
 NEXT_TERM = B
 NEXT_YEAR = $(YEAR)
-else ifeq (TERM, B)
+else ifeq ($(TERM), B)
 NEXT_TERM = C
 NEXT_YEAR = $(YEAR)
 else
@@ -24,7 +24,10 @@ endif
 LOG_PROGRAM = {for (i = 4; i < 7; i++) $$i=""; gsub(/ {2,}/, " "); print}
 LOG_LEVEL_PROGRAM = '$$1==level $(LOG_PROGRAM)'
 LOG_FILE = ./logs/crf.log
-TAIL = tail -n 100
+TAIL = tail -n 70
+ERROR = "\[ERROR\]"
+INFO = "\[INFO\]"
+WARNING = "\[WARNING\]"
 
 all: help
 black: ## Format code
@@ -83,8 +86,29 @@ live: ## Start the livereload server
 log-apache: ## Print the tail of the apache log file
 	$(TAIL) /var/log/crf2/crf2_error.log
 
-log: ## Print the tail of the crf log
+log: ## Print the tail of the today's crf log
 	awk '$(LOG_PROGRAM)' $(LOG_FILE) | $(TAIL)
+
+log-all-error: ## Print the tail of all crf ERROR messages
+ifdef lines
+	grep -r $(ERROR) | tail -n $(lines)
+else
+	grep -r $(ERROR) | $(TAIL)
+endif
+
+log-all-info: ## Print the tail of all crf INFO messages
+ifdef lines
+	grep -r $(INFO) | tail -n $(lines)
+else
+	grep -r $(INFO) | $(TAIL)
+endif
+
+log-all-warning: ## Print the tail of all crf WARNING messages
+ifdef lines
+	grep -r $(WARNING) | tail -n $(lines)
+else
+	grep -r $(WARNING) | $(TAIL)
+endif
 
 log-celery: ## Print the tail of the celery log file
 	$(TAIL) /var/log/celery/worker.log
