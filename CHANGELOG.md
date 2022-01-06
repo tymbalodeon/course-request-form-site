@@ -3,6 +3,12 @@
 [AX] = "Admin experience" (Changes relevant mainly to admin users)  
 [DX] = "Developer experience" (Changes relevant mainly to developers)
 
+## 2022-01-06
+
+### Fixed
+
+- Courses now pull all related sections
+
 ## 2021-12-28
 
 ### Fixed
