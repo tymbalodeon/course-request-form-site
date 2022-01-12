@@ -774,22 +774,33 @@ class HomePage(UserPassesTestMixin, ModelViewSet):
         user_name = self.request.user.get_username()
         logger.info(f'Checking Users for "{user_name}"...')
         user = User.objects.get(username=self.request.user.get_username())
+        if not user:
+            logger.error(f'User "{user_name}" does not exist in the CRF.')
         try:
             if user.profile:
-                logger.info(f'FOUND user "{user_name}".')
+                logger.info(f'FOUND Profile for "{user_name}".')
                 return True
         except Exception:
             user_data = get_staff_account(penn_key=user.username)
             if user_data:
-                user.first_name = user_data["first_name"].title()
-                user.last_name = user_data["last_name"].title()
-                user.email = user_data["email"]
-                Profile.objects.create(user=user, penn_id=user_data["penn_id"])
-                update_user_courses(user.username)
-                logger.info(f'CREATED user "{user_name}".')
-                return True
+                try:
+                    user.first_name = user_data["first_name"].title()
+                    user.last_name = user_data["last_name"].title()
+                    user.email = user_data["email"]
+                    Profile.objects.create(user=user, penn_id=user_data["penn_id"])
+                    update_user_courses(user.username)
+                    logger.info(f'CREATED user "{user_name}".')
+                    return True
+                except Exception as error:
+                    logger.info(
+                        f'Failed to create Profile for user "{user_name}" ({error}).'
+                    )
             else:
-                logger.error(f'FAILED to create user "{user_name}".')
+                message = (
+                    f'FAILED to create Profile for "{user_name}" '
+                    "(user data not found in the Data Warehouse)."
+                )
+                logger.error(message)
                 return False
 
     def get(self, request):
