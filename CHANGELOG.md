@@ -3,6 +3,15 @@
 [AX] = "Admin experience" (Changes relevant mainly to admin users)  
 [DX] = "Developer experience" (Changes relevant mainly to developers)
 
+## 2022-01-12
+
+### Added
+
+- [DX] Request attempts are now logged with details of user, course requested,
+  parameters. When request attempt fails, it logs the user, course, and error
+  message for easier debugging and for finding errors even when user does not
+  report them.
+
 ## 2022-01-11
 
 ### Added
