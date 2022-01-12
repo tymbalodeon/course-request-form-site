@@ -144,14 +144,15 @@ def get_open_data_courses(year_and_term, logger=logger):
                             for instructor in course["instructors"]
                             if get_user_from_full_name(instructor["name"])
                         ]
-                        course_object.instructors.clear()
-                        for instructor in instructors:
-                            course_object.instructors.add(instructor)
-                            course_object.save()
-                        logger.info(
-                            f"- Updated {course['section_id']} with instructors:"
-                            f" {', '.join([instructor.username for instructor in instructors])}"
-                        )
+                        if instructors:
+                            course_object.instructors.clear()
+                            for instructor in instructors:
+                                course_object.instructors.add(instructor)
+                                course_object.save()
+                            logger.info(
+                                f"- Updated {course['section_id']} with instructors:"
+                                f" {', '.join([instructor.username for instructor in instructors])}"
+                            )
                     except Exception as error:
                         logger.error(
                             f"Failed to update instructors from Open Data ({error})"
