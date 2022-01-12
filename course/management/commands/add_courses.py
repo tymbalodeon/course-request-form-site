@@ -137,7 +137,7 @@ def get_open_data_courses(year_and_term, logger=logger):
                     },
                 )
                 course_object, created = course_created
-                if course["instructors"]:
+                if course["instructors"] and not course_object.requested:
                     try:
                         instructors = [
                             get_user_from_full_name(instructor["name"])

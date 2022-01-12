@@ -5,6 +5,10 @@
 
 ## 2022-01-11
 
+### Added
+
+- Open Data sync now adds instructors if they already have a User object in the CRF
+
 ### Fixed
 
 - User's Home view only displays courses from the current or next terms
