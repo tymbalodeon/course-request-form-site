@@ -414,9 +414,8 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
                 )
         except Exception as error:
             logger.error(
-                f'Failed to request site for "{self.request.user.get_username()}": ({error})'
+                f'Failed to request "{request.data["course_requested"]}" for "{self.request.user.get_username()}": ({error})'
             )
-            logger.error(request.data)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
