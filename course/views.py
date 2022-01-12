@@ -388,11 +388,9 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         course = Course.objects.get(course_code=request.data["course_requested"])
         update_course(course)
-        logger.info(
-            f'"{self.request.user.get_username()}" requesting course "{course}":'
-        )
+        prefix = f'"{self.request.user.get_username()}" requesting course "{course}":'
         for key, value in serializer.validated_data.items():
-            logger.info(f"{key}: {value}")
+            logger.info(f"{prefix} -- {key}: {value}")
         if "view_type" in request.data:
             if request.data["view_type"] == "UI-course-list":
                 return redirect("UI-course-list")
