@@ -391,7 +391,7 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
         logger.info(
             f'"{self.request.user.get_username()}" requesting course "{course}":'
         )
-        for key, value in serializer.validated_data:
+        for key, value in serializer.validated_data.items():
             logger.info(f"{key}: {value}")
         if "view_type" in request.data:
             if request.data["view_type"] == "UI-course-list":
