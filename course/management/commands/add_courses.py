@@ -42,6 +42,14 @@ def pull_from_local_store():
                 logger.error(f"- ERROR: Failed to locate school {school} ({error})")
 
 
+def get_user_from_full_name(full_name):
+    try:
+        first_name, last_name = full_name.split()
+        return User.objects.get(first_name=first_name, last_name=last_name)
+    except Exception:
+        return None
+
+
 def get_open_data_courses(year_and_term, logger=logger):
     logger.info(") Pulling courses from Open Data...")
     year, term = split_year_and_term(year_and_term)
@@ -129,6 +137,25 @@ def get_open_data_courses(year_and_term, logger=logger):
                     },
                 )
                 course_object, created = course_created
+                if course["instructors"]:
+                    try:
+                        instructors = [
+                            get_user_from_full_name(instructor["name"])
+                            for instructor in course["instructors"]
+                            if get_user_from_full_name(instructor["name"])
+                        ]
+                        course_object.instructors.clear()
+                        for instructor in instructors:
+                            course_object.instructors.add(instructor)
+                            course_object.save()
+                        logger.info(
+                            f"- Updated {course['section_id']} with instructors:"
+                            f" {', '.join([instructor.username for instructor in instructors])}"
+                        )
+                    except Exception as error:
+                        logger.error(
+                            f"Failed to update instructors from Open Data ({error})"
+                        )
                 logger.info(
                     f"- {'CREATED' if created else 'UPDATED'} {course['section_id']}"
                 )
