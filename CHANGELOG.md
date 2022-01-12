@@ -3,6 +3,12 @@
 [AX] = "Admin experience" (Changes relevant mainly to admin users)  
 [DX] = "Developer experience" (Changes relevant mainly to developers)
 
+## 2022-01-11
+
+### Fixed
+
+- User's Home view only displays courses from the current or next terms
+
 ## 2022-01-10
 
 ### Changed
