@@ -7,7 +7,7 @@ YEAR := $(shell date +%Y)
 MONTH := $(shell date +%m)
 TERM := $(shell if (( $(MONTH) > 8 )); \
 					then echo "C"; \
-				elif (( $(MONTH) -gt 5 )); \
+				elif (( $(MONTH) > 5 )); \
 					then echo "B"; \
 				else echo "A"; \
 				fi)

@@ -23,7 +23,7 @@ school_data = [
     {
         "abbreviation": "GSE",
         "name": "Graduate School Of Education",
-        "visibility": False,
+        "visibility": True,
         "open_data_abbreviation": "ED",
         "canvas_subaccount": 82192,
     },
@@ -44,7 +44,7 @@ school_data = [
     {
         "abbreviation": "LW",
         "name": "Law",
-        "visibility": True,
+        "visibility": False,
         "open_data_abbreviation": "LW",
     },
     {
@@ -90,7 +90,7 @@ school_data = [
     {
         "abbreviation": "WH",
         "name": "Wharton",
-        "visibility": True,
+        "visibility": False,
         "open_data_abbreviation": "WH",
         "canvas_subaccount": 81471,
     },
