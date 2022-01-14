@@ -3,6 +3,13 @@
 [AX] = "Admin experience" (Changes relevant mainly to admin users)  
 [DX] = "Developer experience" (Changes relevant mainly to developers)
 
+## 2022-01-14
+
+### Added
+
+- [AX] Users are checked against student DW table if not found in employee
+- Added placeholder to "User" input to show that it needs to be a pennkey
+
 ## 2022-01-12
 
 ### Added
