@@ -37,6 +37,7 @@ from data_warehouse.data_warehouse import (
     get_course,
     get_staff_account,
     get_user_by_pennkey,
+    get_student_account,
 )
 from open_data.open_data import OpenData
 
@@ -761,6 +762,20 @@ class CanvasSiteViewSet(MixedPermissionModelViewSet, ModelViewSet):
         )
 
 
+def create_profile_from_dw_data(user, user_name, user_data):
+    try:
+        user.first_name = user_data["first_name"].title()
+        user.last_name = user_data["last_name"].title()
+        user.email = user_data["email"]
+        Profile.objects.create(user=user, penn_id=user_data["penn_id"])
+        update_user_courses(user.username)
+        logger.info(f'CREATED user "{user_name}".')
+        return True
+    except Exception as error:
+        logger.info(f'Failed to create Profile for user "{user_name}" ({error}).')
+        return False
+
+
 class HomePage(UserPassesTestMixin, ModelViewSet):
     lookup_field = "course_code"
     renderer_classes = [TemplateHTMLRenderer]
@@ -783,25 +798,18 @@ class HomePage(UserPassesTestMixin, ModelViewSet):
         except Exception:
             user_data = get_staff_account(penn_key=user.username)
             if user_data:
-                try:
-                    user.first_name = user_data["first_name"].title()
-                    user.last_name = user_data["last_name"].title()
-                    user.email = user_data["email"]
-                    Profile.objects.create(user=user, penn_id=user_data["penn_id"])
-                    update_user_courses(user.username)
-                    logger.info(f'CREATED user "{user_name}".')
-                    return True
-                except Exception as error:
-                    logger.info(
-                        f'Failed to create Profile for user "{user_name}" ({error}).'
-                    )
+                return create_profile_from_dw_data(user, user_name, user_data)
             else:
-                message = (
-                    f'FAILED to create Profile for "{user_name}" '
-                    "(user data not found in the Data Warehouse)."
-                )
-                logger.error(message)
-                return False
+                user_data = get_student_account(penn_key=user.username)
+                if user_data:
+                    return create_profile_from_dw_data(user, user_name, user_data)
+                else:
+                    message = (
+                        f'FAILED to create Profile for "{user_name}" '
+                        "(user data not found in the Data Warehouse)."
+                    )
+                    logger.error(message)
+                    return False
 
     def get(self, request):
         self.test_func()

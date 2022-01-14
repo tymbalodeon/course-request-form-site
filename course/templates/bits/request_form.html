@@ -13,16 +13,18 @@
     </mark>
     <br>
     <br>
-    <strong><p>Default:
-        <em style="text-decoration: underline;">
-            {% if course.primary_crosslist %}
-                {{course.primary_crosslist|course_code_to_string}}
-            {% else %}
-                {{course.course_code|course_code_to_string}}
-            {% endif %}
-            {{course.course_name|truncate_course_name:30}}
-        </em>.</strong>
-    </p>
+    <strong>
+        <p>Default:
+            <em style="text-decoration: underline;">
+                {% if course.primary_crosslist %}
+                    {{course.primary_crosslist|course_code_to_string}}
+                {% else %}
+                    {{course.course_code|course_code_to_string}}
+                {% endif %}
+                {{course.course_name|truncate_course_name:30}}.
+            </em>
+        </p>
+    </strong>
     <br>
     {% render_field request_form.title_override style=style %}
 </fieldset>
@@ -188,7 +190,7 @@
                 <div id="addEnroll-1" class="additional-enrollments">
                     <label class="additional-enrollments-user">
                         User
-                        <input name="additional_enrollments[1][user]" value="" class="form-control" type="text">
+                        <input name="additional_enrollments[1][user]" value="" class="form-control" type="text" placeholder="pennkey">
                     </label>
                     <label class="additional-enrollments-role">
                         Role
@@ -248,7 +250,7 @@
          "beforeend",
          `<label class="additional-enrollments-user">
               User
-              <input name="${user}" value="" class="form-control" type="text">
+              <input name="${user}" value="" class="form-control" type="text" placeholder="pennkey">
             </label>
             <label class="additional-enrollments-role">
                 Role

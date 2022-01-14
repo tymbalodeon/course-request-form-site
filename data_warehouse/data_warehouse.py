@@ -111,6 +111,33 @@ def get_staff_account(penn_key=None, penn_id=None):
             }
 
 
+def get_student_account(penn_key):
+    cursor = get_cursor()
+    logger.info(f"Checking Data Warehouse for pennkey {penn_key}...")
+    cursor.execute(
+        """
+        SELECT
+            first_name, last_name, email_address, penn_id
+        FROM
+            person_all_v
+        WHERE
+            pennkey = :pennkey
+        """,
+        pennkey=penn_key,
+    )
+    for first_name, last_name, email, dw_penn_id in cursor:
+        logger.info(
+            f'FOUND "{penn_key}": {first_name} {last_name} ({dw_penn_id})'
+            f" {email.strip() if email else email}"
+        )
+        return {
+            "first_name": first_name,
+            "last_name": last_name,
+            "email": email,
+            "penn_id": dw_penn_id,
+        }
+
+
 def get_user_by_pennkey(pennkey):
     if isinstance(pennkey, str):
         pennkey = pennkey.lower()
