@@ -21,7 +21,7 @@ from django.db.models import (
 from django.utils.safestring import mark_safe
 from markdown import markdown
 
-from .terms import get_term_letters
+from .terms import FALL, SPRING, SUMMER
 
 logger = getLogger(__name__)
 
@@ -113,7 +113,6 @@ class CanvasSite(Model):
 
 
 class Course(Model):
-    SPRING, SUMMER, FALL = get_term_letters()
     TERM_CHOICES = ((SPRING, "Spring"), (SUMMER, "Summer"), (FALL, "Fall"))
     course_activity = ForeignKey(Activity, related_name="courses", on_delete=CASCADE)
     course_code = CharField(

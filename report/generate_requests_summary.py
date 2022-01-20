@@ -16,7 +16,7 @@ def get_requests(year_and_term, start_month=5):
     individual_requests = Request.objects.filter(
         Q(
             course_requested__year=year,
-            courssplit_year_and_termrm=term,
+            course_requested__course_term=term,
             created__month__gte=start_month,
         )
         & ~Q(additional_instructions__contains="Request automatically generated")
