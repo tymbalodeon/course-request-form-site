@@ -113,7 +113,17 @@ class CanvasSite(Model):
 
 
 class Course(Model):
-    TERM_CHOICES = ((SPRING, "Spring"), (SUMMER, "Summer"), (FALL, "Fall"))
+    OLD_SPRING = "A"
+    OLD_SUMMER = "B"
+    OLD_FALL = "C"
+    TERM_CHOICES = (
+        (SPRING, "Spring"),
+        (SUMMER, "Summer"),
+        (FALL, "Fall"),
+        (OLD_SPRING, "Old Spring"),
+        (OLD_SUMMER, "Old Summer"),
+        (OLD_FALL, "Old Fall"),
+    )
     course_activity = ForeignKey(Activity, related_name="courses", on_delete=CASCADE)
     course_code = CharField(
         max_length=150, unique=True, primary_key=True, editable=False
@@ -124,7 +134,7 @@ class Course(Model):
     course_schools = ForeignKey(School, related_name="courses", on_delete=CASCADE)
     course_section = CharField(max_length=4, blank=False)
     course_subject = ForeignKey(Subject, on_delete=CASCADE, related_name="courses")
-    course_term = CharField(max_length=1, choices=TERM_CHOICES)
+    course_term = CharField(max_length=2, choices=TERM_CHOICES)
     created = DateTimeField(auto_now_add=True)
     crosslisted = ManyToManyField("self", blank=True, symmetrical=True, default=None)
     crosslisted_request = ForeignKey(
