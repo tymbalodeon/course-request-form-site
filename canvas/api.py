@@ -6,7 +6,7 @@ from canvasapi.exceptions import CanvasException
 from canvasapi.tab import Tab
 
 from config.config import PROD_KEY, PROD_URL, TEST_KEY, TEST_URL
-from course.models import CanvasSite, Course, Request, User
+from course.models import SIS_PREFIX, CanvasSite, Course, Request, User
 from course.serializers import RequestSerializer
 
 MAIN_ACCOUNT_ID = 96678
@@ -109,7 +109,7 @@ def get_section_code(request, course_requested):
             f" {course_requested.year}{course_requested.course_term}"
         )
     elif course_requested.primary_crosslist:
-        return course_requested.srs_format_primary()
+        return course_requested.sis_format_primary()
     else:
         add_request_process_notes("Primary crosslist not set", request)
         return None
@@ -194,9 +194,9 @@ def handle_sections(
         if section_course.course_activity.abbr != "LEC":
             course_title = section_course.course_activity.abbr
         course_title = (
-            f"{section_course.srs_format_primary(sis_id=False)} {course_title}"
+            f"{section_course.sis_format_primary(sis_id=False)} {course_title}"
         )
-        sis_section = f"SRS_{section_course.srs_format_primary()}"
+        sis_section = f"{SIS_PREFIX}_{section_course.sis_format_primary()}"
         additional_sections = create_section(
             request,
             section_course,
@@ -394,7 +394,7 @@ def create_canvas_sites(requested_courses=None, sections=None, test=False):
             if request.title_override
             else f"{section_code} {course_requested.course_name}"
         )
-        sis_course_id = f"SRS_{course_requested.srs_format_primary()}"
+        sis_course_id = f"{SIS_PREFIX}_{course_requested.sis_format_primary()}"
         term_id = get_term_id(
             MAIN_ACCOUNT_ID,
             f"{course_requested.year}{course_requested.course_term}",

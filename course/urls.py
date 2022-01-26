@@ -29,7 +29,7 @@ from .views import (
     quick_config,
     user_courses,
     user_info,
-    view_canceled_SRS,
+    view_canceled_SIS,
     view_deleted_requests,
     view_requests,
 )
@@ -49,7 +49,7 @@ urlpatterns = [
     path("siterequest/", emergency_redirect),
     path("admin/process_requests/", process_requests),
     path("admin/view_requests/", view_requests),
-    path("admin/view_canceled_SRS/", view_canceled_SRS),
+    path("admin/view_canceled_SIS/", view_canceled_SIS),
     path("admin/delete_canceled_requests/", delete_canceled_requests),
     path("admin/view_deleted_requests/", view_deleted_requests),
     path("quickconfig/", quick_config),

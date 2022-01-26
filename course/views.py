@@ -36,8 +36,8 @@ from canvas.api import (
 from data_warehouse.data_warehouse import (
     get_course,
     get_staff_account,
-    get_user_by_pennkey,
     get_student_account,
+    get_user_by_pennkey,
 )
 from open_data.open_data import OpenData
 
@@ -415,7 +415,8 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
                 )
         except Exception as error:
             logger.error(
-                f'Failed to request "{request.data["course_requested"]}" for "{self.request.user.get_username()}": ({error})'
+                f'Failed to request "{request.data["course_requested"]}" for'
+                f' "{self.request.user.get_username()}": ({error})'
             )
 
     def perform_create(self, serializer):
@@ -1081,7 +1082,7 @@ def view_requests(request):
 
 
 @staff_member_required
-def view_canceled_SRS(request):
+def view_canceled_SIS(request):
     try:
         with open(CHECK_CANCELED_LOG) as json_file:
             content = load(json_file)

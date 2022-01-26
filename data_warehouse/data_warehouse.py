@@ -165,6 +165,7 @@ def get_user_by_pennkey(pennkey):
 def get_course(section, term=None):
     section = (
         section.replace("SRS_", "")
+        .replace("BAN_", "")
         .replace("_", "")
         .replace("-", "")
         .replace(" ", "")

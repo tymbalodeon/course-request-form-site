@@ -21,9 +21,10 @@ from django.db.models import (
 from django.utils.safestring import mark_safe
 from markdown import markdown
 
-from .terms import FALL, SPRING, SUMMER
+from .terms import FALL, SPRING, SUMMER, USE_BANNER
 
 logger = getLogger(__name__)
+SIS_PREFIX = "BAN" if USE_BANNER else "SRS"
 
 
 class Profile(Model):
@@ -268,6 +269,9 @@ class Course(Model):
             )
         )
 
+    def get_year_and_term(self):
+        return f"{self.year}{self.course_term}"
+
     def find_sections(self):
         courses = list(
             Course.objects.filter(
@@ -283,7 +287,7 @@ class Course(Model):
                 courses.remove(course)
         return courses
 
-    def srs_format(self):
+    def sis_format(self):
         return (
             f"{self.course_subject.abbreviation}-"
             f"{self.course_number}-"
@@ -291,9 +295,9 @@ class Course(Model):
             f" {self.year}{self.course_term}"
         )
 
-    def srs_format_primary(self, sis_id=True):
+    def sis_format_primary(self, sis_id=True):
         primary_crosslist = self.primary_crosslist
-        year_and_term = f"{self.year}{self.course_term}"
+        year_and_term = self.get_year_and_term()
 
         if primary_crosslist:
             if year_and_term in primary_crosslist and len(primary_crosslist) > 9:
@@ -315,7 +319,7 @@ class Course(Model):
             else:
                 return f"{subject} {number}-{section} {year_and_term}"
         else:
-            return self.srs_format()
+            return self.sis_format()
 
 
 class Notice(Model):

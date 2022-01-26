@@ -149,9 +149,12 @@ def get_open_data_courses(year_and_term, logger=logger):
                             for instructor in instructors:
                                 course_object.instructors.add(instructor)
                                 course_object.save()
+                            instructors_display = ", ".join(
+                                [instructor.username for instructor in instructors]
+                            )
                             logger.info(
-                                f"- Updated {course['section_id']} with instructors:"
-                                f" {', '.join([instructor.username for instructor in instructors])}"
+                                f"- Updated {course['section_id']} with instructors: "
+                                f"{instructors_display}"
                             )
                     except Exception as error:
                         logger.error(
