@@ -311,7 +311,11 @@ class Course(Model):
                 for character in primary_crosslist
                 if not str.isalpha(character)
             )
-            number = number_section[:4] if USE_BANNER else number_section[:3]
+            number = (
+                number_section[:4]
+                if self.course_term.isnumeric()
+                else number_section[:3]
+            )
             section = number_section[3:]
 
             if sis_id:
