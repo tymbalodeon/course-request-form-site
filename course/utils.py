@@ -5,7 +5,6 @@ from pathlib import Path
 from django.db.models import Q
 
 from canvas.api import get_canvas, get_user_courses
-from course.terms import USE_BANNER
 
 from .models import CanvasSite, Request, User
 
@@ -16,7 +15,7 @@ logger = getLogger(__name__)
 def split_year_and_term(year_and_term):
     return (
         (year_and_term[:-2], year_and_term[-2:])
-        if USE_BANNER
+        if year_and_term.isnumeric()
         else (year_and_term[:-1], year_and_term[-1])
     )
 

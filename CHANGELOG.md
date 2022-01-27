@@ -3,6 +3,13 @@
 [AX] = "Admin experience" (Changes relevant mainly to admin users)  
 [DX] = "Developer experience" (Changes relevant mainly to developers)
 
+## 2022-01-27
+
+### Added
+
+- Updated term values to support new "10/20/30" system, switching in March
+- [AX] Added functions capable of distinguishing old from new systems in case admins still need to see old courses
+
 ## 2022-01-14
 
 ### Added
