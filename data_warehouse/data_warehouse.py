@@ -28,9 +28,13 @@ def get_banner_course(srs_course_id, search_term):
         """,
         srs_course_id=srs_course_id,
     )
-    for subject, course, section, term in cursor:
-        if term[-2:] == search_term:
-            print(f"{subject}-{course}-{section} {term}")
+    results = list()
+    for subject, course_num, section_num, term in cursor:
+        if not search_term:
+            results.append(f"{subject}-{course_num}-{section_num} {term}")
+        elif term[-2:] == search_term:
+            results.append(f"{subject}-{course_num}-{section_num} {term}")
+    return results
 
 
 def get_cursor():

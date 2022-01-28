@@ -27,6 +27,7 @@ from .views import (
     emergency_redirect,
     process_requests,
     quick_config,
+    search_banner_courses,
     user_courses,
     user_info,
     view_canceled_SIS,
@@ -65,6 +66,7 @@ urlpatterns = [
     ),
     path("courselookup/", check_open_data_for_course),
     path("dwlookup/", check_data_warehouse_for_course),
+    path("bannerlookup/", search_banner_courses),
     path("api/", include(router.urls)),
     path("api_doc/", schema_view),
     path(

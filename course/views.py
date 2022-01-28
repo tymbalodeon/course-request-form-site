@@ -34,6 +34,7 @@ from canvas.api import (
     get_user_by_sis,
 )
 from data_warehouse.data_warehouse import (
+    get_banner_course,
     get_course,
     get_staff_account,
     get_student_account,
@@ -1274,6 +1275,25 @@ def check_open_data_for_course(request):
         except Exception as error:
             logger.error(f"ERROR (OpenData): {error}")
     return render(request, "admin/course_lookup.html", {"data": courses, "size": size})
+
+
+def search_banner_courses(request):
+    courses = list()
+    size = 0
+    if request.GET:
+        try:
+            srs_course_id = request.GET.get("srs_course_id")
+            term = request.GET.get("term")
+            courses = get_banner_course(srs_course_id, term)
+            if courses:
+                size = len(courses)
+            else:
+                courses = ["COURSE(S) NOT FOUND"]
+        except Exception as error:
+            logger.error(f"ERROR (Data Warehouse): {error}")
+    return render(
+        request, "admin/banner_lookup.html", {"courses": courses, "size": size}
+    )
 
 
 def check_data_warehouse_for_course(request):

@@ -1,0 +1,50 @@
+{% extends "base_authenticated.html" %}
+{% load rest_framework %}
+
+{% block bannerlookup %}
+    active
+{% endblock %}
+
+{% block content %}
+    <h1>Banner Course Lookup</h1>
+    <dl>
+        <dt>Course ID</dt>
+        <dd>
+            Subject Abbreviation + Course Number
+            <br>
+            <em>(BOTH REQUIRED)</em>
+        </dd>
+        <dt>Term</dt>
+        <dd>
+            "10" for Spring; "20" for Summer; "30" for Fall
+            <br>
+            <em>(Leave blank to return courses from any term.)</em>
+        </dd>
+    </dl>
+
+    <fieldset>
+        <legend>Banner Lookup</legend>
+        <form>
+            <div class="flex-row">
+                <div class="flex-large">
+                    <label for="srs_course_id">SRS Course ID</label>
+                    <input type="text" id="srs_course_id" name="srs_course_id" placeholder="SRS Course ID">
+                    <label for="term">Term</label>
+                    <input type="text" id="term" name="term" placeholder="Term">
+                </div>
+            </div>
+            <br>
+            <input type="submit" value="Submit">
+        </form>
+    </fieldset>
+
+    <fieldset>
+        <legend>Results ({{ size }})</legend>
+        <ul>
+            {% for course in courses  %}
+                <li> {{ course }}</li>
+            {% endfor %}
+        </ul>
+    </fieldset>
+    <br>
+{% endblock %}
