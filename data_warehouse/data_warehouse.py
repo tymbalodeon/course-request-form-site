@@ -12,6 +12,27 @@ from open_data.open_data import OpenData
 logger = getLogger(__name__)
 
 
+def get_banner_course(srs_course_id, search_term):
+    cursor = get_cursor()
+    cursor.execute(
+        """
+        SELECT
+            banner.subject, banner.course_num, banner.section_num, banner.term
+        FROM
+            dwngss.xwalk_crse_number xwalk
+        JOIN
+            dwngss_ps.crse_section banner
+        ON xwalk.ngss_course_id=banner.course_id
+        WHERE
+            srs_course_id = :srs_course_id
+        """,
+        srs_course_id=srs_course_id,
+    )
+    for subject, course, section, term in cursor:
+        if term[-2:] == search_term:
+            print(f"{subject}-{course}-{section} {term}")
+
+
 def get_cursor():
     config = ConfigParser()
     config.read("config/config.ini")
