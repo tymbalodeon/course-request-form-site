@@ -3,6 +3,12 @@
 [AX] = "Admin experience" (Changes relevant mainly to admin users)  
 [DX] = "Developer experience" (Changes relevant mainly to developers)
 
+## 2022-01-28
+
+### Added
+
+- [AX] Added function to get Banner course info from SRS course code
+
 ## 2022-01-27
 
 ### Added
