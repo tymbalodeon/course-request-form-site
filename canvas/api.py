@@ -8,6 +8,7 @@ from canvasapi.tab import Tab
 from config.config import PROD_KEY, PROD_URL, TEST_KEY, TEST_URL
 from course.models import SIS_PREFIX, CanvasSite, Course, Request, User
 from course.serializers import RequestSerializer
+from course.terms import USE_BANNER
 
 MAIN_ACCOUNT_ID = 96678
 logger = getLogger(__name__)
@@ -372,11 +373,17 @@ def create_canvas_sites(requested_courses=None, sections=None, test=False):
         return
     section_already_exists = False
     for request in requested_courses:
+        course_requested = request.course_requested
+        if USE_BANNER and not (
+            course_requested.course_term.isnumeric()
+            or len(course_requested.course_number) == 4
+        ):
+            request.status = "LOCKED"
+            continue
         request.status = "IN_PROCESS"
         request.save()
         serialized = RequestSerializer(request)
         additional_sections = list()
-        course_requested = request.course_requested
         logger.info(f"Creating Canvas site for {course_requested}...")
         account = get_school_account(request, course_requested, test)
         if not account:

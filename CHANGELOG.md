@@ -8,6 +8,7 @@
 ### Changed
 
 - Updated course_code_to_string template filter to format Banner courses
+- Lock course requests taht use old format SRS values, starting on Banner switchover date
 
 ## 2022-01-28
 
