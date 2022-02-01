@@ -3,6 +3,12 @@
 [AX] = "Admin experience" (Changes relevant mainly to admin users)  
 [DX] = "Developer experience" (Changes relevant mainly to developers)
 
+## 2022-02-01
+
+### Changed
+
+- Updated course_code_to_string template filter to format Banner courses
+
 ## 2022-01-28
 
 ### Added
