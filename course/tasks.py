@@ -23,7 +23,7 @@ def get_args(celery, term=None):
     return args
 
 
-@task()
+@task
 def sync_all(terms=TERMS, celery=True):
     if isinstance(terms, str):
         terms = [terms]
@@ -39,7 +39,7 @@ def sync_all(terms=TERMS, celery=True):
     delete_canceled_requests()
 
 
-@task()
+@task
 def delete_canceled_requests():
     for request in Request.objects.filter(status="CANCELED"):
         request.delete()
