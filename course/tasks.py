@@ -52,5 +52,5 @@ def process_approved_sites():
 
 
 @task
-def sync_sites(term):
-    sync_crf_canvas_sites(term)
+def sync_sites():
+    sync_crf_canvas_sites(CURRENT_YEAR_AND_TERM)

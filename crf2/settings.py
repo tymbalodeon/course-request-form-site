@@ -130,7 +130,6 @@ CELERY_BEAT_SCHEDULE = {
     "read_canvas_sites": {
         "task": "course.tasks.sync_sites",
         "schedule": crontab(minute="0", hour="0"),
-        "args": CURRENT_YEAR_AND_TERM,
     },
     "clear_canceled_requests": {
         "task": "course.tasks.delete_canceled_requests",
