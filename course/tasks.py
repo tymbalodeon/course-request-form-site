@@ -1,6 +1,7 @@
 from celery import task
 from celery.utils.log import get_task_logger
 
+from canvas.api import create_canvas_sites
 from course.management.commands.add_courses import get_open_data_courses
 from course.terms import CURRENT_YEAR_AND_TERM, NEXT_YEAR_AND_TERM
 from data_warehouse.data_warehouse import (
@@ -43,3 +44,13 @@ def sync_all(terms=TERMS, celery=True):
 def delete_canceled_requests():
     for request in Request.objects.filter(status="CANCELED"):
         request.delete()
+
+
+@task
+def process_approved_sites():
+    create_canvas_sites()
+
+
+@task
+def sync_sites(term):
+    sync_crf_canvas_sites(term)

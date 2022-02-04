@@ -2,7 +2,6 @@ from logging import getLogger
 from os import mkdir
 from pathlib import Path
 
-from celery import task
 from django.db.models import Q
 
 from canvas.api import get_canvas, get_user_courses
@@ -28,7 +27,6 @@ def get_data_directory(data_directory_name):
     return data_directory_parent
 
 
-@task
 def sync_crf_canvas_sites(year_and_term, logger=logger):
     year, term = split_year_and_term(year_and_term)
     logger.info(f"Updating site info for {term} courses...")

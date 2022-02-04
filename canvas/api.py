@@ -4,7 +4,6 @@ from time import sleep
 from canvasapi import Canvas
 from canvasapi.exceptions import CanvasException
 from canvasapi.tab import Tab
-from celery import task
 
 from config.config import PROD_KEY, PROD_URL, TEST_KEY, TEST_URL
 from course.models import SIS_PREFIX, CanvasSite, Course, Request, User
@@ -38,7 +37,6 @@ def get_canvas_account(account_id, test=False):
         return None
 
 
-@task
 def create_canvas_user(penn_key, penn_id, email, full_name, test=False):
     pseudonym = {"sis_user_id": penn_id, "unique_id": penn_key}
     try:
@@ -364,7 +362,6 @@ def add_site_owners(canvas_course, canvas_site):
             logger.error(f"Failed to add {instructor} to site owners ({error})")
 
 
-@task
 def create_canvas_sites(requested_courses=None, sections=None, test=False):
     logger.info("Creating Canvas sites for requested courses...")
     if requested_courses is None:
