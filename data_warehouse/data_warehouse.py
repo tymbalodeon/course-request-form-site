@@ -3,7 +3,7 @@ from datetime import datetime
 from logging import getLogger
 from re import findall, search, sub
 
-import cx_Oracle
+from cx_Oracle import connect
 
 from course.models import Activity, Course, Profile, School, Subject, User
 from course.terms import CURRENT_YEAR_AND_TERM
@@ -12,7 +12,7 @@ from open_data.open_data import OpenData
 logger = getLogger(__name__)
 
 
-def get_banner_course(srs_course_id, search_term):
+def get_banner_course(srs_course_id):
     cursor = get_cursor()
     cursor.execute(
         """
@@ -30,10 +30,7 @@ def get_banner_course(srs_course_id, search_term):
     )
     results = list()
     for subject, course_num, section_num, term in cursor:
-        if not search_term:
-            results.append(f"{subject}-{course_num}-{section_num} {term}")
-        elif term[-2:] == search_term:
-            results.append(f"{subject}-{course_num}-{section_num} {term}")
+        results.append(f"{subject}-{course_num}-{section_num} {term}")
     return results
 
 
@@ -41,9 +38,7 @@ def get_cursor():
     config = ConfigParser()
     config.read("config/config.ini")
     values = dict(config.items("data_warehouse"))
-    connection = cx_Oracle.connect(
-        values["user"], values["password"], values["service"]
-    )
+    connection = connect(values["user"], values["password"], values["service"])
     return connection.cursor()
 
 
@@ -507,6 +502,7 @@ def get_data_warehouse_instructors(term=CURRENT_YEAR_AND_TERM, logger=logger):
             try:
                 course = Course.objects.get(course_code=course_code)
                 if not course.requested:
+                    error_message = ""
                     try:
                         instructor = User.objects.get(username=pennkey)
                     except Exception:
