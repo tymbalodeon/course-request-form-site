@@ -6,6 +6,7 @@ import cx_Oracle
 from celery.schedules import crontab
 
 from config.config import DEBUG_VALUE, LIB_DIR, SECRET_KEY_VALUE
+from course.terms import CURRENT_YEAR_AND_TERM
 
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 SECRET_KEY = SECRET_KEY_VALUE
@@ -129,6 +130,7 @@ CELERY_BEAT_SCHEDULE = {
     "read_canvas_sites": {
         "task": "course.tasks.sync_sites",
         "schedule": crontab(minute="0", hour="0"),
+        "args": CURRENT_YEAR_AND_TERM,
     },
     "clear_canceled_requests": {
         "task": "course.tasks.delete_canceled_requests",
