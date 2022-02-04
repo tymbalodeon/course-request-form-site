@@ -127,15 +127,15 @@ CELERY_RESULT_SERIALIZER = "json"
 CELERY_TASK_SERIALIZER = "json"
 CELERY_BEAT_SCHEDULE = {
     "read_canvas_sites": {
-        "task": "course.tasks.process_canvas",
+        "task": "course.utils.sync_crf_canvas_sites",
         "schedule": crontab(minute="0", hour="0"),
     },
     "clear_canceled_requests": {
-        "task": "course.tasks.remove_canceled",
+        "task": "course.tasks.delete_canceled_requests",
         "schedule": crontab(minute="*/60"),
     },
     "process_approved_requests": {
-        "task": "course.tasks.create_canvas_site",
+        "task": "canvas.api.create_canvas_site",
         "schedule": crontab(minute="*/20"),
     },
 }
