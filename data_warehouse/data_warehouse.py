@@ -21,7 +21,7 @@ def get_cursor():
 
 
 def get_banner_course(srs_course_id, search_term):
-    srs_course_id = srs_course_id.replace(" ", "").replace("-", "").replace("-", "")
+    srs_course_id = srs_course_id.replace(" ", "").replace("-", "").replace("_", "")
     subject = "".join(character for character in srs_course_id if character.isalpha())
     if len(subject) == 3:
         srs_course_id = srs_course_id.replace(subject, f"{subject} ")
