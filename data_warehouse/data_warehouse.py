@@ -12,7 +12,15 @@ from open_data.open_data import OpenData
 logger = getLogger(__name__)
 
 
-def get_banner_course(srs_course_id):
+def get_cursor():
+    config = ConfigParser()
+    config.read("config/config.ini")
+    values = dict(config.items("data_warehouse"))
+    connection = connect(values["user"], values["password"], values["service"])
+    return connection.cursor()
+
+
+def get_banner_course(srs_course_id, search_term):
     cursor = get_cursor()
     cursor.execute(
         """
@@ -30,16 +38,9 @@ def get_banner_course(srs_course_id):
     )
     results = list()
     for subject, course_num, section_num, term in cursor:
-        results.append(f"{subject}-{course_num}-{section_num} {term}")
+        if not search_term or term[-2:] == search_term:
+            results.append(f"{subject}-{course_num}-{section_num} {term}")
     return results
-
-
-def get_cursor():
-    config = ConfigParser()
-    config.read("config/config.ini")
-    values = dict(config.items("data_warehouse"))
-    connection = connect(values["user"], values["password"], values["service"])
-    return connection.cursor()
 
 
 def format_title(title):
