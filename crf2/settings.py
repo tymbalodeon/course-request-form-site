@@ -68,10 +68,14 @@ TEMPLATES = [
 ]
 WSGI_APPLICATION = "crf2.wsgi.application"
 DATABASES = {
+    # "default": {
+    #     "ENGINE": "django.db.backends.sqlite3",
+    #     "NAME": str(BASE_DIR / "db.sbqlite3"),
+    #     "OPTIONS": {"timeout": 20},
+    # }
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": str(BASE_DIR / "db.sqlite3"),
-        "OPTIONS": {"timeout": 20},
+        "ENGINE": "django.db.backends.postgresql",
+        "OPTIONS": {"service": "crf"},
     }
 }
 CORS_ORIGIN_ALLOW_ALL = True
@@ -187,8 +191,7 @@ if DEBUG:
     AUTHENTICATION_BACKENDS = [
         "django.contrib.auth.backends.ModelBackend",
     ]
-    INSTALLED_APPS.extend(["livereload", "django_sass"])
-    MIDDLEWARE.append("livereload.middleware.LiveReloadScript")
+    INSTALLED_APPS.append("django_sass")
 
     if platform.system() == "Darwin":
         lib_dir = Path.home() / LIB_DIR
