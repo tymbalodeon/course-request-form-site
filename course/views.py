@@ -14,7 +14,8 @@ from django.contrib.messages import error as messages_error
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
-from django_celery_beat.models import PeriodicTask
+
+# from django_celery_beat.models import PeriodicTask
 from django_filters import CharFilter, ChoiceFilter, DateTimeFilter, ModelChoiceFilter
 from django_filters.rest_framework import FilterSet
 from rest_framework import permissions, serializers, status
