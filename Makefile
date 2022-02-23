@@ -80,6 +80,9 @@ install: ## Install the dependencies from the requirements.txt file
 isort: ## Sort imports
 	isort ./
 
+live: ## Start the livereload server
+	$(MANAGE) livereload
+
 log-apache: ## Print the tail of the apache log file
 	$(TAIL) /var/log/crf2/crf2_error.log
 
