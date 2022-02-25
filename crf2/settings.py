@@ -33,7 +33,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "django_filters",
     "admin_auto_filters",
-    # "django_celery_beat",
+    "django_celery_beat",
     "django_extensions",
     "rest_framework_swagger",
     "debug_toolbar",
@@ -68,14 +68,10 @@ TEMPLATES = [
 ]
 WSGI_APPLICATION = "crf2.wsgi.application"
 DATABASES = {
-    # "default": {
-    #     "ENGINE": "django.db.backends.sqlite3",
-    #     "NAME": str(BASE_DIR / "db.sqlite3"),
-    #     "OPTIONS": {"timeout": 20},
-    # }
     "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "OPTIONS": {"service": "crf"},
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": str(BASE_DIR / "db.sqlite3"),
+        "OPTIONS": {"timeout": 20},
     }
 }
 CORS_ORIGIN_ALLOW_ALL = True
