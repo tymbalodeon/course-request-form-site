@@ -184,6 +184,9 @@ LOGGING = {
 }
 
 if DEBUG:
+    AUTHENTICATION_BACKENDS = [
+        "django.contrib.auth.backends.ModelBackend",
+    ]
     INSTALLED_APPS.extend(["livereload", "django_sass"])
     MIDDLEWARE.append("livereload.middleware.LiveReloadScript")
 
