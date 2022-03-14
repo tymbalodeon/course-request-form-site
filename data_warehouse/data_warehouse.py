@@ -373,7 +373,7 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
                 term,
                 subject,
                 school,
-                xlist_enrolmt,
+                xlist_enrlmt,
                 xlist_family,
                 schedule_type,
                 trim(title)
