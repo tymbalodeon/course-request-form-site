@@ -333,7 +333,8 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
     term = term.upper()
     open_data = OpenData()
     cursor = get_cursor()
-    if next((character for character in term if character.isalpha()), None):
+    old_term = next((character for character in term if character.isalpha()), None)
+    if old_term:
         cursor.execute(
             """
             SELECT
@@ -463,7 +464,7 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
                 course_code=course_code,
                 defaults={
                     "owner": User.objects.get(username="benrosen"),
-                    "course_term": term[-1],
+                    "course_term": term[-1] if old_term else term[-2],
                     "course_activity": activity,
                     "course_subject": subject,
                     "course_primary_subject": primary_subject,
