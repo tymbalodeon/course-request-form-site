@@ -407,7 +407,7 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
     ) in cursor:
         course_code = course_code.replace(" ", "")
         subject_area = subject_area.replace(" ", "")
-        crosslist_code = crosslist_code.replace(" ", "")
+        crosslist_code = crosslist_code.replace(" ", "") if crosslist_code else ""
         primary_crosslist = ""
         try:
             subject = Subject.objects.get(abbreviation=subject_area)
