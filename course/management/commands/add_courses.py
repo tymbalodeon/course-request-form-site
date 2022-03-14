@@ -4,7 +4,7 @@ from logging import getLogger
 from django.core.management.base import BaseCommand
 
 from course.models import Activity, Course, School, Subject, User
-from course.utils import split_year_and_term
+from course.terms import split_year_and_term
 from data_warehouse.data_warehouse import (
     get_data_warehouse_courses,
     get_data_warehouse_instructors,

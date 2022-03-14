@@ -2,9 +2,10 @@ from datetime import datetime
 from pathlib import Path
 from shutil import rmtree
 
+from coruse.terms import split_year_and_term
 from django.test import TestCase
 
-from course.utils import get_data_directory, split_year_and_term
+from course.utils import get_data_directory
 
 
 class UtilsTest(TestCase):

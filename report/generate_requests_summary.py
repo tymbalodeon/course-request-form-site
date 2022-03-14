@@ -5,7 +5,9 @@ from pprint import PrettyPrinter
 from django.db.models import Q
 
 from course.models import Request, School
-from course.utils import DATA_DIRECTORY_NAME, get_data_directory, split_year_and_term
+from course.utils import DATA_DIRECTORY_NAME, get_data_directory
+from course.terms import split_year_and_term
+
 
 CURRENT_MONTH = datetime.now().month
 SCHOOLS = list(School.objects.all())

@@ -37,6 +37,14 @@ def get_next_term():
     return {SPRING: SUMMER, SUMMER: FALL, FALL: SPRING}.get(get_current_term())
 
 
+def split_year_and_term(year_and_term):
+    return (
+        (year_and_term[:-2], year_and_term[-2:])
+        if year_and_term.isnumeric()
+        else (year_and_term[:-1], year_and_term[-1])
+    )
+
+
 TWENTY_TWO_A = CURRENT_YEAR == 2022 and get_term_by_month(CURRENT_MONTH) == SPRING
 CURRENT_TERM = "A" if TWENTY_TWO_A else get_current_term()
 NEXT_TERM = get_next_term()
