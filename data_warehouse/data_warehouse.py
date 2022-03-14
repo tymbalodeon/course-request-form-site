@@ -333,7 +333,7 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
     term = term.upper()
     open_data = OpenData()
     cursor = get_cursor()
-    if next(character for character in term if character.isalpha()):
+    if next((character for character in term if character.isalpha()), None):
         cursor.execute(
             """
             SELECT
