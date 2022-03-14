@@ -6,7 +6,7 @@ from re import findall, search, sub
 from cx_Oracle import connect
 
 from course.models import Activity, Course, Profile, School, Subject, User
-from course.terms import CURRENT_YEAR_AND_TERM
+from course.terms import CURRENT_YEAR_AND_TERM, TWENTY_TWO_A
 from open_data.open_data import OpenData
 
 logger = getLogger(__name__)
@@ -333,37 +333,68 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
     term = term.upper()
     open_data = OpenData()
     cursor = get_cursor()
-    cursor.execute(
-        """
-        SELECT
-            section.section_id || section.term section,
-            section.term,
-            section.subject_area subject_id,
-            section.tuition_school school_id,
-            section.xlist,
-            section.xlist_primary,
-            section.activity,
-            trim(section.title) srs_title
-        FROM
-            dwadmin.course_section section
-        WHERE section.activity IN (
-            'LEC',
-            'REC',
-            'LAB',
-            'SEM',
-            'CLN',
-            'CRT',
-            'PRE',
-            'STU',
-            'ONL',
-            'HYB'
+    if TWENTY_TWO_A:
+        cursor.execute(
+            """
+            SELECT
+                section.section_id || section.term section,
+                section.term,
+                section.subject_area subject_id,
+                section.tuition_school school_id,
+                section.xlist,
+                section.xlist_primary,
+                section.activity,
+                trim(section.title) srs_title
+            FROM
+                dwadmin.course_section section
+            WHERE section.activity IN (
+                'LEC',
+                'REC',
+                'LAB',
+                'SEM',
+                'CLN',
+                'CRT',
+                'PRE',
+                'STU',
+                'ONL',
+                'HYB'
+            )
+            AND section.tuition_school NOT IN ('WH', 'LW')
+            AND section.status IN ('O')
+            AND section.term = :term
+            """,
+            term=term,
         )
-        AND section.tuition_school NOT IN ('WH', 'LW')
-        AND section.status IN ('O')
-        AND section.term = :term
-        """,
-        term=term,
-    )
+    else:
+        cursor.execute(
+            """
+            SELECT
+                section_id || term,
+                term,
+                subject,
+                school,
+                xlist_enrolmt,
+                xlist_family,
+                schedule_type,
+                trim(title)
+            FROM
+                dwngss_ps.crse_section
+            WHERE schedule_type IN (
+                'LEC',
+                'REC',
+                'LAB',
+                'SEM',
+                'CLN',
+                'CRT',
+                'PRE',
+                'STU',
+                'ONL',
+                'HYB'
+            )
+            AND term = :term
+            """,
+            term=term,
+        )
     for (
         course_code,
         term,
