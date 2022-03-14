@@ -4,7 +4,7 @@ CURRENT_DATE = datetime.now()
 CURRENT_YEAR = CURRENT_DATE.year
 CURRENT_MONTH = CURRENT_DATE.month
 NEXT_YEAR = CURRENT_YEAR + 1
-USE_BANNER = CURRENT_DATE > datetime(2022, 4, 14)
+USE_BANNER = CURRENT_DATE >= datetime(2022, 4, 14)
 
 
 def get_term_letters():
