@@ -544,12 +544,40 @@ def get_instructors(section_id, term):
     return instructors
 
 
+def get_instructor_object(instructor, cache):
+    if instructor["penn_id"] in cache:
+        return cache["penn_id"], None
+    penn_key = get_penn_key_from_penn_id(instructor["penn_id"])
+    try:
+        instructor = User.objects.update_or_create(
+            username=penn_key,
+            defaults={
+                "first_name": instructor["first_name"],
+                "last_name": instructor["last_name"],
+                "email": instructor["email"],
+            },
+        )[0]
+        profile = Profile.objects.update_or_create(
+            user=instructor,
+            defaults={"penn_id": instructor["penn_id"]},
+        )[0]
+        return instructor, profile
+    except Exception as error:
+        logger.error(
+            "- ERROR: Failed to create User object for instructor"
+            f" {instructor['first_name']} {instructor['last_name']} ({instructor['penn_id']})"
+            f" -- {error}"
+        )
+        return None
+
+
 def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
     logger.info(") Pulling courses from the Data Warehouse...")
     term = term.upper()
     open_data = OpenData()
     cursor = get_cursor()
     old_term = next((character for character in term if character.isalpha()), None)
+    INSTRUCTORS = dict()
     if old_term:
         pull_srs_courses(cursor, term, open_data)
     else:
@@ -646,50 +674,27 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
                 try:
                     instructors = get_instructors(section_id, year_and_term)
                     instructors = [
-                        get_instructor_object(instructor) for instructor in instructors
+                        get_instructor_object(instructor, INSTRUCTORS)
+                        for instructor in instructors
                     ]
                     instructors = [
                         instructor for instructor in instructors if instructor
                     ]
                     if instructors:
                         course.instructors.clear()
-                        for instructor in instructors:
+                        for instructor, profile in instructors:
                             course.instructors.add(instructor)
+                            if profile:
+                                INSTRUCTORS[profile.penn_id] = instructor
+                            logger.info(
+                                f"- Updated {course_code} with instructor:"
+                                f" {instructor.username}"
+                            )
                         course.save()
-                        logger.info(
-                            f"- Updated {course_code} with instructors:"
-                            f" {', '.join([instructor.username for instructor in instructors])}"
-                        )
                 except Exception as error:
                     message = f"Failed to add new instructor(s) to course ({error})"
                     logger.error(message)
         logger.info("FINISHED")
-
-
-def get_instructor_object(instructor):
-    penn_key = get_penn_key_from_penn_id(instructor["penn_id"])
-    try:
-        instructor, created = User.objects.update_or_create(
-            username=penn_key,
-            defaults={
-                "first_name": instructor["first_name"],
-                "last_name": instructor["last_name"],
-                "email": instructor["email"],
-            },
-        )
-        if created:
-            Profile.objects.update_or_create(
-                user=instructor,
-                defaults={"penn_id": instructor["penn_id"]},
-            )
-        return instructor
-    except Exception as error:
-        logger.error(
-            "- ERROR: Failed to create User object for instructor"
-            f" {instructor['first_name']} {instructor['last_name']} ({instructor['penn_id']})"
-            f" -- {error}"
-        )
-        return None
 
 
 def get_data_warehouse_instructors(term=CURRENT_YEAR_AND_TERM, logger=logger):
