@@ -13,6 +13,8 @@ def get_config_section_values(section):
 
 
 USERNAME, PASSWORD, EMAIL = get_config_section_values("user")
+
+
 OPEN_DATA_ID, OPEN_DATA_KEY, OPEN_DATA_DOMAIN = get_config_section_values("open_data")
 PROD_URL, PROD_KEY, TEST_URL, TEST_KEY = get_config_section_values("canvas")
 (

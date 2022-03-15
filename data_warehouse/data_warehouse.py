@@ -5,11 +5,19 @@ from re import findall, search, sub
 
 from cx_Oracle import connect
 
+from config.config import USERNAME
 from course.models import Activity, Course, Profile, School, Subject, User
 from course.terms import CURRENT_YEAR_AND_TERM, split_year_and_term
 from open_data.open_data import OpenData
 
 logger = getLogger(__name__)
+
+
+def get_owner():
+    return User.objects.get(username=USERNAME)
+
+
+OWNER = get_owner()
 
 
 def get_cursor():
@@ -48,6 +56,8 @@ def get_banner_course(srs_course_id, search_term):
 
 
 def format_title(title):
+    if not title:
+        return "[TBD]"
     roman_numeral_regex = (
         r"(?=[MDCLXVI].)M*(C[MD]|D?C{0,3})(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})\)?$"
     )
@@ -134,6 +144,27 @@ def get_staff_account(penn_key=None, penn_id=None):
                 "email": email,
                 "penn_key": penn_key,
             }
+
+
+def get_penn_key_from_penn_id(penn_id):
+    cursor = get_cursor()
+    logger.info(f"Checking Data Warehouse for penn id {penn_id}...")
+    cursor.execute(
+        """
+        SELECT
+            first_name, last_name, pennkey
+        FROM
+            employee_general
+        WHERE
+            penn_id = :penn_id
+        """,
+        penn_id=penn_id,
+    )
+    for first_name, last_name, penn_key in cursor:
+        logger.info(
+            f'FOUND PennKey "{penn_key}" for {penn_id} ({first_name} {last_name})'
+        )
+        return penn_key
 
 
 def get_student_account(penn_key):
@@ -328,6 +359,188 @@ def get_instructor(pennkey, term=CURRENT_YEAR_AND_TERM):
         }
 
 
+def pull_srs_courses(cursor, term, open_data):
+    cursor.execute(
+        """
+        SELECT
+            section.section_id || section.term section,
+            section.term,
+            section.subject_area subject_id,
+            section.tuition_school school_id,
+            section.xlist,
+            section.xlist_primary,
+            section.activity,
+            trim(section.title) srs_title
+        FROM
+            dwadmin.course_section section
+        WHERE section.activity IN (
+            'LEC',
+            'REC',
+            'LAB',
+            'SEM',
+            'CLN',
+            'CRT',
+            'PRE',
+            'STU',
+            'ONL',
+            'HYB'
+        )
+        AND section.tuition_school NOT IN ('WH', 'LW')
+        AND section.status IN ('O')
+        AND section.term = :term
+        """,
+        term=term,
+    )
+    for (
+        course_code,
+        term,
+        subject_area,
+        school,
+        crosslist,
+        crosslist_code,
+        activity,
+        title,
+    ) in cursor:
+        course_code = course_code.replace(" ", "")
+        subject_area = subject_area.replace(" ", "")
+        crosslist_code = crosslist_code.replace(" ", "") if crosslist_code else ""
+        primary_crosslist = ""
+        try:
+            subject = Subject.objects.get(abbreviation=subject_area)
+        except Exception:
+            try:
+                school_code = open_data.get_school_by_subject(subject_area)
+                school = School.objects.get(open_data_abbreviation=school_code)
+                subject = Subject.objects.create(
+                    abbreviation=subject_area, name=subject_area, schools=school
+                )
+            except Exception as error:
+                subject = ""
+                logger.error(
+                    f"{course_code}: Subject {subject_area} not found ({error})"
+                )
+        if crosslist:
+            if crosslist == "S":
+                primary_crosslist = f"{crosslist_code}{term}"
+            p_subj = crosslist_code[:-6]
+            try:
+                primary_subject = Subject.objects.get(abbreviation=p_subj)
+            except Exception:
+                try:
+                    school_code = open_data.get_school_by_subject(p_subj)
+                    school = School.objects.get(open_data_abbreviation=school_code)
+                    primary_subject = Subject.objects.create(
+                        abbreviation=p_subj, name=p_subj, schools=school
+                    )
+                except Exception as error:
+                    primary_subject = ""
+                    logger.error(f"{course_code}: Primary subject not found ({error})")
+        else:
+            primary_subject = subject
+        if primary_subject:
+            school = primary_subject.schools
+        else:
+            school = ""
+        try:
+            activity = Activity.objects.get(abbr=activity)
+        except Exception:
+            try:
+                activity = Activity.objects.create(abbr=activity, name=activity)
+            except Exception:
+                activity = ""
+                logger.error(f"{course_code}: Activity not found")
+        course_number_and_section = course_code[:-5][-6:]
+        course_number = course_number_and_section[:3]
+        section_number = course_number_and_section[-3:]
+        year = term[:4]
+        try:
+            title = format_title(title) if title else title
+            created = Course.objects.update_or_create(
+                course_code=course_code,
+                defaults={
+                    "owner": OWNER,
+                    "course_term": term[-1],
+                    "course_activity": activity,
+                    "course_subject": subject,
+                    "course_primary_subject": primary_subject,
+                    "primary_crosslist": primary_crosslist,
+                    "course_schools": school,
+                    "course_number": course_number,
+                    "course_section": section_number,
+                    "course_name": title,
+                    "year": year,
+                },
+            )[1]
+            logger.info(
+                f"- Added course {course_code}"
+                if created
+                else f"- Updated course {course_code}"
+            )
+        except Exception as error:
+            logger.error(
+                f"- ERROR: Failed to add or update course {course_code} ({error})"
+            )
+    logger.info("FINISHED")
+
+
+def get_subject_object(subject, course_code, crosslist=False):
+    try:
+        return Subject.objects.get(abbreviation=subject)
+    except Exception:
+        try:
+            school_code = OpenData().get_school_by_subject(subject)
+            school = School.objects.get(open_data_abbreviation=school_code)
+            return Subject.objects.create(
+                abbreviation=subject, name=subject, schools=school
+            )
+        except Exception as error:
+            logger.error(
+                f"{course_code}:"
+                f" {'Primary subject' if crosslist else 'Subject'} {subject} not found"
+                f" ({error})"
+            )
+            return ""
+
+
+def get_schedule_type_object(schedule_type, course_code):
+    try:
+        return Activity.objects.get(abbr=schedule_type)
+    except Exception:
+        try:
+            return Activity.objects.create(abbr=schedule_type, name=schedule_type)
+        except Exception:
+            logger.error(f"{course_code}: Activity {schedule_type} not found")
+            return ""
+
+
+def get_instructors(section_id, term):
+    cursor = get_cursor()
+    cursor.execute(
+        """
+        SELECT
+            instructor_first_name,
+            instructor_last_name,
+            instructor_penn_id,
+            instructor_email
+        FROM dwngss_ps.crse_sect_instructor
+        WHERE section_id = :section_id
+        AND term = :term
+        """,
+        section_id=section_id,
+        term=term,
+    )
+    instructors = list()
+    for first_name, last_name, penn_id, email in cursor:
+        instructor = {
+            "first_name": first_name,
+            "last_name": last_name,
+            "penn_id": penn_id,
+            "email": email,
+        }
+        instructors.append(instructor)
+    return instructors
+
+
 def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
     logger.info(") Pulling courses from the Data Warehouse...")
     term = term.upper()
@@ -335,37 +548,7 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
     cursor = get_cursor()
     old_term = next((character for character in term if character.isalpha()), None)
     if old_term:
-        cursor.execute(
-            """
-            SELECT
-                section.section_id || section.term section,
-                section.term,
-                section.subject_area subject_id,
-                section.tuition_school school_id,
-                section.xlist,
-                section.xlist_primary,
-                section.activity,
-                trim(section.title) srs_title
-            FROM
-                dwadmin.course_section section
-            WHERE section.activity IN (
-                'LEC',
-                'REC',
-                'LAB',
-                'SEM',
-                'CLN',
-                'CRT',
-                'PRE',
-                'STU',
-                'ONL',
-                'HYB'
-            )
-            AND section.tuition_school NOT IN ('WH', 'LW')
-            AND section.status IN ('O')
-            AND section.term = :term
-            """,
-            term=term,
-        )
+        pull_srs_courses(cursor, term, open_data)
     else:
         cursor.execute(
             """
@@ -378,7 +561,8 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
                 school,
                 trim(title),
                 xlist_enrlmt,
-                xlist_family
+                xlist_family,
+                section_id
             FROM
                 dwngss_ps.crse_section
             WHERE schedule_type IN (
@@ -397,171 +581,42 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
             """,
             term=term,
         )
-    if old_term:
-        for (
-            course_code,
-            term,
-            subject_area,
-            school,
-            crosslist,
-            crosslist_code,
-        ) in cursor:
-            course_code = course_code.replace(" ", "")
-            subject_area = subject_area.replace(" ", "")
-            crosslist_code = crosslist_code.replace(" ", "") if crosslist_code else ""
-            primary_crosslist = ""
-            try:
-                subject = Subject.objects.get(abbreviation=subject_area)
-            except Exception:
-                try:
-                    school_code = open_data.get_school_by_subject(subject_area)
-                    school = School.objects.get(open_data_abbreviation=school_code)
-                    subject = Subject.objects.create(
-                        abbreviation=subject_area, name=subject_area, schools=school
-                    )
-                except Exception as error:
-                    subject = ""
-                    logger.error(
-                        f"{course_code}: Subject {subject_area} not found ({error})"
-                    )
-            if crosslist:
-                if crosslist == "S":
-                    primary_crosslist = f"{crosslist_code}{term}"
-                p_subj = crosslist_code[:-6]
-                try:
-                    primary_subject = Subject.objects.get(abbreviation=p_subj)
-                except Exception:
-                    try:
-                        school_code = open_data.get_school_by_subject(p_subj)
-                        school = School.objects.get(open_data_abbreviation=school_code)
-                        primary_subject = Subject.objects.create(
-                            abbreviation=p_subj, name=p_subj, schools=school
-                        )
-                    except Exception as error:
-                        primary_subject = ""
-                        logger.error(
-                            f"{course_code}: Primary subject not found ({error})"
-                        )
-            else:
-                primary_subject = subject
-            if primary_subject:
-                school = primary_subject.schools
-            else:
-                school = ""
-            try:
-                activity = Activity.objects.get(abbr=activity)
-            except Exception:
-                try:
-                    activity = Activity.objects.create(abbr=activity, name=activity)
-                except Exception:
-                    activity = ""
-                    logger.error(f"{course_code}: Activity not found")
-            course_number_and_section = course_code[:-5][-6:]
-            course_number = course_number_and_section[:3]
-            section_number = course_number_and_section[-3:]
-            year = term[:4]
-            try:
-                title = format_title(title) if title else title
-                created = Course.objects.update_or_create(
-                    course_code=course_code,
-                    defaults={
-                        "owner": User.objects.get(username="benrosen"),
-                        "course_term": term[-1] if old_term else term[-2:],
-                        "course_activity": activity,
-                        "course_subject": subject,
-                        "course_primary_subject": primary_subject,
-                        "primary_crosslist": primary_crosslist,
-                        "course_schools": school,
-                        "course_number": course_number,
-                        "course_section": section_number,
-                        "course_name": title,
-                        "year": year,
-                    },
-                )[1]
-                logger.info(
-                    f"- Added course {course_code}"
-                    if created
-                    else f"- Updated course {course_code}"
-                )
-            except Exception as error:
-                logger.error(
-                    f"- ERROR: Failed to add or update course {course_code} ({error})"
-                )
-        logger.info("FINISHED")
-    else:
         for (
             subject,
             course_number,
             section_number,
-            term,
+            year_and_term,
             schedule_type,
             school,
             title,
             crosslist,
             crosslist_code,
+            section_id,
         ) in cursor:
-            year, term = split_year_and_term(term)
-            course_code = f"{subject}{course_number}{section_number}{term}"
+            course_code = f"{subject}{course_number}{section_number}{year_and_term}"
+            subject = get_subject_object(subject, course_code)
+            year, term = split_year_and_term(year_and_term)
+            schedule_type = get_schedule_type_object(schedule_type, course_code)
+            title = format_title(title)
             crosslist_code = crosslist_code.replace(" ", "") if crosslist_code else ""
             primary_crosslist = ""
-            try:
-                subject = Subject.objects.get(abbreviation=subject)
-            except Exception:
-                try:
-                    school_code = open_data.get_school_by_subject(subject)
-                    school = School.objects.get(open_data_abbreviation=school_code)
-                    subject = Subject.objects.create(
-                        abbreviation=subject, name=subject, schools=school
-                    )
-                except Exception as error:
-                    subject = ""
-                    logger.error(
-                        f"{course_code}: Subject {subject} not found ({error})"
-                    )
+            primary_subject = subject
             if crosslist:
-                if crosslist == "S":
-                    primary_crosslist = f"{crosslist_code}{term}"
+                primary_crosslist = (
+                    f"{crosslist_code}{term}" if crosslist == "S" else ""
+                )
                 primary_subject = "".join(
                     character for character in crosslist_code if character.isalpha()
                 )
-                try:
-                    primary_subject = Subject.objects.get(abbreviation=primary_subject)
-                except Exception:
-                    try:
-                        school_code = open_data.get_school_by_subject(primary_subject)
-                        school = School.objects.get(open_data_abbreviation=school_code)
-                        primary_subject = Subject.objects.create(
-                            abbreviation=primary_subject,
-                            name=primary_subject,
-                            schools=school,
-                        )
-                    except Exception as error:
-                        primary_subject = ""
-                        logger.error(
-                            f"{course_code}: Primary subject not found ({error})"
-                        )
-            else:
-                primary_subject = subject
-            if primary_subject:
-                school = primary_subject.schools
-            else:
-                school = ""
+                primary_subject = get_subject_object(
+                    primary_subject, course_code, crosslist=True
+                )
+            school = primary_subject.schools if primary_subject else ""
             try:
-                schedule_type = Activity.objects.get(abbr=schedule_type)
-            except Exception:
-                try:
-                    schedule_type = Activity.objects.create(
-                        abbr=schedule_type, name=schedule_type
-                    )
-                except Exception:
-                    schedule_type = ""
-                    logger.error(f"{course_code}: Activity {schedule_type} not found")
-            try:
-                title = format_title(title) if title else title
-                created = Course.objects.update_or_create(
+                course, created = Course.objects.update_or_create(
                     course_code=course_code,
                     defaults={
-                        "owner": User.objects.get(username="benrosen"),
+                        "owner": OWNER,
                         "course_term": term,
                         "course_activity": schedule_type,
                         "course_subject": subject,
@@ -573,17 +628,65 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
                         "course_name": title,
                         "year": year,
                     },
-                )[1]
+                )
                 logger.info(
                     f"- Added course {course_code}"
                     if created
                     else f"- Updated course {course_code}"
                 )
             except Exception as error:
+                course = None
                 logger.error(
                     f"- ERROR: Failed to add or update course {course_code} ({error})"
                 )
+            if course:
+                try:
+                    instructors = get_instructors(section_id, year_and_term)
+                    instructors = [
+                        get_instructor_object(instructor) for instructor in instructors
+                    ]
+                    instructors = [
+                        instructor for instructor in instructors if instructor
+                    ]
+                    if instructors:
+                        course.instructors.clear()
+                        for instructor in instructors:
+                            course.instructors.add(instructor)
+                        course.save()
+                        logger.info(
+                            f"- Updated {course_code} with instructors:"
+                            f" {', '.join([instructor.username for instructor in instructors])}"
+                        )
+                except Exception as error:
+                    message = f"Failed to add new instructor(s) to course ({error})"
+                    logger.error(message)
         logger.info("FINISHED")
+
+
+def get_instructor_object(instructor):
+    penn_key = get_penn_key_from_penn_id(instructor["penn_id"])
+    try:
+        instructor, created = User.objects.update_or_create(
+            username=penn_key,
+            defaults={
+                "first_name": instructor["first_name"],
+                "last_name": instructor["last_name"],
+                "email": instructor["email"],
+            },
+        )
+        if created:
+            Profile.objects.update_or_create(
+                user=instructor,
+                defaults={"penn_id": instructor["penn_id"]},
+            )
+        return instructor
+    except Exception as error:
+        logger.error(
+            "- ERROR: Failed to create User object for instructor"
+            f" {instructor['first_name']} {instructor['last_name']} ({instructor['penn_id']})"
+            f" -- {error}"
+        )
+        return None
 
 
 def get_data_warehouse_instructors(term=CURRENT_YEAR_AND_TERM, logger=logger):
