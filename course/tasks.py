@@ -29,10 +29,13 @@ def sync_all(terms=TERMS, celery=True):
     if isinstance(terms, str):
         terms = [terms]
     for term in terms:
+        old_term = next((character for character in term if character.isalpha()), None)
         args = get_args(celery, term)
-        get_open_data_courses(*args)
+        if old_term:
+            get_open_data_courses(*args)
         get_data_warehouse_courses(*args)
-        get_data_warehouse_instructors(*args)
+        if old_term:
+            get_data_warehouse_instructors(*args)
         sync_crf_canvas_sites(*args)
         delete_data_warehouse_canceled_courses(*args)
     args = get_args(celery)
