@@ -546,10 +546,10 @@ def get_instructors(section_id, term):
 
 def get_instructor_object(instructor, cache):
     if instructor["penn_id"] in cache:
-        return cache["penn_id"], None
+        return cache[instructor["penn_id"]], None
     penn_key = get_penn_key_from_penn_id(instructor["penn_id"])
     try:
-        instructor = User.objects.update_or_create(
+        instructor_object = User.objects.update_or_create(
             username=penn_key,
             defaults={
                 "first_name": instructor["first_name"],
@@ -558,17 +558,17 @@ def get_instructor_object(instructor, cache):
             },
         )[0]
         profile = Profile.objects.update_or_create(
-            user=instructor,
+            user=instructor_object,
             defaults={"penn_id": instructor["penn_id"]},
         )[0]
-        return instructor, profile
+        return instructor_object, profile
     except Exception as error:
         logger.error(
             "- ERROR: Failed to create User object for instructor"
             f" {instructor['first_name']} {instructor['last_name']} ({instructor['penn_id']})"
             f" -- {error}"
         )
-        return None
+        return None, None
 
 
 def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
@@ -678,7 +678,9 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
                         for instructor in instructors
                     ]
                     instructors = [
-                        instructor for instructor in instructors if instructor
+                        (instructor, profile)
+                        for instructor, profile in instructors
+                        if instructor
                     ]
                     if instructors:
                         course.instructors.clear()
