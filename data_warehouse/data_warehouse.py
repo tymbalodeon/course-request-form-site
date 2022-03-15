@@ -58,37 +58,40 @@ def get_banner_course(srs_course_id, search_term):
 def format_title(title):
     if not title:
         return "[TBD]"
-    roman_numeral_regex = (
-        r"(?=[MDCLXVI].)M*(C[MD]|D?C{0,3})(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})\)?$"
-    )
-    numbers_regex = r"\d(?:S|Nd|Rd|Th|)"
-    words_to_capitalize = ["Bc", "Bce", "Ce", "Ad", "Ai", "Snf", "Asl"]
-    dividers = ["/", "-", ":"]
+    try:
+        roman_numeral_regex = (
+            r"(?=[MDCLXVI].)M*(C[MD]|D?C{0,3})(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})\)?$"
+        )
+        numbers_regex = r"\d(?:S|Nd|Rd|Th|)"
+        words_to_capitalize = ["Bc", "Bce", "Ce", "Ad", "Ai", "Snf", "Asl"]
+        dividers = ["/", "-", ":"]
 
-    def capitalize_roman_numerals(title):
-        title = title.upper()
-        roman_numerals = search(roman_numeral_regex, title)
-        if roman_numerals:
-            roman_numerals = roman_numerals.group()
-            title_base = sub(roman_numerals, "", title)
-            title = f"{title_base.title()}{roman_numerals}"
-        else:
-            title = title.title()
-        for word in words_to_capitalize:
-            if word in title.split():
-                title = title.replace(word, word.upper())
+        def capitalize_roman_numerals(title):
+            title = title.upper()
+            roman_numerals = search(roman_numeral_regex, title)
+            if roman_numerals:
+                roman_numerals = roman_numerals.group()
+                title_base = sub(roman_numerals, "", title)
+                title = f"{title_base.title()}{roman_numerals}"
+            else:
+                title = title.title()
+            for word in words_to_capitalize:
+                if word in title.split():
+                    title = title.replace(word, word.upper())
+            return title
+
+        for divider in dividers:
+            titles = title.split(divider)
+            title = divider.join([capitalize_roman_numerals(title) for title in titles])
+            if divider == ":" and findall(r":[^ ]", title):
+                title = sub(r":", ": ", title)
+        numbers = findall(numbers_regex, title)
+        if numbers:
+            for number in numbers:
+                title = sub(number, number.lower(), title)
         return title
-
-    for divider in dividers:
-        titles = title.split(divider)
-        title = divider.join([capitalize_roman_numerals(title) for title in titles])
-        if divider == ":" and findall(r":[^ ]", title):
-            title = sub(r":", ": ", title)
-    numbers = findall(numbers_regex, title)
-    if numbers:
-        for number in numbers:
-            title = sub(number, number.lower(), title)
-    return title
+    except Exception as error:
+        logger.error(f'- ERROR: Failed to format title "{title}" ({error})')
 
 
 def get_staff_account(penn_key=None, penn_id=None):
