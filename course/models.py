@@ -42,7 +42,7 @@ class Activity(Model):
         verbose_name_plural = "Activites"
 
     def __str__(self):
-        return self.abbr
+        return f"{self.name} ({self.abbr})"
 
 
 class School(Model):
