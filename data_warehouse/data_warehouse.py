@@ -329,13 +329,6 @@ def get_course(section, term=None):
     return results
 
 
-def test():
-    cursor = get_cursor()
-    cursor.execute("SELECT * from dwngss.v_sched_status")
-    for item in cursor:
-        print(item)
-
-
 def get_instructor(pennkey, term=CURRENT_YEAR_AND_TERM):
     cursor = get_cursor()
     cursor.execute(
