@@ -583,6 +583,8 @@ def get_instructor_object(instructor, cache):
         )[0]
         return instructor_object, profile
     except Exception as error:
+        if instructor["penn_id"]:
+            cache[instructor["penn_id"]] = None
         logger.error(
             "- ERROR: Failed to create User object for instructor"
             f" {instructor['first_name']} {instructor['last_name']} ({instructor['penn_id']})"
