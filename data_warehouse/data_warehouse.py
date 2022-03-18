@@ -329,6 +329,13 @@ def get_course(section, term=None):
     return results
 
 
+def test():
+    cursor = get_cursor()
+    cursor.execute("SELECT * from dwngss.v_sched_status")
+    for item in cursor:
+        print(item)
+
+
 def get_instructor(pennkey, term=CURRENT_YEAR_AND_TERM):
     cursor = get_cursor()
     cursor.execute(
@@ -544,6 +551,26 @@ def get_instructors(section_id, term):
     return instructors
 
 
+def get_school_codes_and_descriptions():
+    cursor = get_cursor()
+    cursor.execute(
+        """
+        SELECT
+            school_code,
+            legacy_school_code,
+            school_desc_long
+        FROM dwngss.v_school_v
+        """
+    )
+    schools = dict()
+    for school_code, legacy_school_code, school_desc_long in cursor:
+        schools[school_code] = dict()
+        schools[school_code]["school_code"] = school_code
+        schools[school_code]["legacy_school_code"] = legacy_school_code
+        schools[school_code]["school_desc_long"] = school_desc_long
+    return schools
+
+
 def get_instructor_object(instructor, cache):
     if instructor["penn_id"] in cache:
         return cache[instructor["penn_id"]], None
@@ -593,21 +620,27 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
                 trim(title),
                 xlist_enrlmt,
                 xlist_family,
-                section_id
+                section_id,
+                section_status
             FROM
                 dwngss_ps.crse_section
-            WHERE schedule_type IN (
-                'LEC',
-                'REC',
-                'LAB',
-                'SEM',
-                'CLN',
-                'CRT',
-                'PRE',
-                'STU',
-                'ONL',
-                'HYB'
+            WHERE schedule_type NOT IN (
+                'MED',
+                'DIS',
+                'FLD',
+                'F01',
+                'F02',
+                'F03',
+                'F04',
+                'IND',
+                'I01',
+                'I02',
+                'I03',
+                'I04',
+                'MST',
+                'SRT'
             )
+            AND school NOT IN ('W', 'L')
             AND term = :term
             """,
             term=term,
@@ -623,6 +656,7 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
             crosslist,
             crosslist_code,
             section_id,
+            section_status,
         ) in cursor:
             course_code = f"{subject}{course_number}{section_number}{year_and_term}"
             subject = get_subject_object(subject, course_code)
@@ -696,6 +730,10 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
                 except Exception as error:
                     message = f"Failed to add new instructor(s) to course ({error})"
                     logger.error(message)
+            if section_status != "A":
+                delete_data_warehouse_canceled_courses(
+                    query=False, course=(course_code, subject, crosslist_code)
+                )
         logger.info("FINISHED")
 
 
@@ -802,71 +840,78 @@ def delete_data_warehouse_canceled_courses(
     term=CURRENT_YEAR_AND_TERM,
     log_path="course/static/log/canceled_courses.log",
     logger=logger,
+    query=True,
+    course=None,
 ):
-    cursor = get_cursor()
-    cursor.execute(
-        """
-        SELECT
-            cs.section_id || cs.term section,
-            cs.term,
-            cs.subject_area subject_id,
-            cs.xlist_primary
-        FROM dwadmin.course_section cs
-        WHERE
-            cs.activity IN (
-                'LEC',
-                'REC',
-                'LAB',
-                'SEM',
-                'CLN',
-                'CRT',
-                'PRE',
-                'STU',
-                'ONL',
-                'HYB'
+    def delete_canceled_course(course_code, subject, crosslist_code):
+        course_code = course_code.replace(" ", "")
+        subject = subject.replace(" ", "")
+        crosslist_code = crosslist_code.replace(" ", "")
+        try:
+            course = Course.objects.get(course_code=course_code)
+            if not course.requested:
+                logger.info(") Deleting {course_code}...")
+                course.delete()
+            else:
+                try:
+                    canvas_site = course.request.canvas_instance
+                except Exception:
+                    logger.info(f"- No main request for {course.course_code}.")
+                    if course.multisection_request:
+                        canvas_site = course.multisection_request.canvas_instance
+                    elif course.crosslisted_request:
+                        canvas_site = course.crosslisted_request.canvas_instance
+                    else:
+                        canvas_site = None
+                if canvas_site and canvas_site.workflow_state != "deleted":
+                    log.write(f"- Canvas site already exists for {course_code}.\n")
+                else:
+                    log.write(
+                        "- Canceled course requested but no Canvas site for"
+                        f" {course_code}.\n"
+                    )
+        except Exception:
+            logger.info(
+                f"- The canceled course {course_code} doesn't exist in the CRF yet."
             )
-        AND cs.status IN ('X')
-        AND cs.tuition_school NOT IN ('WH', 'LW')
-        AND cs.term = :term
-        """,
-        term=term,
-    )
+
     start = datetime.now().strftime("%Y-%m-%d")
     with open(log_path, "a") as log:
         log.write(f"-----{start}-----\n")
-        for (
-            course_code,
-            term,
-            subject_area,
-            crosslist_code,
-        ) in cursor:
-            course_code = course_code.replace(" ", "")
-            subject_area = subject_area.replace(" ", "")
-            crosslist_code = crosslist_code.replace(" ", "")
-            try:
-                course = Course.objects.get(course_code=course_code)
-                if course.requested:
-                    try:
-                        canvas_site = course.request.canvas_instance
-                    except Exception:
-                        logger.info(f"- No main request for {course.course_code}.")
-                        if course.multisection_request:
-                            canvas_site = course.multisection_request.canvas_instance
-                        elif course.crosslisted_request:
-                            canvas_site = course.crosslisted_request.canvas_instance
-                        else:
-                            canvas_site = None
-                    if canvas_site and canvas_site.workflow_state != "deleted":
-                        log.write(f"- Canvas site already exists for {course_code}.\n")
-                    else:
-                        log.write(
-                            "- Canceled course requested but no Canvas site for"
-                            f" {course_code}.\n"
-                        )
-                else:
-                    logger.info(") Deleting {course_code}...")
-                    course.delete()
-            except Exception:
-                logger.info(
-                    f"- The canceled course {course_code} doesn't exist in the CRF yet."
-                )
+        if query:
+            cursor = get_cursor()
+            cursor.execute(
+                """
+                SELECT
+                    section_id || term section,
+                    subject_area subject_id,
+                    xlist_primary
+                FROM dwadmin.course_section
+                WHERE activity IN (
+                        'LEC',
+                        'REC',
+                        'LAB',
+                        'SEM',
+                        'CLN',
+                        'CRT',
+                        'PRE',
+                        'STU',
+                        'ONL',
+                        'HYB'
+                    )
+                AND status IN ('X')
+                AND tuition_school NOT IN ('WH', 'LW')
+                AND term = :term
+                """,
+                term=term,
+            )
+            for (
+                course_code,
+                term,
+                subject,
+                crosslist_code,
+            ) in cursor:
+                delete_canceled_course(course_code, subject, crosslist_code)
+        elif course:
+            course_code, subject, crosslist_code = course
+            delete_canceled_course(course_code, subject, crosslist_code)
