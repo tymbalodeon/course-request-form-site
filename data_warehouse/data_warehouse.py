@@ -521,11 +521,14 @@ def get_instructors(section_id, term):
     cursor.execute(
         """
         SELECT
-            instructor_first_name,
-            instructor_last_name,
-            instructor_penn_id,
-            instructor_email
-        FROM dwngss_ps.crse_sect_instructor
+            instructor.instructor_first_name,
+            instructor.instructor_last_name,
+            instructor.instructor_penn_id,
+            employee.pennkey,
+            instructor.instructor_email
+        FROM dwngss_ps.crse_sect_instructor instructor
+        JOIN employee_general_v employee
+        ON instructor.instructor_penn_id = employee.penn_id
         WHERE section_id = :section_id
         AND term = :term
         """,
@@ -533,11 +536,12 @@ def get_instructors(section_id, term):
         term=term,
     )
     instructors = list()
-    for first_name, last_name, penn_id, email in cursor:
+    for first_name, last_name, penn_id, penn_key, email in cursor:
         instructor = {
             "first_name": first_name,
             "last_name": last_name,
             "penn_id": penn_id,
+            "penn_key": penn_key,
             "email": email,
         }
         instructors.append(instructor)
@@ -567,10 +571,9 @@ def get_school_codes_and_descriptions():
 def get_instructor_object(instructor, cache):
     if instructor["penn_id"] in cache:
         return cache[instructor["penn_id"]], None
-    penn_key = get_penn_key_from_penn_id(instructor["penn_id"])
     try:
         instructor_object = User.objects.update_or_create(
-            username=penn_key,
+            username=instructor["penn_key"],
             defaults={
                 "first_name": instructor["first_name"],
                 "last_name": instructor["last_name"],
