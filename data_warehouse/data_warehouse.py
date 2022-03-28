@@ -1,4 +1,5 @@
 from configparser import ConfigParser
+from dataclasses import dataclass
 from datetime import datetime
 from functools import lru_cache
 from logging import getLogger
@@ -539,13 +540,7 @@ def get_instructors(section_id, term):
     )
     instructors = list()
     for first_name, last_name, penn_id, penn_key, email in cursor:
-        instructor = {
-            "first_name": first_name,
-            "last_name": last_name,
-            "penn_id": penn_id,
-            "penn_key": penn_key,
-            "email": email,
-        }
+        instructor = Instructor(first_name, last_name, penn_id, penn_key, email)
         instructors.append(instructor)
     return instructors
 
@@ -570,26 +565,35 @@ def get_school_codes_and_descriptions():
     return schools
 
 
+@dataclass(frozen=True)
+class Instructor:
+    first_name: str
+    last_name: str
+    penn_id: str
+    penn_key: str
+    email: str
+
+
 @lru_cache(maxsize=128)
-def get_instructor_object(instructor):
+def get_instructor_object(instructor: Instructor):
     try:
         instructor_object = User.objects.update_or_create(
-            username=instructor["penn_key"],
+            username=instructor.penn_key,
             defaults={
-                "first_name": instructor["first_name"],
-                "last_name": instructor["last_name"],
-                "email": instructor["email"],
+                "first_name": instructor.first_name,
+                "last_name": instructor.last_name,
+                "email": instructor.email,
             },
         )[0]
         Profile.objects.update_or_create(
             user=instructor_object,
-            defaults={"penn_id": instructor["penn_id"]},
+            defaults={"penn_id": instructor.penn_id},
         )
         return instructor_object
     except Exception as error:
         logger.error(
             "- ERROR: Failed to create User object for instructor"
-            f" {instructor['first_name']} {instructor['last_name']} ({instructor['penn_id']})"
+            f" {instructor.first_name} {instructor.last_name} ({instructor.penn_id})"
             f" -- {error}"
         )
         return None
