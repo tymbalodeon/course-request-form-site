@@ -570,7 +570,7 @@ def get_school_codes_and_descriptions():
     return schools
 
 
-@lru_cache
+@lru_cache(maxsize=128)
 def get_instructor_object(instructor):
     try:
         instructor_object = User.objects.update_or_create(
