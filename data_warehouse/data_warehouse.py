@@ -1,12 +1,14 @@
 from configparser import ConfigParser
 from datetime import datetime
+from functools import lru_cache
 from logging import getLogger
 from re import findall, search, sub
 
 from cx_Oracle import connect
+from django.contrib.auth.models import User
 
 from config.config import USERNAME
-from course.models import Activity, Course, Profile, School, Subject, User
+from course.models import Activity, Course, Profile, School, Subject
 from course.terms import CURRENT_YEAR_AND_TERM, split_year_and_term
 from open_data.open_data import OpenData
 
@@ -568,9 +570,8 @@ def get_school_codes_and_descriptions():
     return schools
 
 
-def get_instructor_object(instructor, cache):
-    if instructor["penn_id"] in cache:
-        return cache[instructor["penn_id"]], None
+@lru_cache
+def get_instructor_object(instructor):
     try:
         instructor_object = User.objects.update_or_create(
             username=instructor["penn_key"],
@@ -580,20 +581,18 @@ def get_instructor_object(instructor, cache):
                 "email": instructor["email"],
             },
         )[0]
-        profile = Profile.objects.update_or_create(
+        Profile.objects.update_or_create(
             user=instructor_object,
             defaults={"penn_id": instructor["penn_id"]},
-        )[0]
-        return instructor_object, profile
+        )
+        return instructor_object
     except Exception as error:
-        if instructor["penn_id"]:
-            cache[instructor["penn_id"]] = None
         logger.error(
             "- ERROR: Failed to create User object for instructor"
             f" {instructor['first_name']} {instructor['last_name']} ({instructor['penn_id']})"
             f" -- {error}"
         )
-        return None, None
+        return None
 
 
 def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
@@ -602,7 +601,6 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
     open_data = OpenData()
     cursor = get_cursor()
     old_term = next((character for character in term if character.isalpha()), None)
-    INSTRUCTORS = dict()
     if old_term:
         pull_srs_courses(cursor, term, open_data)
     else:
@@ -706,20 +704,15 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
                 try:
                     instructors = get_instructors(section_id, year_and_term)
                     instructors = [
-                        get_instructor_object(instructor, INSTRUCTORS)
-                        for instructor in instructors
+                        get_instructor_object(instructor) for instructor in instructors
                     ]
                     instructors = [
-                        (instructor, profile)
-                        for instructor, profile in instructors
-                        if instructor
+                        instructor for instructor in instructors if instructor
                     ]
                     if instructors:
                         course.instructors.clear()
-                        for instructor, profile in instructors:
+                        for instructor in instructors:
                             course.instructors.add(instructor)
-                            if profile:
-                                INSTRUCTORS[profile.penn_id] = instructor
                             logger.info(
                                 f"- Updated {course_code} with instructor:"
                                 f" {instructor.username}"
