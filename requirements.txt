@@ -43,6 +43,7 @@ packaging==21.3
 platformdirs==2.5.1
 pre-commit==2.17.0
 prompt-toolkit==3.0.28
+psycopg2==2.9.3
 pyparsing==3.0.7
 python-crontab==2.6.0
 python-dateutil==2.8.2

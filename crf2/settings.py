@@ -7,6 +7,13 @@ from cx_Oracle import init_oracle_client
 
 from config.config import DEBUG_VALUE, LIB_DIR, SECRET_KEY_VALUE
 
+def get_secret(key, default):
+    value = os.getenv(key, default)
+    if os.path.isfile(value):
+        with open(value) as f:
+            return f.read()
+    return value
+
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 SECRET_KEY = SECRET_KEY_VALUE
 DEBUG = DEBUG_VALUE
@@ -69,9 +76,12 @@ TEMPLATES = [
 WSGI_APPLICATION = "crf2.wsgi.application"
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": str(BASE_DIR / "db.sqlite3"),
-        "OPTIONS": {"timeout": 20},
+        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "NAME": "crf",
+        "USER": "crf",
+        "PASSWORD": get_secret("POSTGRES_PASSWORD_FILE", ""),
+        "HOST": "postgres",
+        "PORT": "5432",
     }
 }
 CORS_ORIGIN_ALLOW_ALL = True
