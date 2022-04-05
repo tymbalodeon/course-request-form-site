@@ -29,6 +29,7 @@ django-timezone-field==4.2.3
 djangorestframework==3.13.1
 djangorestframework-link-header-pagination==0.1.1
 filelock==3.6.0
+gunicorn==20.1.0
 identify==2.4.11
 idna==3.3
 itypes==1.2.0
