@@ -769,7 +769,7 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
                     logger.error(message)
             if section_status != "A":
                 delete_data_warehouse_canceled_courses(
-                    query=False, course=(course_code, subject, crosslist_code)
+                    term, query=False, course=(course_code, crosslist_code)
                 )
         logger.info("FINISHED")
 
