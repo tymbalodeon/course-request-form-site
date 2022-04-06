@@ -873,6 +873,38 @@ def get_data_warehouse_instructors(term=CURRENT_YEAR_AND_TERM, logger=logger):
     logger.info("FINISHED")
 
 
+def delete_canceled_course(course_code, crosslist_code, log, logger):
+    course_code = course_code.replace(" ", "")
+    crosslist_code = crosslist_code.replace(" ", "")
+    try:
+        course = Course.objects.get(course_code=course_code)
+        if not course.requested:
+            logger.info(") Deleting {course_code}...")
+            course.delete()
+        else:
+            try:
+                canvas_site = course.request.canvas_instance
+            except Exception:
+                logger.info(f"- No main request for {course.course_code}.")
+                if course.multisection_request:
+                    canvas_site = course.multisection_request.canvas_instance
+                elif course.crosslisted_request:
+                    canvas_site = course.crosslisted_request.canvas_instance
+                else:
+                    canvas_site = None
+            if canvas_site and canvas_site.workflow_state != "deleted":
+                log.write(f"- Canvas site already exists for {course_code}.\n")
+            else:
+                log.write(
+                    "- Canceled course requested but no Canvas site for"
+                    f" {course_code}.\n"
+                )
+    except Exception:
+        logger.info(
+            f"- The canceled course {course_code} doesn't exist in the CRF yet."
+        )
+
+
 def delete_data_warehouse_canceled_courses(
     term=CURRENT_YEAR_AND_TERM,
     log_path="course/static/log/canceled_courses.log",
@@ -880,38 +912,6 @@ def delete_data_warehouse_canceled_courses(
     query=True,
     course=None,
 ):
-    def delete_canceled_course(course_code, subject, crosslist_code):
-        course_code = course_code.replace(" ", "")
-        subject = subject.replace(" ", "")
-        crosslist_code = crosslist_code.replace(" ", "")
-        try:
-            course = Course.objects.get(course_code=course_code)
-            if not course.requested:
-                logger.info(") Deleting {course_code}...")
-                course.delete()
-            else:
-                try:
-                    canvas_site = course.request.canvas_instance
-                except Exception:
-                    logger.info(f"- No main request for {course.course_code}.")
-                    if course.multisection_request:
-                        canvas_site = course.multisection_request.canvas_instance
-                    elif course.crosslisted_request:
-                        canvas_site = course.crosslisted_request.canvas_instance
-                    else:
-                        canvas_site = None
-                if canvas_site and canvas_site.workflow_state != "deleted":
-                    log.write(f"- Canvas site already exists for {course_code}.\n")
-                else:
-                    log.write(
-                        "- Canceled course requested but no Canvas site for"
-                        f" {course_code}.\n"
-                    )
-        except Exception:
-            logger.info(
-                f"- The canceled course {course_code} doesn't exist in the CRF yet."
-            )
-
     start = datetime.now().strftime("%Y-%m-%d")
     with open(log_path, "a") as log:
         log.write(f"-----{start}-----\n")
@@ -945,10 +945,9 @@ def delete_data_warehouse_canceled_courses(
             for (
                 course_code,
                 term,
-                subject,
                 crosslist_code,
             ) in cursor:
-                delete_canceled_course(course_code, subject, crosslist_code)
+                delete_canceled_course(course_code, crosslist_code, log, logger)
         elif course:
-            course_code, subject, crosslist_code = course
-            delete_canceled_course(course_code, subject, crosslist_code)
+            course_code, crosslist_code = course
+            delete_canceled_course(course_code, crosslist_code, log, logger)
