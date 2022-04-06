@@ -8,6 +8,8 @@ from data_warehouse.data_warehouse import (
     delete_data_warehouse_canceled_courses,
     get_data_warehouse_courses,
     get_data_warehouse_instructors,
+    get_data_warehouse_schools,
+    get_data_warehouse_subjects,
 )
 
 from .models import Request
@@ -17,28 +19,30 @@ LOGGER = get_task_logger(__name__)
 TERMS = [CURRENT_YEAR_AND_TERM, NEXT_YEAR_AND_TERM]
 
 
-def get_args(celery, term=None):
+def get_args(use_logger: bool, term=None) -> list:
     args = [term] if term else []
-    if celery:
+    if use_logger:
         args.append(LOGGER)
     return args
 
 
 @task
-def sync_all(terms=TERMS, celery=True):
+def sync_all(terms=TERMS, use_logger=True):
     if isinstance(terms, str):
         terms = [terms]
     for term in terms:
         old_term = next((character for character in term if character.isalpha()), None)
-        args = get_args(celery, term)
+        args = get_args(use_logger, term)
         if old_term:
             get_open_data_courses(*args)
+        get_data_warehouse_schools()
+        get_data_warehouse_subjects()
         get_data_warehouse_courses(*args)
         if old_term:
             get_data_warehouse_instructors(*args)
         sync_crf_canvas_sites(*args)
         delete_data_warehouse_canceled_courses(*args)
-    args = get_args(celery)
+    args = get_args(use_logger)
     update_all_users_courses(*args)
     delete_canceled_requests()
 

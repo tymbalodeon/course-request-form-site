@@ -14,13 +14,7 @@ from course.terms import CURRENT_YEAR_AND_TERM, split_year_and_term
 from open_data.open_data import OpenData
 
 logger = getLogger(__name__)
-
-
-def get_owner():
-    return User.objects.get(username=USERNAME)
-
-
-OWNER = get_owner()
+OWNER = User.objects.get(username=USERNAME)
 
 
 def get_cursor():
@@ -29,6 +23,54 @@ def get_cursor():
     values = dict(config.items("data_warehouse"))
     connection = connect(values["user"], values["password"], values["service"])
     return connection.cursor()
+
+
+def get_data_warehouse_schools():
+    school_codes = {school.open_data_abbreviation for school in School.objects.all()}
+    cursor = get_cursor()
+    cursor.execute("SELECT legacy_school_code, school_desc_long FROM dwngss.v_school")
+    for abbreviation, name in cursor:
+        if not abbreviation in school_codes:
+            logger.info(f') Creating school "{name}"...')
+            School.objects.create(
+                abbreviation=abbreviation,
+                open_data_abbreviation=abbreviation,
+                name=name,
+            )
+
+
+def get_data_warehouse_school(school_code: str) -> str:
+    cursor = get_cursor()
+    cursor.execute(
+        "SELECT legacy_school_code  FROM dwngss.v_school WHERE school_code ="
+        " :school_code",
+        school_code=school_code,
+    )
+    legacy_school_code = ""
+    for value in cursor:
+        legacy_school_code = next((code for code in value), "")
+    return legacy_school_code
+
+
+def get_data_warehouse_subjects():
+    subject_codes = {subject.abbreviation for subject in Subject.objects.all()}
+    cursor = get_cursor()
+    cursor.execute(
+        "SELECT subject_code, subject_desc_long, school_code FROM dwngss.v_subject"
+    )
+    for abbreviation, name, school_code in cursor:
+        if not abbreviation in subject_codes:
+            if name is None:
+                name = abbreviation
+            logger.info(f') Creating subject "{name}"...')
+            if school_code is not None:
+                legacy_school_code = get_data_warehouse_school(school_code)
+                school = School.objects.get(open_data_abbreviation=legacy_school_code)
+                Subject.objects.create(
+                    abbreviation=abbreviation, name=name, schools=school
+                )
+            else:
+                Subject.objects.create(abbreviation=abbreviation, name=name)
 
 
 def get_banner_course(srs_course_id, search_term):
