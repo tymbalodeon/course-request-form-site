@@ -3,6 +3,12 @@
 [AX] = "Admin experience" (Changes relevant mainly to admin users)  
 [DX] = "Developer experience" (Changes relevant mainly to developers)
 
+## 2022-04-06
+
+### Changed
+
+- Schools and Subjects are now pulled from the DW in the daily sync
+
 ## 2022-02-01
 
 ### Changed
