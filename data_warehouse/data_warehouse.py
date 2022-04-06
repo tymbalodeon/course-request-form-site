@@ -624,7 +624,7 @@ def get_instructor_object(instructor: Instructor):
             defaults={
                 "first_name": instructor.first_name,
                 "last_name": instructor.last_name,
-                "email": instructor.email,
+                "email": instructor.email or "",
             },
         )[0]
         Profile.objects.update_or_create(
