@@ -879,7 +879,7 @@ def delete_canceled_course(course_code, crosslist_code, log, logger):
     try:
         course = Course.objects.get(course_code=course_code)
         if not course.requested:
-            logger.info(") Deleting {course_code}...")
+            logger.info(f") Deleting {course_code}...")
             course.delete()
         else:
             try:
