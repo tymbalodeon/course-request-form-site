@@ -760,7 +760,7 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
                         for instructor in instructors:
                             course.instructors.add(instructor)
                             logger.info(
-                                f"- Updated {course_code} with instructor:"
+                                f"- Updated course {course_code} with instructor:"
                                 f" {instructor.username}"
                             )
                         course.save()
@@ -864,7 +864,7 @@ def get_data_warehouse_instructors(term=CURRENT_YEAR_AND_TERM, logger=logger):
                 course.instructors.add(instructor)
             course.save()
             logger.info(
-                f"- Updated {course_code} with instructors:"
+                f"- Updated course {course_code} with instructors:"
                 f" {', '.join([instructor.username for instructor in instructors])}"
             )
         except Exception as error:
