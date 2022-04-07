@@ -636,10 +636,10 @@ def get_instructor_object(instructor: Instructor):
                 "email": instructor.email or "",
             },
         )[0]
-        Profile.objects.update_or_create(
-            user=instructor_object,
-            defaults={"penn_id": instructor.penn_id},
-        )
+        try:
+            Profile.objects.get(user=instructor_object, penn_id=instructor.penn_id)
+        except Exception:
+            Profile.objects.create(user=instructor_object, penn_id=instructor.penn_id)
         return instructor_object
     except Exception as error:
         logger.error(
