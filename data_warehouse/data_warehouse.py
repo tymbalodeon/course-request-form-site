@@ -14,13 +14,7 @@ from course.terms import CURRENT_YEAR_AND_TERM, split_year_and_term
 from open_data.open_data import OpenData
 
 logger = getLogger(__name__)
-
-
-def get_owner():
-    return User.objects.get(username=USERNAME)
-
-
-OWNER = get_owner()
+OWNER = User.objects.get(username=USERNAME)
 
 
 def get_cursor():
@@ -29,6 +23,54 @@ def get_cursor():
     values = dict(config.items("data_warehouse"))
     connection = connect(values["user"], values["password"], values["service"])
     return connection.cursor()
+
+
+def get_data_warehouse_schools():
+    school_codes = {school.open_data_abbreviation for school in School.objects.all()}
+    cursor = get_cursor()
+    cursor.execute("SELECT legacy_school_code, school_desc_long FROM dwngss.v_school")
+    for abbreviation, name in cursor:
+        if not abbreviation in school_codes:
+            logger.info(f') Creating school "{name}"...')
+            School.objects.create(
+                abbreviation=abbreviation,
+                open_data_abbreviation=abbreviation,
+                name=name,
+            )
+
+
+def get_data_warehouse_school(school_code: str) -> str:
+    cursor = get_cursor()
+    cursor.execute(
+        "SELECT legacy_school_code  FROM dwngss.v_school WHERE school_code ="
+        " :school_code",
+        school_code=school_code,
+    )
+    legacy_school_code = ""
+    for value in cursor:
+        legacy_school_code = next((code for code in value), "")
+    return legacy_school_code
+
+
+def get_data_warehouse_subjects():
+    subject_codes = {subject.abbreviation for subject in Subject.objects.all()}
+    cursor = get_cursor()
+    cursor.execute(
+        "SELECT subject_code, subject_desc_long, school_code FROM dwngss.v_subject"
+    )
+    for abbreviation, name, school_code in cursor:
+        if not abbreviation in subject_codes:
+            if name is None:
+                name = abbreviation
+            logger.info(f') Creating subject "{name}"...')
+            if school_code is not None:
+                legacy_school_code = get_data_warehouse_school(school_code)
+                school = School.objects.get(open_data_abbreviation=legacy_school_code)
+                Subject.objects.create(
+                    abbreviation=abbreviation, name=name, schools=school
+                )
+            else:
+                Subject.objects.create(abbreviation=abbreviation, name=name)
 
 
 def get_banner_course(srs_course_id, search_term):
@@ -58,43 +100,52 @@ def get_banner_course(srs_course_id, search_term):
     return results
 
 
-def format_title(title):
+def capitalize_roman_numerals(title: str) -> str:
+    title = title.upper()
+    roman_numeral_regex = (
+        r"(?=[MDCLXVI].)M*(C[MD]|D?C{0,3})(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})\)?[^)]$"
+    )
+    roman_numerals = search(roman_numeral_regex, title)
+    if roman_numerals:
+        roman_numerals = roman_numerals.group()
+        title_base = sub(roman_numerals, "", title)
+        title = f"{title_base.title()}{roman_numerals}"
+    else:
+        title = title.title()
+    words_to_capitalize = ["Bc", "Bce", "Ce", "Ad", "Ai", "Snf", "Asl"]
+    for word in words_to_capitalize:
+        if word in title.split():
+            title = title.replace(word, word.upper())
+    return title
+
+
+def format_title(title: str) -> str:
     if not title:
         return "[TBD]"
     try:
-        roman_numeral_regex = (
-            r"(?=[MDCLXVI].)M*(C[MD]|D?C{0,3})(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})\)?$"
-        )
-        numbers_regex = r"\d(?:S|Nd|Rd|Th|)"
-        words_to_capitalize = ["Bc", "Bce", "Ce", "Ad", "Ai", "Snf", "Asl"]
         dividers = ["/", "-", ":"]
-
-        def capitalize_roman_numerals(title):
-            title = title.upper()
-            roman_numerals = search(roman_numeral_regex, title)
-            if roman_numerals:
-                roman_numerals = roman_numerals.group()
-                title_base = sub(roman_numerals, "", title)
-                title = f"{title_base.title()}{roman_numerals}"
-            else:
-                title = title.title()
-            for word in words_to_capitalize:
-                if word in title.split():
-                    title = title.replace(word, word.upper())
-            return title
-
+        parenthesis_regex = r"\(([^\)]+)\)"
+        parenthetical = search(parenthesis_regex, title)
+        placeholder = "[...]"
+        if parenthetical:
+            parenthetical = parenthetical.group()
+            title = title.replace(parenthetical, placeholder)
         for divider in dividers:
             titles = title.split(divider)
             title = divider.join([capitalize_roman_numerals(title) for title in titles])
             if divider == ":" and findall(r":[^ ]", title):
                 title = sub(r":", ": ", title)
+        numbers_regex = r"\d(?:S|Nd|Rd|Th|)"
         numbers = findall(numbers_regex, title)
         if numbers:
             for number in numbers:
                 title = sub(number, number.lower(), title)
+        if parenthetical:
+            title = title.replace(placeholder, parenthetical)
         return title
     except Exception as error:
         logger.error(f'- ERROR: Failed to format title "{title}" ({error})')
+        return title
 
 
 def get_staff_account(penn_key=None, penn_id=None):
@@ -582,13 +633,13 @@ def get_instructor_object(instructor: Instructor):
             defaults={
                 "first_name": instructor.first_name,
                 "last_name": instructor.last_name,
-                "email": instructor.email,
+                "email": instructor.email or "",
             },
         )[0]
-        Profile.objects.update_or_create(
-            user=instructor_object,
-            defaults={"penn_id": instructor.penn_id},
-        )
+        try:
+            Profile.objects.get(user=instructor_object, penn_id=instructor.penn_id)
+        except Exception:
+            Profile.objects.create(user=instructor_object, penn_id=instructor.penn_id)
         return instructor_object
     except Exception as error:
         logger.error(
@@ -718,7 +769,7 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
                         for instructor in instructors:
                             course.instructors.add(instructor)
                             logger.info(
-                                f"- Updated {course_code} with instructor:"
+                                f"- Updated course {course_code} with instructor:"
                                 f" {instructor.username}"
                             )
                         course.save()
@@ -727,7 +778,7 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
                     logger.error(message)
             if section_status != "A":
                 delete_data_warehouse_canceled_courses(
-                    query=False, course=(course_code, subject, crosslist_code)
+                    term, query=False, course=(course_code, crosslist_code)
                 )
         logger.info("FINISHED")
 
@@ -822,13 +873,45 @@ def get_data_warehouse_instructors(term=CURRENT_YEAR_AND_TERM, logger=logger):
                 course.instructors.add(instructor)
             course.save()
             logger.info(
-                f"- Updated {course_code} with instructors:"
+                f"- Updated course {course_code} with instructors:"
                 f" {', '.join([instructor.username for instructor in instructors])}"
             )
         except Exception as error:
             message = f"Failed to add new instructor(s) to course ({error})"
             logger.error(message)
     logger.info("FINISHED")
+
+
+def delete_canceled_course(course_code, crosslist_code, log, logger):
+    course_code = course_code.replace(" ", "")
+    crosslist_code = crosslist_code.replace(" ", "")
+    try:
+        course = Course.objects.get(course_code=course_code)
+        if not course.requested:
+            logger.info(f") Deleting {course_code}...")
+            course.delete()
+        else:
+            try:
+                canvas_site = course.request.canvas_instance
+            except Exception:
+                logger.info(f"- No main request for {course.course_code}.")
+                if course.multisection_request:
+                    canvas_site = course.multisection_request.canvas_instance
+                elif course.crosslisted_request:
+                    canvas_site = course.crosslisted_request.canvas_instance
+                else:
+                    canvas_site = None
+            if canvas_site and canvas_site.workflow_state != "deleted":
+                log.write(f"- Canvas site already exists for {course_code}.\n")
+            else:
+                log.write(
+                    "- Canceled course requested but no Canvas site for"
+                    f" {course_code}.\n"
+                )
+    except Exception:
+        logger.info(
+            f"- The canceled course {course_code} doesn't exist in the CRF yet."
+        )
 
 
 def delete_data_warehouse_canceled_courses(
@@ -838,38 +921,6 @@ def delete_data_warehouse_canceled_courses(
     query=True,
     course=None,
 ):
-    def delete_canceled_course(course_code, subject, crosslist_code):
-        course_code = course_code.replace(" ", "")
-        subject = subject.replace(" ", "")
-        crosslist_code = crosslist_code.replace(" ", "")
-        try:
-            course = Course.objects.get(course_code=course_code)
-            if not course.requested:
-                logger.info(") Deleting {course_code}...")
-                course.delete()
-            else:
-                try:
-                    canvas_site = course.request.canvas_instance
-                except Exception:
-                    logger.info(f"- No main request for {course.course_code}.")
-                    if course.multisection_request:
-                        canvas_site = course.multisection_request.canvas_instance
-                    elif course.crosslisted_request:
-                        canvas_site = course.crosslisted_request.canvas_instance
-                    else:
-                        canvas_site = None
-                if canvas_site and canvas_site.workflow_state != "deleted":
-                    log.write(f"- Canvas site already exists for {course_code}.\n")
-                else:
-                    log.write(
-                        "- Canceled course requested but no Canvas site for"
-                        f" {course_code}.\n"
-                    )
-        except Exception:
-            logger.info(
-                f"- The canceled course {course_code} doesn't exist in the CRF yet."
-            )
-
     start = datetime.now().strftime("%Y-%m-%d")
     with open(log_path, "a") as log:
         log.write(f"-----{start}-----\n")
@@ -903,10 +954,9 @@ def delete_data_warehouse_canceled_courses(
             for (
                 course_code,
                 term,
-                subject,
                 crosslist_code,
             ) in cursor:
-                delete_canceled_course(course_code, subject, crosslist_code)
+                delete_canceled_course(course_code, crosslist_code, log, logger)
         elif course:
-            course_code, subject, crosslist_code = course
-            delete_canceled_course(course_code, subject, crosslist_code)
+            course_code, crosslist_code = course
+            delete_canceled_course(course_code, crosslist_code, log, logger)
