@@ -374,12 +374,13 @@ def create_canvas_sites(requested_courses=None, sections=None, test=False):
     section_already_exists = False
     for request in requested_courses:
         course_requested = request.course_requested
+        sis_prefix = ""
         if USE_BANNER and not (
             course_requested.course_term.isnumeric()
             or len(course_requested.course_number) == 4
         ):
-            request.status = "LOCKED"
-            continue
+            sis_prefix = "SRS"
+            logger.warning(f"Old style course code: {course_requested}")
         request.status = "IN_PROCESS"
         request.save()
         serialized = RequestSerializer(request)
@@ -401,7 +402,9 @@ def create_canvas_sites(requested_courses=None, sections=None, test=False):
             if request.title_override
             else f"{section_code} {course_requested.course_name}"
         )
-        sis_course_id = f"{SIS_PREFIX}_{course_requested.sis_format_primary()}"
+        sis_course_id = (
+            f"{sis_prefix or SIS_PREFIX}_{course_requested.sis_format_primary()}"
+        )
         term_id = get_term_id(
             MAIN_ACCOUNT_ID,
             f"{course_requested.year}{course_requested.course_term}",
