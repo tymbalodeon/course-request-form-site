@@ -44,8 +44,8 @@ def sync_all(terms=TERMS, use_logger=True):
         get_data_warehouse_courses(*args)
         if old_term:
             get_data_warehouse_instructors(*args)
+            delete_data_warehouse_canceled_courses(*args)
         sync_crf_canvas_sites(*args)
-        delete_data_warehouse_canceled_courses(*args)
     args = get_args(use_logger)
     update_all_users_courses(*args)
     delete_canceled_requests()
