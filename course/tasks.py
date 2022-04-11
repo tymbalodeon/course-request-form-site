@@ -3,7 +3,11 @@ from celery.utils.log import get_task_logger
 
 from canvas.api import create_canvas_sites
 from course.management.commands.add_courses import get_open_data_courses
-from course.terms import CURRENT_YEAR_AND_TERM, NEXT_YEAR_AND_TERM
+from course.terms import (
+    CURRENT_YEAR_AND_TERM,
+    NEXT_YEAR_AND_TERM,
+    TWO_YEAR_AND_TERMS_AHEAD,
+)
 from data_warehouse.data_warehouse import (
     delete_data_warehouse_canceled_courses,
     get_data_warehouse_courses,
@@ -16,7 +20,7 @@ from .models import Request
 from .utils import sync_crf_canvas_sites, update_all_users_courses
 
 LOGGER = get_task_logger(__name__)
-TERMS = [CURRENT_YEAR_AND_TERM, NEXT_YEAR_AND_TERM]
+TERMS = [CURRENT_YEAR_AND_TERM, NEXT_YEAR_AND_TERM, TWO_YEAR_AND_TERMS_AHEAD]
 
 
 def get_args(use_logger: bool, term=None) -> list:
