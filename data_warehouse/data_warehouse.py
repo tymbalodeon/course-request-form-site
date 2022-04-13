@@ -103,7 +103,7 @@ def get_banner_course(srs_course_id, search_term):
 def capitalize_roman_numerals(title: str) -> str:
     title = title.upper()
     roman_numeral_regex = (
-        r"(?=[MDCLXVI].)M*(C[MD]|D?C{0,3})(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})\)?[^)]$"
+        r"\b(?=[MDCLXVI].)M*(C[MD]|D?C{0,3})(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})\)?[^)]$"
     )
     roman_numerals = search(roman_numeral_regex, title)
     if roman_numerals:
