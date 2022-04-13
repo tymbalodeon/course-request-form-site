@@ -43,7 +43,7 @@ def course_code_to_string(course_code):
         course = course_code[:-8][-3:] if includes_year else course_code[:-3][-3:]
     else:
         year = course_code[-6:] if includes_year else ""
-        section = course_code[:-5][-3:] if includes_year else course_code[-3:]
+        section = course_code[:-6][-3:] if includes_year else course_code[-3:]
         course = course_code[:-9][-4:] if includes_year else course_code[:-3][-3:]
     if course_code[2].isnumeric():
         subject = course_code[:2]

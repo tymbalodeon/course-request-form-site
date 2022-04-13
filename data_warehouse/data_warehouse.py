@@ -10,7 +10,7 @@ from django.contrib.auth.models import User
 
 from config.config import USERNAME
 from course.models import Activity, Course, Profile, School, Subject
-from course.terms import CURRENT_YEAR_AND_TERM, split_year_and_term
+from course.terms import CURRENT_YEAR_AND_TERM, NEXT_YEAR_AND_TERM, split_year_and_term
 from open_data.open_data import OpenData
 
 logger = getLogger(__name__)
@@ -273,6 +273,37 @@ def get_user_by_pennkey(pennkey):
             user = None
             logger.error(f'FAILED to create Profile for "{pennkey}".')
     return user
+
+
+def get_banner_sections(subject, course_number, term=NEXT_YEAR_AND_TERM):
+    cursor = get_cursor()
+    cursor.execute(
+        """
+        SELECT
+            trim(subject),
+            course_num,
+            section_num,
+            term,
+            schedule_type,
+            school,
+            trim(title),
+            xlist_enrlmt,
+            xlist_family,
+            section_id,
+            section_status
+        FROM
+            dwngss_ps.crse_section
+        WHERE
+            subject = :subject
+        AND course_num = :course_number
+        AND term = :term
+        """,
+        subject=subject,
+        course_number=course_number,
+        term=term,
+    )
+    for course in cursor:
+        print(course)
 
 
 def get_course(section, term=None):
@@ -951,11 +982,7 @@ def delete_data_warehouse_canceled_courses(
                 """,
                 term=term,
             )
-            for (
-                course_code,
-                term,
-                crosslist_code,
-            ) in cursor:
+            for (course_code, term, crosslist_code) in cursor:
                 delete_canceled_course(course_code, crosslist_code, log, logger)
         elif course:
             course_code, crosslist_code = course
