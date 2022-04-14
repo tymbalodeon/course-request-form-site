@@ -7,6 +7,7 @@ from cx_Oracle import init_oracle_client
 
 from config.config import DEBUG_VALUE, LIB_DIR, SECRET_KEY_VALUE
 
+
 def get_secret(key, default):
     value = os.getenv(key, default)
     if os.path.isfile(value):

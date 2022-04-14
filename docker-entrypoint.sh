@@ -3,7 +3,7 @@ set -e
 
 # if we are running gunicorn or celery then make sure we are running as the application user (app)
 if [ "$1" = "gunicorn" ] || [ "$1" = "celery" ]; then
-    # if APP_UID and APP_GID exist then assume we are running in dev mode and update 
+    # if APP_UID and APP_GID exist then assume we are running in dev mode and update
     # the UID/GID for the node user inside the container
     if [ ! -z "${APP_UID}" ] && [ ! -z "${APP_GID}" ]; then
         usermod -u $APP_UID app
