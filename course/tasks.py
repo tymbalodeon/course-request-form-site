@@ -1,4 +1,4 @@
-from celery import task
+from celery import shared_task
 from celery.utils.log import get_task_logger
 
 from canvas.api import create_canvas_sites
@@ -24,7 +24,7 @@ def get_args(celery, term=None):
     return args
 
 
-@task
+@shared_task
 def sync_all(terms=TERMS, celery=True):
     if isinstance(terms, str):
         terms = [terms]
@@ -40,17 +40,17 @@ def sync_all(terms=TERMS, celery=True):
     delete_canceled_requests()
 
 
-@task
+@shared_task
 def delete_canceled_requests():
     for request in Request.objects.filter(status="CANCELED"):
         request.delete()
 
 
-@task
+@shared_task
 def process_approved_sites():
     create_canvas_sites()
 
 
-@task
+@shared_task
 def sync_sites():
     sync_crf_canvas_sites(CURRENT_YEAR_AND_TERM)
