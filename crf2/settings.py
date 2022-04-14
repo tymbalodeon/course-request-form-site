@@ -15,6 +15,7 @@ def get_secret(key, default):
             return f.read()
     return value
 
+
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 SECRET_KEY = SECRET_KEY_VALUE
 DEBUG = DEBUG_VALUE
@@ -200,7 +201,7 @@ if DEBUG:
     ]
     # INSTALLED_APPS.extend(["livereload", "django_sass"])
     # MIDDLEWARE.append("livereload.middleware.LiveReloadScript")
-
+    CSRF_TRUSTED_ORIGINS = ["https://reqform-local.library.upenn.edu"]
     if platform.system() == "Darwin":
         lib_dir = Path.home() / LIB_DIR
         init_oracle_client(lib_dir=str(lib_dir))
