@@ -77,11 +77,11 @@ WSGI_APPLICATION = "crf2.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": "crf",
-        "USER": "crf",
-        "PASSWORD": get_secret("POSTGRES_PASSWORD_FILE", ""),
+        "NAME": get_secret("POSTGRES_DATABASE_NAME", "crf"),
+        "USER": get_secret("POSTGRES_USER", "crf"),
+        "PASSWORD": get_secret("POSTGRES_PASSWORD_FILE", "password"),
         "HOST": "postgres",
-        "PORT": "5432",
+        "PORT": get_secret("POSTGRES_PORT", "5432"),
     }
 }
 CORS_ORIGIN_ALLOW_ALL = True
