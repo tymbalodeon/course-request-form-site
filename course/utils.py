@@ -50,7 +50,8 @@ def sync_crf_canvas_sites(year_and_term, logger=logger):
             logger.info(f"SYNCED Canvas site for {crf_canvas_site.sis_course_id}")
         except Exception:
             logger.warning(
-                f"Canvas site {crf_canvas_site.sis_course_id} not found. Removing from the CRF..."
+                f"Canvas site {crf_canvas_site.sis_course_id} not found. Removing from"
+                " the CRF..."
             )
             crf_canvas_site.workflow_state = "deleted"
             crf_canvas_site.save()

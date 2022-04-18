@@ -14,7 +14,10 @@ from course.terms import CURRENT_YEAR_AND_TERM, NEXT_YEAR_AND_TERM, split_year_a
 from open_data.open_data import OpenData
 
 logger = getLogger(__name__)
-OWNER = User.objects.get(username=USERNAME)
+try:
+    OWNER = User.objects.get(username=USERNAME)
+except Exception:
+    OWNER = User.objects.create(username="admin")
 
 
 def get_cursor():
