@@ -759,6 +759,7 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
                     crosslist_code = crosslist_code.replace(" ", "")
                 primary_crosslist = f"{crosslist_code}{term}"
             school = primary_subject.schools if primary_subject else subject.schools
+            primary_subject = primary_subject or subject
             try:
                 course, created = Course.objects.update_or_create(
                     course_code=course_code,
