@@ -72,8 +72,8 @@ from .terms import (
     CURRENT_YEAR,
     CURRENT_YEAR_AND_TERM,
     NEXT_TERM,
-    YEAR_PLUS_ONE,
     NEXT_YEAR_AND_TERM,
+    YEAR_PLUS_ONE,
     get_term_letters,
 )
 from .utils import DATA_DIRECTORY_NAME, get_data_directory, update_user_courses
