@@ -576,6 +576,8 @@ def pull_srs_courses(cursor, term, open_data):
 
 def get_subject_object(subject, course_code, crosslist=False):
     try:
+        if not subject:
+            return subject
         return Subject.objects.get(abbreviation=subject)
     except Exception:
         try:
@@ -752,9 +754,9 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
             schedule_type = get_schedule_type_object(schedule_type, course_code)
             title = format_title(title)
             primary_crosslist = ""
-            primary_subject = subject
             if crosslist and crosslist == "S":
-                crosslist_code = crosslist_code.replace(" ", "")
+                if crosslist_code:
+                    crosslist_code = crosslist_code.replace(" ", "")
                 primary_crosslist = f"{crosslist_code}{term}"
             school = primary_subject.schools if primary_subject else subject.schools
             try:
