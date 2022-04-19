@@ -590,7 +590,7 @@ def get_subject_object(subject, course_code, crosslist=False):
                 f" {'Primary subject' if crosslist else 'Subject'} {subject} not found"
                 f" ({error})"
             )
-            raise Exception
+            return ""
 
 
 def get_schedule_type_object(schedule_type, course_code):

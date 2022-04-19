@@ -51,10 +51,10 @@ repos:
   #       entry: make test
   #       language: system
   #       pass_filenames: false
-  - repo: local
-    hooks:
-      - id: coverage
-        name: coverage
-        entry: make coverage fail-under=52
-        language: system
-        pass_filenames: false
+  # - repo: local
+  #   hooks:
+  #     - id: coverage
+  #       name: coverage
+  #       entry: make coverage fail-under=52
+  #       language: system
+  #       pass_filenames: false
