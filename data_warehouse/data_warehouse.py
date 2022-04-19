@@ -916,7 +916,8 @@ def get_data_warehouse_instructors(term=CURRENT_YEAR_AND_TERM, logger=logger):
 
 def delete_canceled_course(course_code, crosslist_code, log, logger):
     course_code = course_code.replace(" ", "")
-    crosslist_code = crosslist_code.replace(" ", "")
+    if crosslist_code:
+        crosslist_code = crosslist_code.replace(" ", "")
     try:
         course = Course.objects.get(course_code=course_code)
         if not course.requested:
