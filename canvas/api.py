@@ -113,7 +113,7 @@ def get_section_code(request, course_requested):
         return course_requested.sis_format_primary()
     else:
         add_request_process_notes("Primary crosslist not set", request)
-        return None
+        return course_requested.sis_format()
 
 
 def get_canvas_course(request, account, course, sis_course_id, test):
