@@ -72,7 +72,7 @@ from .terms import (
     CURRENT_YEAR,
     CURRENT_YEAR_AND_TERM,
     NEXT_TERM,
-    NEXT_YEAR,
+    YEAR_PLUS_ONE,
     NEXT_YEAR_AND_TERM,
     get_term_letters,
 )
@@ -179,7 +179,7 @@ class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
         )
         if CURRENT_TERM != FALL
         else Course.objects.filter(
-            Q(course_term=NEXT_TERM, year=NEXT_YEAR)
+            Q(course_term=NEXT_TERM, year=YEAR_PLUS_ONE)
             | Q(course_term=CURRENT_TERM, year=CURRENT_YEAR),
             course_subject__visible=True,
             course_schools__visible=True,
@@ -825,7 +825,7 @@ class HomePage(UserPassesTestMixin, ModelViewSet):
         )
         courses = self.get_queryset().filter(instructors=user_account)
         courses = courses.filter(
-            Q(course_term=NEXT_TERM, year=NEXT_YEAR)
+            Q(course_term=NEXT_TERM, year=YEAR_PLUS_ONE)
             | Q(course_term=CURRENT_TERM, year=CURRENT_YEAR),
             course_subject__visible=True,
             course_schools__visible=True,

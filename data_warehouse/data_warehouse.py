@@ -590,7 +590,7 @@ def get_subject_object(subject, course_code, crosslist=False):
                 f" {'Primary subject' if crosslist else 'Subject'} {subject} not found"
                 f" ({error})"
             )
-            return ""
+            raise Exception
 
 
 def get_schedule_type_object(schedule_type, course_code):
@@ -697,6 +697,7 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
             """
             SELECT
                 trim(subject),
+                primary_subject,
                 course_num,
                 section_num,
                 term,
@@ -732,6 +733,7 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
         )
         for (
             subject,
+            primary_subject,
             course_number,
             section_number,
             year_and_term,
@@ -745,23 +747,16 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
         ) in cursor:
             course_code = f"{subject}{course_number}{section_number}{year_and_term}"
             subject = get_subject_object(subject, course_code)
+            primary_subject = get_subject_object(primary_subject, course_code)
             year, term = split_year_and_term(year_and_term)
             schedule_type = get_schedule_type_object(schedule_type, course_code)
             title = format_title(title)
-            crosslist_code = crosslist_code.replace(" ", "") if crosslist_code else ""
             primary_crosslist = ""
             primary_subject = subject
-            if crosslist:
-                primary_crosslist = (
-                    f"{crosslist_code}{term}" if crosslist == "S" else ""
-                )
-                primary_subject = "".join(
-                    character for character in crosslist_code if character.isalpha()
-                )
-                primary_subject = get_subject_object(
-                    primary_subject, course_code, crosslist=True
-                )
-            school = primary_subject.schools if primary_subject else ""
+            if crosslist and crosslist == "S":
+                crosslist_code = crosslist_code.replace(" ", "")
+                primary_crosslist = f"{crosslist_code}{term}"
+            school = primary_subject.schools if primary_subject else subject.schools
             try:
                 course, created = Course.objects.update_or_create(
                     course_code=course_code,
