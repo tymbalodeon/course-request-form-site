@@ -33,7 +33,7 @@ def get_data_warehouse_schools():
     cursor = get_cursor()
     cursor.execute("SELECT legacy_school_code, school_desc_long FROM dwngss.v_school")
     for abbreviation, name in cursor:
-        if not abbreviation in school_codes:
+        if abbreviation not in school_codes:
             logger.info(f') Creating school "{name}"...')
             School.objects.create(
                 abbreviation=abbreviation,
@@ -62,7 +62,7 @@ def get_data_warehouse_subjects():
         "SELECT subject_code, subject_desc_long, school_code FROM dwngss.v_subject"
     )
     for abbreviation, name, school_code in cursor:
-        if not abbreviation in subject_codes:
+        if abbreviation not in subject_codes:
             if name is None:
                 name = abbreviation
             logger.info(f') Creating subject "{name}"...')
