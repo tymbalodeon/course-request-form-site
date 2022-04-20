@@ -1,70 +1,65 @@
-amqp @ file:///wheels/amqp-5.0.9-py3-none-any.whl
-asgiref @ file:///wheels/asgiref-3.5.0-py3-none-any.whl
-async-timeout==4.0.2
-billiard @ file:///wheels/billiard-3.6.4.0-py3-none-any.whl
-bleach @ file:///wheels/bleach-4.1.0-py2.py3-none-any.whl
-bleach-allowlist @ file:///wheels/bleach_allowlist-1.0.3-py2.py3-none-any.whl
-canvasapi @ file:///wheels/canvasapi-2.2.0-py3-none-any.whl
-celery @ file:///wheels/celery-5.2.3-py3-none-any.whl
-certifi @ file:///wheels/certifi-2021.10.8-py2.py3-none-any.whl
-cfgv @ file:///wheels/cfgv-3.3.1-py2.py3-none-any.whl
-charset-normalizer @ file:///wheels/charset_normalizer-2.0.12-py3-none-any.whl
-click @ file:///wheels/click-8.0.4-py3-none-any.whl
-click-didyoumean @ file:///wheels/click_didyoumean-0.3.0-py3-none-any.whl
-click-plugins @ file:///wheels/click_plugins-1.1.1-py2.py3-none-any.whl
-click-repl @ file:///wheels/click_repl-0.2.0-py3-none-any.whl
-coreapi @ file:///wheels/coreapi-2.3.3-py2.py3-none-any.whl
-coreschema @ file:///wheels/coreschema-0.0.4-py3-none-any.whl
-cx-Oracle @ file:///wheels/cx_Oracle-8.3.0-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl
-Deprecated==1.2.13
-distlib @ file:///wheels/distlib-0.3.4-py2.py3-none-any.whl
-Django @ file:///wheels/Django-4.0.2-py3-none-any.whl
-django-admin-autocomplete-filter @ file:///wheels/django_admin_autocomplete_filter-0.7.1-py3-none-any.whl
-django-autocomplete-light @ file:///wheels/django_autocomplete_light-3.9.1-py3-none-any.whl
-django-celery-beat @ file:///wheels/django_celery_beat-2.2.1-py2.py3-none-any.whl
-django-cors-headers @ file:///wheels/django_cors_headers-3.11.0-py3-none-any.whl
-django-debug-toolbar @ file:///wheels/django_debug_toolbar-3.2.4-py3-none-any.whl
-django-extensions @ file:///wheels/django_extensions-3.1.5-py3-none-any.whl
-django-filter @ file:///wheels/django_filter-21.1-py3-none-any.whl
-django-rest-swagger @ file:///wheels/django_rest_swagger-2.2.0-py2.py3-none-any.whl
+amqp==5.0.9
+asgiref==3.5.0
+billiard==3.6.4.0
+bleach==4.1.0
+bleach-allowlist==1.0.3
+canvasapi==2.2.0
+celery==5.2.3
+certifi==2021.10.8
+cfgv==3.3.1
+charset-normalizer==2.0.12
+click==8.0.4
+click-didyoumean==0.3.0
+click-plugins==1.1.1
+click-repl==0.2.0
+coreapi==2.3.3
+coreschema==0.0.4
+cx-Oracle==8.3.0
+distlib==0.3.4
+Django==4.0.2
 django-sass==1.1.0
-django-timezone-field @ file:///wheels/django_timezone_field-4.2.3-py3-none-any.whl
-djangorestframework @ file:///wheels/djangorestframework-3.13.1-py3-none-any.whl
-djangorestframework-link-header-pagination @ file:///wheels/djangorestframework_link_header_pagination-0.1.1-py2.py3-none-any.whl
-filelock @ file:///wheels/filelock-3.6.0-py3-none-any.whl
-gunicorn @ file:///wheels/gunicorn-20.1.0-py3-none-any.whl
-identify @ file:///wheels/identify-2.4.11-py2.py3-none-any.whl
-idna @ file:///wheels/idna-3.3-py3-none-any.whl
-importlib-metadata==4.11.3
-itypes @ file:///wheels/itypes-1.2.0-py2.py3-none-any.whl
-Jinja2 @ file:///wheels/Jinja2-3.0.3-py3-none-any.whl
-kombu @ file:///wheels/kombu-5.2.3-py3-none-any.whl
 libsass==0.21.0
-Markdown @ file:///wheels/Markdown-3.3.6-py3-none-any.whl
-MarkupSafe @ file:///wheels/MarkupSafe-2.1.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
-nodeenv @ file:///wheels/nodeenv-1.6.0-py2.py3-none-any.whl
-openapi-codec @ file:///wheels/openapi_codec-1.3.2-py3-none-any.whl
-packaging @ file:///wheels/packaging-21.3-py3-none-any.whl
-platformdirs @ file:///wheels/platformdirs-2.5.1-py3-none-any.whl
-pre-commit @ file:///wheels/pre_commit-2.17.0-py2.py3-none-any.whl
-prompt-toolkit @ file:///wheels/prompt_toolkit-3.0.28-py3-none-any.whl
-psycopg2 @ file:///wheels/psycopg2-2.9.3-cp39-cp39-linux_x86_64.whl
-pyparsing @ file:///wheels/pyparsing-3.0.7-py3-none-any.whl
-python-crontab @ file:///wheels/python_crontab-2.6.0-py3-none-any.whl
-python-dateutil @ file:///wheels/python_dateutil-2.8.2-py2.py3-none-any.whl
-pytz @ file:///wheels/pytz-2021.3-py2.py3-none-any.whl
-PyYAML @ file:///wheels/PyYAML-6.0-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl
-redis @ file:///wheels/redis-4.2.2-py3-none-any.whl
-requests @ file:///wheels/requests-2.27.1-py2.py3-none-any.whl
-simplejson @ file:///wheels/simplejson-3.17.6-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl
-six @ file:///wheels/six-1.16.0-py2.py3-none-any.whl
-sqlparse @ file:///wheels/sqlparse-0.4.2-py3-none-any.whl
-toml @ file:///wheels/toml-0.10.2-py2.py3-none-any.whl
-uritemplate @ file:///wheels/uritemplate-4.1.1-py2.py3-none-any.whl
-urllib3 @ file:///wheels/urllib3-1.26.8-py2.py3-none-any.whl
-vine @ file:///wheels/vine-5.0.0-py2.py3-none-any.whl
-virtualenv @ file:///wheels/virtualenv-20.13.1-py2.py3-none-any.whl
-wcwidth @ file:///wheels/wcwidth-0.2.5-py2.py3-none-any.whl
-webencodings @ file:///wheels/webencodings-0.5.1-py2.py3-none-any.whl
-wrapt==1.14.0
-zipp==3.8.0
+django-admin-autocomplete-filter==0.7.1
+django-autocomplete-light==3.9.1
+git+https://github.com/celery/django-celery-beat.git@fa73034be892052893e4ef17926ef3a5d4a21ea2#egg=django-celery-beat
+django-cors-headers==3.11.0
+django-debug-toolbar==3.2.4
+django-extensions==3.1.5
+django-filter==21.1
+django-rest-swagger==2.2.0
+django-timezone-field==4.2.3
+djangorestframework==3.13.1
+djangorestframework-link-header-pagination==0.1.1
+filelock==3.6.0
+gunicorn==20.1.0
+identify==2.4.11
+idna==3.3
+itypes==1.2.0
+Jinja2==3.0.3
+kombu==5.2.3
+Markdown==3.3.6
+MarkupSafe==2.1.0
+nodeenv==1.6.0
+openapi-codec==1.3.2
+packaging==21.3
+platformdirs==2.5.1
+pre-commit==2.17.0
+prompt-toolkit==3.0.28
+psycopg2==2.9.3
+pyparsing==3.0.7
+python-crontab==2.6.0
+python-dateutil==2.8.2
+pytz==2021.3
+PyYAML==6.0
+redis==4.2.2
+requests==2.27.1
+simplejson==3.17.6
+six==1.16.0
+sqlparse==0.4.2
+toml==0.10.2
+uritemplate==4.1.1
+urllib3==1.26.8
+vine==5.0.0
+virtualenv==20.13.1
+wcwidth==0.2.5
+webencodings==0.5.1
