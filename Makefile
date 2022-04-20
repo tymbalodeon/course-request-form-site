@@ -5,12 +5,12 @@ TEST = test tests
 COVERAGE = coverage run manage.py $(TEST) && coverage report --skip-covered --sort=cover
 YEAR := $(shell date +%Y)
 MONTH := $(shell date +%m)
-TERM := $(shell if (( $(MONTH) > 8 )); \
-					then echo "C"; \
-				elif (( $(MONTH) > 5 )); \
-					then echo "B"; \
-				else echo "A"; \
-				fi)
+TERM := if [ $(MONTH) -gt 8 ]; \
+			then echo "C"; \
+		elif [ $(MONTH) -gt 5 ]; \
+			then echo "B"; \
+		else echo "A"; \
+		fi
 ifeq ($(TERM), A)
 NEXT_TERM = B
 NEXT_YEAR = $(YEAR)
