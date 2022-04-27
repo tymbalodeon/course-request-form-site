@@ -32,7 +32,7 @@ from canvas.api import (
     create_canvas_sites,
     create_canvas_user,
     get_canvas,
-    get_user_by_sis,
+    get_user_by_login_id,
 )
 from data_warehouse.data_warehouse import (
     get_banner_course,
@@ -981,7 +981,7 @@ def DWHSE_Proxy(request):
 def user_courses(request, username):
     logger.info(f"Username: {username}")
 
-    user = get_user_by_sis(username)
+    user = get_user_by_login_id(username)
     courses = user.get_courses(enrollment_type="teacher") if user else None
     properties = ["id", "name", "sis_course_id", "workflow_state"]
     courses = (
@@ -1183,7 +1183,7 @@ def quick_config(request):
 
                     return render(request, "admin/quickconfig.html", {"data": data})
 
-                canvas_user = get_user_by_sis(pennkey)
+                canvas_user = get_user_by_login_id(pennkey)
 
                 if not canvas_user:
                     data["Job"] = "AccountCreation"

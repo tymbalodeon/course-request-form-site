@@ -7,7 +7,7 @@ from canvas.api import (
     create_canvas_user,
     get_canvas_account,
     get_term_id,
-    get_user_by_sis,
+    get_user_by_login_id,
     get_user_courses,
 )
 from config.config import USERNAME
@@ -28,9 +28,9 @@ class CanvasAPITest(TestCase):
         self.assertIsNone(user)
 
     def test_get_user_by_sis(self):
-        canvas_user = get_user_by_sis(self.username)
+        canvas_user = get_user_by_login_id(self.username)
         self.assertEqual(canvas_user.login_id, self.username)
-        none_user = get_user_by_sis("noneuser")
+        none_user = get_user_by_login_id("noneuser")
         self.assertIsNone(none_user)
 
     def test_get_user_courses(self):
