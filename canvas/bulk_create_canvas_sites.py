@@ -3,7 +3,8 @@ from os import path, remove
 from canvasapi.exceptions import CanvasException
 from django.utils import timezone
 
-from canvas.api import create_canvas_sites, get_canvas
+from canvas.api import get_canvas
+from canvas.helpers import create_canvas_sites
 from config.config import USERNAME
 from course.models import SIS_PREFIX, Course, Request, School, User
 from course.utils import DATA_DIRECTORY_NAME, get_data_directory, split_year_and_term

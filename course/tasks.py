@@ -1,7 +1,7 @@
 from celery import shared_task
 from celery.utils.log import get_task_logger
 
-from canvas.api import create_canvas_sites
+from canvas.helpers import create_canvas_sites
 from course.management.commands.add_courses import get_open_data_courses
 from course.terms import CURRENT_YEAR_AND_TERM, NEXT_YEAR_AND_TERM
 from data_warehouse.data_warehouse import (
