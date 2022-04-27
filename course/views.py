@@ -47,7 +47,7 @@ from .forms import CanvasSiteForm, EmailChangeForm, SubjectForm, UserForm
 from .models import (
     Activity,
     AutoAdd,
-    CanvasSite,
+    CanvasCourse,
     Course,
     Notice,
     Profile,
@@ -717,14 +717,14 @@ class NoticeViewSet(MixedPermissionModelViewSet, ModelViewSet):
 
 
 class CanvasSiteViewSet(MixedPermissionModelViewSet, ModelViewSet):
-    queryset = CanvasSite.objects.all()
+    queryset = CanvasCourse.objects.all()
     serializer_class = CanvasSiteSerializer
     lookup_field = "canvas_id"
 
     def get_queryset(self):
         user = self.request.user
 
-        return CanvasSite.objects.filter(Q(owners=user) | Q(added_permissions=user))
+        return CanvasCourse.objects.filter(Q(owners=user) | Q(added_permissions=user))
 
     def list(self, request):
         queryset = self.filter_queryset(self.get_queryset())
@@ -838,7 +838,7 @@ class HomePage(UserPassesTestMixin, ModelViewSet):
         )
         requests_count = requests.count()
         requests = requests[:15]
-        canvas_sites = CanvasSite.objects.filter(Q(owners=user_account))
+        canvas_sites = CanvasCourse.objects.filter(Q(owners=user_account))
         canvas_sites_count = canvas_sites.count()
         canvas_sites = canvas_sites[:15]
         page = self.paginate_queryset(courses)
@@ -1363,7 +1363,7 @@ def autocomplete_subject(request):
 def autocomplete_canvas_site(request):
     if request.is_ajax():
         query = request.GET.get("term", "").capitalize()
-        search_results = CanvasSite.objects.filter(
+        search_results = CanvasCourse.objects.filter(
             Q(owners=query) | Q(added_permissions=query)
         )
         results = [site.name for site in search_results]

@@ -8,7 +8,7 @@ from django.forms import (
     ValidationError,
 )
 
-from .models import CanvasSite, Subject, User
+from .models import CanvasCourse, Subject, User
 
 
 class UserForm(ModelForm):
@@ -38,7 +38,7 @@ class SubjectForm(ModelForm):
 class CanvasSiteForm(ModelForm):
     name = ModelChoiceField(
         label="content_copy",
-        queryset=CanvasSite.objects.all(),
+        queryset=CanvasCourse.objects.all(),
         required=False,
         widget=ModelSelect2(
             url="canvas_site-autocomplete",
@@ -48,7 +48,7 @@ class CanvasSiteForm(ModelForm):
     )
 
     class Meta:
-        model = CanvasSite
+        model = CanvasCourse
         fields = "__all__"
 
 

@@ -17,7 +17,7 @@ from .models import (
     Activity,
     AdditionalEnrollment,
     AutoAdd,
-    CanvasSite,
+    CanvasCourse,
     Course,
     Notice,
     PageContent,
@@ -330,5 +330,5 @@ admin.site.register(Subject)
 admin.site.register(AutoAdd, AutoAddAdmin)
 admin.site.register(UpdateLog)
 admin.site.register(PageContent)
-admin.site.register(CanvasSite, CanvasSiteAdmin)
+admin.site.register(CanvasCourse, CanvasSiteAdmin)
 admin.site.register(RequestSummary, RequestSummaryAdmin)

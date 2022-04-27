@@ -195,7 +195,7 @@ def write_request_statuses(year_and_term, school_abbreviation, verbose=True):
         row = [
             course.course_code,
             f'"{course.course_name}"',
-            course.course_activity.name,
+            course.schedule_type.name,
             list_instructors(course),
             course.requested,
             has_canvas_site(course),

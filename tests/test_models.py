@@ -3,7 +3,7 @@ from django.test import TestCase
 from config.config import USERNAME
 from course.models import (
     Activity,
-    CanvasSite,
+    CanvasCourse,
     Course,
     Notice,
     PageContent,
@@ -46,7 +46,7 @@ class CanvasSiteTest(TestCase):
 
     def setUp(self):
         owners = [User.objects.create(username=owner) for owner in self.owners]
-        canvas_site = CanvasSite.objects.create(
+        canvas_site = CanvasCourse.objects.create(
             canvas_id=self.canvas_id,
             name=self.name,
             workflow_state=self.workflow_state,
@@ -55,15 +55,15 @@ class CanvasSiteTest(TestCase):
         canvas_site.added_permissions.set(owners)
 
     def test_str(self):
-        canvas_site = CanvasSite.objects.get(canvas_id=self.canvas_id)
+        canvas_site = CanvasCourse.objects.get(canvas_id=self.canvas_id)
         self.assertEqual(str(canvas_site), f"{self.name}")
 
     def test_get_owners(self):
-        canvas_site = CanvasSite.objects.get(canvas_id=self.canvas_id)
+        canvas_site = CanvasCourse.objects.get(canvas_id=self.canvas_id)
         self.assertEqual(canvas_site.get_owners(), self.owners_string)
 
     def test_get_added_permissions(self):
-        canvas_site = CanvasSite.objects.get(canvas_id=self.canvas_id)
+        canvas_site = CanvasCourse.objects.get(canvas_id=self.canvas_id)
         self.assertEqual(canvas_site.get_added_permissions(), self.owners_string)
 
 

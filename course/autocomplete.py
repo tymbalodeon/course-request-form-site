@@ -3,7 +3,7 @@ from logging import getLogger
 from dal.autocomplete import Select2QuerySetView
 from django.db.models import Q
 
-from .models import CanvasSite, Subject, User
+from .models import CanvasCourse, Subject, User
 
 logger = getLogger(__name__)
 
@@ -43,12 +43,12 @@ class CanvasSiteAutocomplete(Select2QuerySetView):
             f"{'' if self.request.user.is_authenticated else 'not'} authenticated."
         )
         if not self.request.user.is_authenticated:
-            return CanvasSite.objects.none()
+            return CanvasCourse.objects.none()
         masquerade = self.request.session["on_behalf_of"]
         user = (
             User.objects.get(username=masquerade) if masquerade else self.request.user
         )
-        query_set = CanvasSite.objects.filter(
+        query_set = CanvasCourse.objects.filter(
             Q(owners=user) | Q(added_permissions=self.request.user)
         ).order_by("-canvas_id")
         query_set = query_set.filter(~Q(workflow_state="deleted"))

@@ -6,7 +6,7 @@ from canvasapi.exceptions import CanvasException
 from canvasapi.tab import Tab
 
 from config.config import PROD_KEY, PROD_URL, TEST_KEY, TEST_URL
-from course.models import SIS_PREFIX, CanvasSite, Course, Request, User
+from course.models import SIS_PREFIX, CanvasCourse, Course, Request, User
 from course.serializers import RequestSerializer
 from course.terms import USE_BANNER
 
@@ -461,7 +461,7 @@ def create_canvas_sites(requested_courses=None, sections=None, test=False):
             set_reserves(request, canvas_course)
         if serialized.data["copy_from_course"]:
             migrate_course(canvas_course, serialized, test)
-        canvas_site = CanvasSite.objects.update_or_create(
+        canvas_site = CanvasCourse.objects.update_or_create(
             canvas_id=canvas_course.id,
             defaults={
                 "request_instance": request,

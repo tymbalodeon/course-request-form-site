@@ -19,7 +19,7 @@ from .models import (
     Activity,
     AdditionalEnrollment,
     AutoAdd,
-    CanvasSite,
+    CanvasCourse,
     Course,
     Notice,
     Profile,
@@ -196,7 +196,7 @@ class CanvasSiteSerializer(ModelSerializer):
     )
 
     class Meta:
-        model = CanvasSite
+        model = CanvasCourse
         fields = "__all__"
 
     def validate(self, data):

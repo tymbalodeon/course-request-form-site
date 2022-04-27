@@ -2,13 +2,14 @@ from logging import getLogger
 
 from bleach import clean
 from bleach_allowlist import markdown_attrs, markdown_tags
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
 from django.db.models import (
     CASCADE,
     SET_NULL,
     BooleanField,
     CharField,
     DateTimeField,
+    EmailField,
     ForeignKey,
     IntegerField,
     Manager,
@@ -27,10 +28,22 @@ logger = getLogger(__name__)
 SIS_PREFIX = "BAN" if USE_BANNER else "SRS"
 
 
-class Profile(Model):
-    user = OneToOneField(User, on_delete=CASCADE)
-    penn_id = CharField(max_length=10, unique=True)
-    canvas_id = CharField(max_length=10, unique=True, null=True)
+class User(AbstractUser):
+    email = EmailField(unique=True, null=True)
+    penn_id = IntegerField(max_length=10, unique=True, null=True)
+    canvas_id = IntegerField(max_length=10, unique=True, null=True)
+
+    def get_penn_id(self):
+        pass
+
+    def get_email(self):
+        pass
+
+    def get_penn_id_and_email(self):
+        pass
+
+    def get_canvas_id(self):
+        pass
 
 
 class Activity(Model):
@@ -46,11 +59,10 @@ class Activity(Model):
 
 
 class School(Model):
-    name = CharField(max_length=50, unique=True)
-    abbreviation = CharField(max_length=10, unique=True, primary_key=True)
+    school_desc_long = CharField(max_length=50, unique=True)
+    school_code = CharField(max_length=10, unique=True, primary_key=True)
     visible = BooleanField(default=True)
-    open_data_abbreviation = CharField(max_length=2)
-    canvas_subaccount = IntegerField(null=True)
+    canvas_sub_account = IntegerField(null=True)
     form_additional_enrollments = BooleanField(
         default=True, verbose_name="Additional Enrollments Form Field"
     )
@@ -59,7 +71,7 @@ class School(Model):
         ordering = ["name"]
 
     def __str__(self):
-        return f"{self.name} ({self.abbreviation})"
+        return f"{self.school_desc_long} ({self.school_code})"
 
     def get_subjects(self):
         return Subject.objects.filter(schools=self)
@@ -71,10 +83,13 @@ class School(Model):
 
         super().save(*args, **kwargs)
 
+    def get_canvas_sub_account(self):
+        pass
+
 
 class Subject(Model):
-    name = CharField(max_length=50)
-    abbreviation = CharField(max_length=10, unique=True, primary_key=True)
+    subject_desc_long = CharField(max_length=50)
+    subject_code = CharField(max_length=10, unique=True, primary_key=True)
     visible = BooleanField(default=True)
     schools = ForeignKey(
         School, related_name="subjects", on_delete=CASCADE, blank=True, null=True
@@ -84,12 +99,12 @@ class Subject(Model):
         ordering = ["name"]
 
     def __str__(self):
-        return f"{self.name} ({self.abbreviation})"
+        return f"{self.subject_desc_long} ({self.subject_code})"
 
 
-class CanvasSite(Model):
-    canvas_id = CharField(max_length=10, blank=False, default=None, primary_key=True)
-    request_instance = ForeignKey(
+class CanvasCourse(Model):
+    canvas_id = IntegerField(max_length=10, blank=False, default=None, primary_key=True)
+    request = ForeignKey(
         "Request", on_delete=SET_NULL, null=True, default=None, blank=True
     )
     owners = ManyToManyField(User, related_name="canvas_sites", blank=True)
@@ -114,28 +129,22 @@ class CanvasSite(Model):
 
 
 class Course(Model):
-    OLD_SPRING = "A"
-    OLD_SUMMER = "B"
-    OLD_FALL = "C"
     TERM_CHOICES = (
         (SPRING, "Spring"),
         (SUMMER, "Summer"),
         (FALL, "Fall"),
-        (OLD_SPRING, "Old Spring"),
-        (OLD_SUMMER, "Old Summer"),
-        (OLD_FALL, "Old Fall"),
     )
-    course_activity = ForeignKey(Activity, related_name="courses", on_delete=CASCADE)
     course_code = CharField(
         max_length=150, unique=True, primary_key=True, editable=False
     )
-    course_name = CharField(max_length=250)
-    course_number = CharField(max_length=4, blank=False)
-    course_primary_subject = ForeignKey(Subject, on_delete=CASCADE)
-    course_schools = ForeignKey(School, related_name="courses", on_delete=CASCADE)
-    course_section = CharField(max_length=4, blank=False)
-    course_subject = ForeignKey(Subject, on_delete=CASCADE, related_name="courses")
-    course_term = CharField(max_length=2, choices=TERM_CHOICES)
+    schedule_type = ForeignKey(Activity, related_name="courses", on_delete=CASCADE)
+    title = CharField(max_length=250)
+    course_num = CharField(max_length=4, blank=False)
+    primary_subject = ForeignKey(Subject, on_delete=CASCADE)
+    school = ForeignKey(School, related_name="courses", on_delete=CASCADE)
+    section_num = CharField(max_length=4, blank=False)
+    subject = ForeignKey(Subject, on_delete=CASCADE, related_name="courses")
+    term = CharField(max_length=2, choices=TERM_CHOICES)
     created = DateTimeField(auto_now_add=True)
     crosslisted = ManyToManyField("self", blank=True, symmetrical=True, default=None)
     crosslisted_request = ForeignKey(
@@ -364,7 +373,7 @@ class Request(Model):
     reserves = BooleanField(default=False)
     process_notes = TextField(blank=True, default="")
     canvas_instance = ForeignKey(
-        CanvasSite,
+        CanvasCourse,
         related_name="canvas",
         on_delete=CASCADE,
         null=True,
