@@ -23,15 +23,7 @@ from django.utils.safestring import mark_safe
 from markdown import markdown
 
 from canvas.api import get_canvas_user_id_by_pennkey
-from data_warehouse.helpers import (
-    get_cursor,
-    get_dw_user_check_message,
-    get_dw_user_found_message,
-    get_dw_user_not_found_message,
-    get_single_item_from_cursor,
-    get_user_field_from_dw,
-    get_user_field_query,
-)
+from data_warehouse.helpers import get_user_field_from_dw
 
 from .terms import FALL, SPRING, SUMMER, USE_BANNER
 

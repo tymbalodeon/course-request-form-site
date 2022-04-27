@@ -31,7 +31,7 @@ WARNING = "\[WARNING\]"
 
 all: help
 black: ## Format code
-	black --experimental-string-processing ./
+	black --preview ./
 
 check: ## Check for problems
 	pre-commit run -a

@@ -6,23 +6,33 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('course', '0010_auto_20220207_0947'),
+        ("course", "0010_auto_20220207_0947"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='course',
-            name='course_term',
-            field=models.CharField(choices=[('10', 'Spring'), ('20', 'Summer'), ('30', 'Fall'), ('A', 'Old Spring'), ('B', 'Old Summer'), ('C', 'Old Fall')], max_length=2),
+            model_name="course",
+            name="course_term",
+            field=models.CharField(
+                choices=[
+                    ("10", "Spring"),
+                    ("20", "Summer"),
+                    ("30", "Fall"),
+                    ("A", "Old Spring"),
+                    ("B", "Old Summer"),
+                    ("C", "Old Fall"),
+                ],
+                max_length=2,
+            ),
         ),
         migrations.AlterField(
-            model_name='course',
-            name='crosslisted',
-            field=models.ManyToManyField(blank=True, default=None, to='course.Course'),
+            model_name="course",
+            name="crosslisted",
+            field=models.ManyToManyField(blank=True, default=None, to="course.Course"),
         ),
         migrations.AlterField(
-            model_name='course',
-            name='sections',
-            field=models.ManyToManyField(blank=True, default=None, to='course.Course'),
+            model_name="course",
+            name="sections",
+            field=models.ManyToManyField(blank=True, default=None, to="course.Course"),
         ),
     ]
