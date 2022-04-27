@@ -22,7 +22,10 @@ from django.db.models import (
 from django.utils.safestring import mark_safe
 from markdown import markdown
 
-from canvas.api import get_canvas_user_id_by_pennkey
+from canvas.api import (
+    get_canvas_main_account,
+    get_canvas_user_id_by_pennkey,
+)
 from data_warehouse.helpers import get_user_field_from_dw
 
 from .terms import FALL, SPRING, SUMMER, USE_BANNER
@@ -54,30 +57,31 @@ class User(AbstractUser):
             self.canvas_id = canvas_user_id
             self.save()
 
+    def sync_fields(self, test=False):
+        self.get_penn_id()
+        self.get_email()
+        self.get_canvas_id(test=test)
 
-class Activity(Model):
-    name = CharField(max_length=40)
-    abbr = CharField(max_length=3, unique=True, primary_key=True)
 
-    class Meta:
-        ordering = ["abbr"]
-        verbose_name_plural = "Activites"
+class ScheduleType(Model):
+    sched_type_code = CharField(unique=True, primary_key=True)
+    sched_type_desc = CharField()
 
     def __str__(self):
-        return self.abbr
+        return f"{self.sched_type_desc} ({self.sched_type_code})"
 
 
 class School(Model):
     school_desc_long = CharField(max_length=50, unique=True)
     school_code = CharField(max_length=10, unique=True, primary_key=True)
     visible = BooleanField(default=True)
-    canvas_sub_account = IntegerField(null=True)
+    canvas_sub_account_id = IntegerField(null=True)
     form_additional_enrollments = BooleanField(
         default=True, verbose_name="Additional Enrollments Form Field"
     )
 
     class Meta:
-        ordering = ["name"]
+        ordering = ["school_desc_long"]
 
     def __str__(self):
         return f"{self.school_desc_long} ({self.school_code})"
@@ -89,15 +93,21 @@ class School(Model):
         for subject in self.get_subjects():
             subject.visible = self.visible
             subject.save()
-
         super().save(*args, **kwargs)
 
-    def get_canvas_sub_account(self):
-        pass
+    def get_canvas_sub_account(self, test=False):
+        accounts = get_canvas_main_account(test=test).get_subaccounts(recursive=True)
+        account_ids = (
+            account.id for account in accounts if self.school_desc_long == account.name
+        )
+        account_id = next(account_ids, None)
+        if account_id:
+            self.canvas_sub_account_id = account_id
+            self.save()
 
 
 class Subject(Model):
-    subject_desc_long = CharField(max_length=50)
+    subject_desc_long = CharField()
     subject_code = CharField(max_length=10, unique=True, primary_key=True)
     visible = BooleanField(default=True)
     schools = ForeignKey(
@@ -105,7 +115,7 @@ class Subject(Model):
     )
 
     class Meta:
-        ordering = ["name"]
+        ordering = ["subject_desc_long"]
 
     def __str__(self):
         return f"{self.subject_desc_long} ({self.subject_code})"
@@ -120,7 +130,7 @@ class CanvasCourse(Model):
     added_permissions = ManyToManyField(
         User, related_name="added_permissions", blank=True, default=None
     )
-    name = CharField(max_length=50, blank=False, default=None)
+    name = CharField(blank=False, default=None)
     sis_course_id = CharField(max_length=50, blank=True, default=None, null=True)
     workflow_state = CharField(max_length=15, blank=False, default=None)
 
@@ -146,7 +156,7 @@ class Course(Model):
     course_code = CharField(
         max_length=150, unique=True, primary_key=True, editable=False
     )
-    schedule_type = ForeignKey(Activity, related_name="courses", on_delete=CASCADE)
+    schedule_type = ForeignKey(ScheduleType, related_name="courses", on_delete=CASCADE)
     title = CharField(max_length=250)
     course_num = CharField(max_length=4, blank=False)
     primary_subject = ForeignKey(Subject, on_delete=CASCADE)
@@ -188,10 +198,10 @@ class Course(Model):
     def __str__(self):
         return "_".join(
             [
-                self.course_subject.abbreviation,
-                self.course_number,
-                self.course_section,
-                f"{self.year}{self.course_term}",
+                self.subject.abbreviation,
+                self.course_num,
+                self.section_num,
+                f"{self.year}{self.term}",
             ]
         )
 
@@ -213,10 +223,10 @@ class Course(Model):
 
     def get_crosslisted(self):
         cross_courses = Course.objects.filter(
-            Q(course_primary_subject=self.course_primary_subject)
-            & Q(course_number=self.course_number)
-            & Q(course_section=self.course_section)
-            & Q(course_term=self.course_term)
+            Q(course_primary_subject=self.primary_subject)
+            & Q(course_number=self.course_num)
+            & Q(course_section=self.section_num)
+            & Q(course_term=self.term)
             & Q(year=self.year)
         )
         for course in cross_courses:
@@ -225,10 +235,10 @@ class Course(Model):
 
     def update_crosslists(self):
         cross_courses = Course.objects.filter(
-            Q(course_primary_subject=self.course_primary_subject)
-            & Q(course_number=self.course_number)
-            & Q(course_section=self.course_section)
-            & Q(course_term=self.course_term)
+            Q(course_primary_subject=self.primary_subject)
+            & Q(course_number=self.course_num)
+            & Q(course_section=self.section_num)
+            & Q(course_term=self.term)
             & Q(year=self.year)
         )
         for course in cross_courses:
@@ -243,11 +253,11 @@ class Course(Model):
 
     def save(self, *args, **kwargs):
         self.course_code = (
-            f"{self.course_subject.abbreviation}"
-            f"{self.course_number}"
-            f"{self.course_section}"
+            f"{self.subject.abbreviation}"
+            f"{self.course_num}"
+            f"{self.section_num}"
             f"{self.year}"
-            f"{self.course_term}"
+            f"{self.term}"
         )
         if self._state.adding is True:
             super().save(*args, **kwargs)
@@ -273,10 +283,10 @@ class Course(Model):
             return request
 
     def get_subjects(self):
-        return self.course_subject.abbreviation
+        return self.subject.abbreviation
 
     def get_schools(self):
-        return self.course_schools
+        return self.school
 
     def get_instructors(self):
         return (
@@ -288,14 +298,14 @@ class Course(Model):
         )
 
     def get_year_and_term(self):
-        return f"{self.year}{self.course_term}"
+        return f"{self.year}{self.term}"
 
     def find_sections(self):
         courses = list(
             Course.objects.filter(
-                Q(course_subject=self.course_subject)
-                & Q(course_number=self.course_number)
-                & Q(course_term=self.course_term)
+                Q(course_subject=self.subject)
+                & Q(course_number=self.course_num)
+                & Q(course_term=self.term)
                 & Q(year=self.year)
             ).exclude(course_code=self.course_code)
         )
@@ -307,10 +317,10 @@ class Course(Model):
 
     def sis_format(self):
         return (
-            f"{self.course_subject.abbreviation}-"
-            f"{self.course_number}-"
-            f"{self.course_section}"
-            f" {self.year}{self.course_term}"
+            f"{self.subject.abbreviation}-"
+            f"{self.course_num}-"
+            f"{self.section_num}"
+            f" {self.year}{self.term}"
         )
 
     def sis_format_primary(self, sis_id=True):
@@ -329,11 +339,7 @@ class Course(Model):
                 for character in primary_crosslist
                 if not str.isalpha(character)
             )
-            number = (
-                number_section[:4]
-                if self.course_term.isnumeric()
-                else number_section[:3]
-            )
+            number = number_section[:4] if self.term.isnumeric() else number_section[:3]
             section = number_section[3:]
 
             if sis_id:

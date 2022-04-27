@@ -3,6 +3,7 @@ from time import sleep
 from typing import Optional
 
 from canvasapi import Canvas
+from canvasapi.account import Account
 from canvasapi.exceptions import CanvasException
 from canvasapi.tab import Tab
 from canvasapi.user import User as CanvasUser
@@ -37,6 +38,10 @@ def get_canvas_account(account_id, test=False):
         return get_canvas(test).get_account(account_id)
     except CanvasException:
         return None
+
+
+def get_canvas_main_account(test=False) -> Account:
+    return get_canvas(test).get_account(MAIN_ACCOUNT_ID)
 
 
 def create_canvas_user(penn_key, penn_id, email, full_name, test=False):
