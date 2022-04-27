@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from course.models import Activity
+from course.models import ScheduleType
 from open_data.open_data import OpenData
 
 ACTIVITY_CHOICES = (
@@ -45,7 +45,7 @@ class Command(BaseCommand):
                 return "NO ACTIVITIES FOUND"
             for abbreviation, name in activities:
                 try:
-                    added = Activity.objects.update_or_create(
+                    added = ScheduleType.objects.update_or_create(
                         name=name, abbr=abbreviation
                     )[1]
                     print(

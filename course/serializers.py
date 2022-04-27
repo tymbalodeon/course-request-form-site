@@ -16,14 +16,13 @@ from rest_framework.serializers import (
 from data_warehouse.data_warehouse import get_user_by_pennkey
 
 from .models import (
-    Activity,
     AdditionalEnrollment,
     AutoAdd,
     CanvasCourse,
     Course,
     Notice,
-    Profile,
     Request,
+    ScheduleType,
     School,
     Subject,
     UpdateLog,
@@ -65,7 +64,7 @@ class CourseSerializer(DynamicFieldsModelSerializer):
         many=False, queryset=Subject.objects.all(), slug_field="abbreviation"
     )
     course_activity = SlugRelatedField(
-        many=False, queryset=Activity.objects.all(), slug_field="abbr"
+        many=False, queryset=ScheduleType.objects.all(), slug_field="abbr"
     )
     id = ReadOnlyField()
     requested_override = ReadOnlyField()
@@ -162,16 +161,11 @@ class UserSerializer(ModelSerializer):
         read_only_fields = ("courses",)
 
     def create(self, validated_data):
-        pennid_data = validated_data.pop("profile")["penn_id"]
-        user = User.objects.create(**validated_data)
-        Profile.objects.create(user=user, penn_id=pennid_data)
-
-        return user
+        return User.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
         instance.name = validated_data.get("username", instance.username)
         instance.save()
-
         return instance
 
 

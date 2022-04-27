@@ -10,7 +10,6 @@ from config.config import (
     PASSWORD,
     USERNAME,
 )
-from course.models import Profile
 
 
 class Command(BaseCommand):
@@ -105,15 +104,6 @@ class Command(BaseCommand):
                     }
                     first_name = user["first_name"].title()
                     last_name = user["last_name"].title()
-                    Profile.objects.create(
-                        user=User.objects.create_user(
-                            username=pennkey,
-                            first_name=first_name,
-                            last_name=last_name,
-                            email=user["email"],
-                        ),
-                        penn_id=user["penn_id"],
-                    )
                     print(
                         f"- ADDED: {first_name}, {last_name}, {email}, {penn_id},"
                         f" {pennkey}"

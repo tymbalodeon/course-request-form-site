@@ -1,5 +1,4 @@
-from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.admin import ModelAdmin, StackedInline, site
 from django.db.models import (
     Count,
     DateTimeField,
@@ -14,16 +13,15 @@ from django.db.models import (
 from django.db.models.functions import Trunc
 
 from .models import (
-    Activity,
     AdditionalEnrollment,
     AutoAdd,
     CanvasCourse,
     Course,
     Notice,
     PageContent,
-    Profile,
     Request,
     RequestSummary,
+    ScheduleType,
     School,
     Subject,
     UpdateLog,
@@ -31,26 +29,26 @@ from .models import (
 )
 
 
-class AdditionalEnrollmentInline(admin.StackedInline):
+class AdditionalEnrollmentInline(StackedInline):
     model = AdditionalEnrollment
     extra = 2
     autocomplete_fields = ["user"]
 
 
-class CourseAdmin(admin.ModelAdmin):
+class CourseAdmin(ModelAdmin):
     list_display = [
         "course_code",
-        "course_name",
+        "title",
         "get_instructors",
         "get_subjects",
         "get_schools",
-        "course_term",
-        "course_activity",
+        "term",
+        "schedule_type",
         "requested",
     ]
 
-    list_filter = ("course_activity", "course_term", "course_schools")
-    search_fields = ("instructors__username", "course_code", "course_name")
+    list_filter = ("schedule_type", "term", "school")
+    search_fields = ("instructors__username", "course_code", "name")
     autocomplete_fields = [
         "crosslisted",
         "instructors",
@@ -64,17 +62,17 @@ class CourseAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     "course_code",
-                    "course_name",
+                    "name",
                     (
                         "course_subject",
                         "course_number",
                         "course_section",
                         "year",
-                        "course_term",
+                        "term",
                     ),
                     "instructors",
-                    "course_schools",
-                    "course_activity",
+                    "school",
+                    "schedule_type",
                 )
             },
         ),
@@ -103,7 +101,7 @@ class CourseAdmin(admin.ModelAdmin):
         (
             "Metadata",
             {
-                "fields": ("created", "updated", "owner"),
+                "fields": ("created_at", "updated_at", "owner"),
             },
         ),
     )
@@ -111,19 +109,19 @@ class CourseAdmin(admin.ModelAdmin):
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == "course":
             kwargs["queryset"] = Course.objects.filter(
-                course_schools__abbreviation=request.user
+                school__abbreviation=request.user
             )
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
             return [
-                "created",
-                "updated",
+                "created_at",
+                "updated_at",
                 "owner",
                 "course_code",
                 "course_section",
-                "course_term",
+                "term",
                 "year",
                 "course_number",
                 "course_subject",
@@ -131,30 +129,34 @@ class CourseAdmin(admin.ModelAdmin):
                 "request",
             ]
         else:
-            return ["created", "updated", "owner", "course_code", "request"]
+            return ["created_at", "updated_at", "owner", "course_code", "request"]
 
     def save_model(self, request, obj, form, change):
         obj.owner = request.user
         obj.save()
 
 
-class RequestAdmin(admin.ModelAdmin):
+class RequestAdmin(ModelAdmin):
     list_display = [
         "course_requested",
         "status",
         "requestors",
-        "created",
-        "updated",
+        "created_at",
+        "updated_at",
     ]
     list_filter = (
         "status",
-        "course_requested__course_term",
-        "course_requested__course_schools",
+        "course_requested__term",
+        "course_requested__school",
     )
-    search_fields = ("owner__username", "masquerade", "course_requested__course_code")
-    readonly_fields = ["created", "updated", "masquerade", "additional_sections"]
+    search_fields = (
+        "requester__username",
+        "masquerade",
+        "course_requested__course_code",
+    )
+    readonly_fields = ["created_at", "updated_at", "masquerade", "additional_sections"]
     inlines = [AdditionalEnrollmentInline]
-    autocomplete_fields = ["owner", "course_requested", "canvas_instance"]
+    autocomplete_fields = ["requester", "course_requested", "canvas_instance"]
 
     def get_fieldsets(self, request, obj):
         fields = [
@@ -169,7 +171,7 @@ class RequestAdmin(admin.ModelAdmin):
             "canvas_instance",
         ]
 
-        if obj.course_requested.course_schools.abbreviation == "SAS":
+        if obj.course_requested.school.abbreviation == "SAS":
             fields.insert(1, "lps_online")
 
         if obj.copy_from_course:
@@ -183,7 +185,7 @@ class RequestAdmin(admin.ModelAdmin):
             (
                 "Metadata",
                 {
-                    "fields": ("created", "updated", "owner", "masquerade"),
+                    "fields": ("created_at", "updated_at", "owner", "masquerade"),
                 },
             ),
         )
@@ -205,22 +207,13 @@ class RequestAdmin(admin.ModelAdmin):
         obj.save()
 
 
-class CanvasSiteAdmin(admin.ModelAdmin):
-    autocomplete_fields = ["owners", "added_permissions", "request_instance"]
+class CanvasSiteAdmin(ModelAdmin):
+    autocomplete_fields = ["owners", "added_permissions", "request"]
     list_display = ["name", "get_owners", "get_added_permissions"]
     search_fields = ("owners__username", "added_permissions__username", "name")
 
 
-class ProfileInline(admin.StackedInline):
-    model = Profile
-    can_delete = False
-
-
-class UserAdmin(BaseUserAdmin):
-    inlines = [ProfileInline]
-
-
-class AutoAddAdmin(admin.ModelAdmin):
+class AutoAddAdmin(ModelAdmin):
     autocomplete_fields = ["user"]
     list_display = [field.name for field in AutoAdd._meta.get_fields()]
 
@@ -236,22 +229,17 @@ def get_next_in_date_hierarchy(request, date_hierarchy):
         return "month"
 
 
-class RequestSummaryAdmin(admin.ModelAdmin):
+class RequestSummaryAdmin(ModelAdmin):
     change_list_template = "admin/request_summary_change_list.html"
-    date_hierarchy = "created"
-    list_filter = ("course_requested__course_term",)
+    date_hierarchy = "created_at"
+    list_filter = ("course_requested__term",)
 
     def changelist_view(self, request, extra_context=None):
-        response = super().changelist_view(
-            request,
-            extra_context=extra_context,
-        )
-
+        response = super().changelist_view(request, extra_context=extra_context)
         try:
             query_set = response.context_data["cl"].queryset
         except (AttributeError, KeyError):
             return response
-
         multisectionExists = query_set.filter(
             course_requested=OuterRef("pk"), additional_sections__isnull=False
         )
@@ -275,11 +263,10 @@ class RequestSummaryAdmin(admin.ModelAdmin):
                 ),
             ),
         }
-
         response.context_data["summary"] = list(
-            query_set.values("course_requested__course_schools__abbreviation")
+            query_set.values("course_requested__school__abbreviation")
             .annotate()
-            .order_by("course_requested__course_schools__abbreviation")
+            .order_by("course_requested__school__abbreviation")
         )
         response.context_data["summary_total"] = dict(query_set.aggregate(**metrics))
         period = get_next_in_date_hierarchy(
@@ -290,7 +277,7 @@ class RequestSummaryAdmin(admin.ModelAdmin):
         summary_over_time = (
             query_set.annotate(
                 period=Trunc(
-                    "created",
+                    "created_at",
                     period,
                     output_field=DateTimeField(),
                 ),
@@ -315,20 +302,18 @@ class RequestSummaryAdmin(admin.ModelAdmin):
             }
             for x in summary_over_time
         ]
-
         return response
 
 
-admin.site.unregister(User)
-admin.site.register(User, UserAdmin)
-admin.site.register(Course, CourseAdmin)
-admin.site.register(Request, RequestAdmin)
-admin.site.register(Notice)
-admin.site.register(School)
-admin.site.register(Activity)
-admin.site.register(Subject)
-admin.site.register(AutoAdd, AutoAddAdmin)
-admin.site.register(UpdateLog)
-admin.site.register(PageContent)
-admin.site.register(CanvasCourse, CanvasSiteAdmin)
-admin.site.register(RequestSummary, RequestSummaryAdmin)
+site.register(User)
+site.register(Course, CourseAdmin)
+site.register(Request, RequestAdmin)
+site.register(Notice)
+site.register(School)
+site.register(ScheduleType)
+site.register(Subject)
+site.register(AutoAdd, AutoAddAdmin)
+site.register(UpdateLog)
+site.register(PageContent)
+site.register(CanvasCourse, CanvasSiteAdmin)
+site.register(RequestSummary, RequestSummaryAdmin)

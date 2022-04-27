@@ -6,7 +6,7 @@ from django.db.models import Q
 
 from canvas.api import get_canvas, get_user_courses
 
-from .models import CanvasSite, Request, User
+from .models import CanvasCourse, Request, User
 
 DATA_DIRECTORY_NAME = "data"
 logger = getLogger(__name__)
@@ -69,7 +69,7 @@ def update_user_courses(penn_key, logger=logger):
     canvas_courses = get_user_courses(penn_key)
     for canvas_course in canvas_courses:
         try:
-            course, created = CanvasSite.objects.update_or_create(
+            course, created = CanvasCourse.objects.update_or_create(
                 canvas_id=str(canvas_course.id),
                 defaults={
                     "workflow_state": canvas_course.workflow_state,

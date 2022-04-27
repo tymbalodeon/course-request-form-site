@@ -14,8 +14,7 @@ from django.contrib.messages import error as messages_error
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
-
-# from django_celery_beat.models import PeriodicTask
+from django_celery_beat.models import PeriodicTask
 from django_filters import CharFilter, ChoiceFilter, DateTimeFilter, ModelChoiceFilter
 from django_filters.rest_framework import FilterSet
 from rest_framework import permissions, serializers, status
@@ -29,11 +28,11 @@ from rest_framework.viewsets import ModelViewSet
 from canvas.api import (
     MAIN_ACCOUNT_ID,
     CanvasException,
-    create_canvas_sites,
     create_canvas_user,
     get_canvas,
     get_user_by_login_id,
 )
+from canvas.helpers import create_canvas_sites
 from data_warehouse.data_warehouse import (
     get_banner_course,
     get_course,
@@ -45,13 +44,12 @@ from open_data.open_data import OpenData
 
 from .forms import CanvasSiteForm, EmailChangeForm, SubjectForm, UserForm
 from .models import (
-    Activity,
     AutoAdd,
     CanvasCourse,
     Course,
     Notice,
-    Profile,
     Request,
+    ScheduleType,
     School,
     Subject,
     UpdateLog,
@@ -142,21 +140,21 @@ class MixedPermissionModelViewSet(AccessMixin, ModelViewSet):
 
 class CourseFilter(FilterSet):
     activity = ModelChoiceFilter(
-        queryset=Activity.objects.all(), field_name="course_activity", label="Activity"
+        queryset=ScheduleType.objects.all(),
+        field_name="course_activity",
+        label="ScheduleType",
     )
     instructor = CharFilter(field_name="instructors__username", label="Instructor")
     school = ModelChoiceFilter(
         queryset=School.objects.all(),
-        field_name="course_schools",
+        field_name="school",
         to_field_name="abbreviation",
         label="School (abbreviation)",
     )
     subject = CharFilter(
-        field_name="course_subject__abbreviation", label="Subject (abbreviation)"
+        field_name="subject__abbreviation", label="Subject (abbreviation)"
     )
-    term = ChoiceFilter(
-        choices=Course.TERM_CHOICES, field_name="course_term", label="Term"
-    )
+    term = ChoiceFilter(choices=Course.TERM_CHOICES, field_name="term", label="Term")
 
     class Meta:
         model = Course
@@ -173,17 +171,16 @@ class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
     lookup_field = "course_code"
     queryset = (
         Course.objects.filter(
-            course_term__in=[CURRENT_TERM, NEXT_TERM],
+            term__in=[CURRENT_TERM, NEXT_TERM],
             year=CURRENT_YEAR,
-            course_subject__visible=True,
-            course_schools__visible=True,
+            subject__visible=True,
+            school__visible=True,
         )
         if CURRENT_TERM != FALL
         else Course.objects.filter(
-            Q(course_term=NEXT_TERM, year=NEXT_YEAR)
-            | Q(course_term=CURRENT_TERM, year=CURRENT_YEAR),
-            course_subject__visible=True,
-            course_schools__visible=True,
+            Q(term=NEXT_TERM, year=NEXT_YEAR) | Q(term=CURRENT_TERM, year=CURRENT_YEAR),
+            subject__visible=True,
+            school__visible=True,
         )
     )
     serializer_class = CourseSerializer
@@ -249,7 +246,7 @@ class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
             else:
                 reserves = (
                     True
-                    if course_instance.course_schools.abbreviation
+                    if course_instance.school.abbreviation
                     in [
                         "SAS",
                         "SEAS",
@@ -287,13 +284,13 @@ class RequestFilter(FilterSet):
     date = DateTimeFilter(field_name="created", label="Created")
     school = ModelChoiceFilter(
         queryset=School.objects.all(),
-        field_name="course_requested__course_schools",
+        field_name="course_requested__school",
         to_field_name="abbreviation",
         label="School (abbreviation)",
     )
     term = ChoiceFilter(
         choices=Course.TERM_CHOICES,
-        field_name="course_requested__course_term",
+        field_name="course_requested__term",
         label="Term",
     )
 
@@ -361,7 +358,7 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
                 else []
             )
             request_data["reserves"] = (
-                course.course_schools.abbreviation
+                course.school.abbreviation
                 in [
                     "SAS",
                     "SEAS",
@@ -770,7 +767,6 @@ def create_profile_from_dw_data(user, user_name, user_data):
         user.first_name = user_data["first_name"].title()
         user.last_name = user_data["last_name"].title()
         user.email = user_data["email"]
-        Profile.objects.create(user=user, penn_id=user_data["penn_id"])
         update_user_courses(user.username)
         logger.info(f'CREATED user "{user_name}".')
         return True
@@ -786,7 +782,7 @@ class HomePage(UserPassesTestMixin, ModelViewSet):
     login_url = "/accounts/login/"
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = CourseSerializer
-    queryset = Course.objects.filter(course_schools__visible=True)
+    queryset = Course.objects.filter(school__visible=True)
 
     def test_func(self):
         user_name = self.request.user.get_username()
@@ -826,10 +822,9 @@ class HomePage(UserPassesTestMixin, ModelViewSet):
         )
         courses = self.get_queryset().filter(instructors=user_account)
         courses = courses.filter(
-            Q(course_term=NEXT_TERM, year=NEXT_YEAR)
-            | Q(course_term=CURRENT_TERM, year=CURRENT_YEAR),
-            course_subject__visible=True,
-            course_schools__visible=True,
+            Q(term=NEXT_TERM, year=NEXT_YEAR) | Q(term=CURRENT_TERM, year=CURRENT_YEAR),
+            subject__visible=True,
+            school__visible=True,
         )
         courses_count = courses.count()
         courses = courses[:15]
@@ -1261,7 +1256,7 @@ def check_open_data_for_course(request):
             term = request.GET.get("term", None)
             instructor = request.GET.get("instructor", None)
             open_data = OpenData()
-            open_data.set_uri("course_section_search")
+            open_data.set_uri("section_num_search")
             open_data.set_param("course_id", course_id)
             if term:
                 open_data.set_param("term", term)

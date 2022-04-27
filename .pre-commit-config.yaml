@@ -5,7 +5,7 @@ repos:
       - id: isort
         args: ["--profile", "black"]
   - repo: https://github.com/psf/black
-    rev: 21.9b0
+    rev: 22.3.0
     hooks:
       - id: black
         args: [--preview]
@@ -44,17 +44,17 @@ repos:
         entry: make check-django
         language: system
         pass_filenames: false
-  - repo: local
-    hooks:
-      - id: django-test
-        name: django-test
-        entry: make test
-        language: system
-        pass_filenames: false
-  - repo: local
-    hooks:
-      - id: coverage
-        name: coverage
-        entry: make coverage fail-under=52
-        language: system
-        pass_filenames: false
+  # - repo: local
+  #   hooks:
+  #     - id: django-test
+  #       name: django-test
+  #       entry: make test
+  #       language: system
+  #       pass_filenames: false
+  # - repo: local
+  #   hooks:
+  #     - id: coverage
+  #       name: coverage
+  #       entry: make coverage fail-under=52
+  #       language: system
+  #       pass_filenames: false

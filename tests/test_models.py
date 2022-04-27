@@ -2,12 +2,12 @@ from django.test import TestCase
 
 from config.config import USERNAME
 from course.models import (
-    Activity,
     CanvasCourse,
     Course,
     Notice,
     PageContent,
     Request,
+    ScheduleType,
     School,
     Subject,
     User,
@@ -18,7 +18,7 @@ SCHOOL_NAME = "School"
 SCHOOL_ABBREVIATION = "SCH"
 SUBJECT_NAME = "Subject"
 SUBJECT_ABBREVIATION = "SUBJ"
-ACTIVITY_NAME = "Activity"
+ACTIVITY_NAME = "ScheduleType"
 ACTIVITY_ABBR = "ACT"
 MARKDOWN = "Content"
 HTML = "<p>Content</p>"
@@ -28,12 +28,12 @@ def create_user():
     return User.objects.create(username=USERNAME)
 
 
-class ActivityTest(TestCase):
+class ScheduleTypeTest(TestCase):
     def setUp(self):
-        Activity.objects.create(name=ACTIVITY_NAME, abbr=ACTIVITY_ABBR)
+        ScheduleType.objects.create(name=ACTIVITY_NAME, abbr=ACTIVITY_ABBR)
 
     def test_str(self):
-        activity = Activity.objects.get(abbr=ACTIVITY_ABBR)
+        activity = ScheduleType.objects.get(abbr=ACTIVITY_ABBR)
         self.assertEqual(str(activity), ACTIVITY_ABBR)
 
 
@@ -91,7 +91,7 @@ class CourseTest(TestCase):
         subject = Subject.objects.create(
             name=SUBJECT_NAME, abbreviation=SUBJECT_ABBREVIATION
         )
-        activity = Activity.objects.create(name=ACTIVITY_NAME, abbr=ACTIVITY_ABBR)
+        activity = ScheduleType.objects.create(name=ACTIVITY_NAME, abbr=ACTIVITY_ABBR)
         Course.objects.create(
             course_code=self.course_code,
             course_subject=subject,
@@ -134,7 +134,7 @@ class CourseTest(TestCase):
             course_section=self.course_section,
             year=self.year,
             course_term=self.course_term,
-            course_activity=Activity.objects.get(abbr=ACTIVITY_ABBR),
+            course_activity=ScheduleType.objects.get(abbr=ACTIVITY_ABBR),
             course_primary_subject=Subject.objects.get(
                 abbreviation=SUBJECT_ABBREVIATION
             ),

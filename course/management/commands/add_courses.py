@@ -3,7 +3,7 @@ from logging import getLogger
 
 from django.core.management.base import BaseCommand
 
-from course.models import Activity, Course, School, Subject, User
+from course.models import Course, ScheduleType, School, Subject, User
 from course.utils import split_year_and_term
 from data_warehouse.data_warehouse import (
     get_data_warehouse_courses,
@@ -110,10 +110,10 @@ def get_open_data_courses(year_and_term, logger=logger):
                 primary_subject = subject
             school = primary_subject.schools
             try:
-                activity = Activity.objects.get(abbr=course["activity"])
+                activity = ScheduleType.objects.get(abbr=course["activity"])
             except Exception:
                 try:
-                    activity = Activity.objects.create(
+                    activity = ScheduleType.objects.create(
                         abbr=course["activity"], name=course["activity"]
                     )
                 except Exception as error:

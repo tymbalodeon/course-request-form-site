@@ -2,7 +2,7 @@ from datetime import datetime
 from logging import getLogger
 from re import findall, search, sub
 
-from course.models import Activity, Course, Profile, School, Subject, User
+from course.models import Course, ScheduleType, School, Subject, User
 from course.terms import CURRENT_YEAR_AND_TERM
 from data_warehouse.helpers import get_cursor
 from open_data.open_data import OpenData
@@ -169,8 +169,6 @@ def get_user_by_pennkey(pennkey):
                 last_name=last_name,
                 email=account_values["email"],
             )
-            Profile.objects.create(user=user, penn_id=account_values["penn_id"])
-            logger.info(f'CREATED Profile for "{pennkey}".')
         else:
             user = None
             logger.error(f'FAILED to create Profile for "{pennkey}".')
@@ -405,13 +403,13 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
         else:
             school = ""
         try:
-            activity = Activity.objects.get(abbr=activity)
+            activity = ScheduleType.objects.get(abbr=activity)
         except Exception:
             try:
-                activity = Activity.objects.create(abbr=activity, name=activity)
+                activity = ScheduleType.objects.create(abbr=activity, name=activity)
             except Exception:
                 activity = ""
-                logger.error(f"{course_code}: Activity not found")
+                logger.error(f"{course_code}: ScheduleType not found")
         course_number_and_section = course_code[:-5][-6:]
         course_number = course_number_and_section[:3]
         section_number = course_number_and_section[-3:]
@@ -510,7 +508,6 @@ def get_data_warehouse_instructors(term=CURRENT_YEAR_AND_TERM, logger=logger):
                                 last_name=last_name,
                                 email=email,
                             )
-                            Profile.objects.create(user=instructor, penn_id=penn_id)
                         except Exception as error:
                             error_message = error
                             instructor = None

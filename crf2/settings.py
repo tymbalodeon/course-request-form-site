@@ -6,7 +6,6 @@ from celery.schedules import crontab
 from cx_Oracle import init_oracle_client
 
 from config.config import DEBUG_VALUE, LIB_DIR, SECRET_KEY_VALUE
-from course.models import User
 
 
 def get_secret(key, default):
@@ -195,7 +194,7 @@ LOGGING = {
     },
     "loggers": {module: CRF_LOGGER for module in MODULES},
 }
-AUTH_USER_MODEL = User
+AUTH_USER_MODEL = "course.User"
 
 if DEBUG:
     AUTHENTICATION_BACKENDS = [

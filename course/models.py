@@ -22,10 +22,7 @@ from django.db.models import (
 from django.utils.safestring import mark_safe
 from markdown import markdown
 
-from canvas.api import (
-    get_canvas_main_account,
-    get_canvas_user_id_by_pennkey,
-)
+from canvas.api import get_canvas_main_account, get_canvas_user_id_by_pennkey
 from data_warehouse.helpers import get_user_field_from_dw
 
 from .terms import FALL, SPRING, SUMMER, USE_BANNER
@@ -36,8 +33,8 @@ SIS_PREFIX = "BAN" if USE_BANNER else "SRS"
 
 class User(AbstractUser):
     email = EmailField(unique=True, null=True)
-    penn_id = IntegerField(max_length=10, unique=True, null=True)
-    canvas_id = IntegerField(max_length=10, unique=True, null=True)
+    penn_id = IntegerField(unique=True, null=True)
+    canvas_id = IntegerField(unique=True, null=True)
 
     def get_penn_id(self):
         penn_id = get_user_field_from_dw(self.username, "penn_id", logger)
@@ -64,8 +61,8 @@ class User(AbstractUser):
 
 
 class ScheduleType(Model):
-    sched_type_code = CharField(unique=True, primary_key=True)
-    sched_type_desc = CharField()
+    sched_type_code = CharField(max_length=255, unique=True, primary_key=True)
+    sched_type_desc = CharField(max_length=255)
 
     def __str__(self):
         return f"{self.sched_type_desc} ({self.sched_type_code})"
@@ -107,7 +104,7 @@ class School(Model):
 
 
 class Subject(Model):
-    subject_desc_long = CharField()
+    subject_desc_long = CharField(max_length=255)
     subject_code = CharField(max_length=10, unique=True, primary_key=True)
     visible = BooleanField(default=True)
     schools = ForeignKey(
@@ -122,7 +119,10 @@ class Subject(Model):
 
 
 class CanvasCourse(Model):
-    canvas_id = IntegerField(max_length=10, blank=False, default=None, primary_key=True)
+    canvas_id = IntegerField(blank=False, default=None, primary_key=True)
+    name = CharField(max_length=255, blank=False, default=None)
+    sis_course_id = CharField(max_length=50, blank=True, default=None, null=True)
+    workflow_state = CharField(max_length=15, blank=False, default=None)
     request = ForeignKey(
         "Request", on_delete=SET_NULL, null=True, default=None, blank=True
     )
@@ -130,9 +130,6 @@ class CanvasCourse(Model):
     added_permissions = ManyToManyField(
         User, related_name="added_permissions", blank=True, default=None
     )
-    name = CharField(blank=False, default=None)
-    sis_course_id = CharField(max_length=50, blank=True, default=None, null=True)
-    workflow_state = CharField(max_length=15, blank=False, default=None)
 
     class Meta:
         ordering = ["canvas_id"]
@@ -141,10 +138,10 @@ class CanvasCourse(Model):
         return self.name
 
     def get_owners(self):
-        return "\n".join([owner.username for owner in self.owners.all()])
+        return "\n".join(owner.username for owner in self.owners.all())
 
     def get_added_permissions(self):
-        return "\n".join([owner.username for owner in self.added_permissions.all()])
+        return "\n".join(owner.username for owner in self.added_permissions.all())
 
 
 class Course(Model):
@@ -164,7 +161,7 @@ class Course(Model):
     section_num = CharField(max_length=4, blank=False)
     subject = ForeignKey(Subject, on_delete=CASCADE, related_name="courses")
     term = CharField(max_length=2, choices=TERM_CHOICES)
-    created = DateTimeField(auto_now_add=True)
+    created_at = DateTimeField(auto_now_add=True)
     crosslisted = ManyToManyField("self", blank=True, symmetrical=True, default=None)
     crosslisted_request = ForeignKey(
         "course.Request",
@@ -183,7 +180,7 @@ class Course(Model):
         blank=True,
         null=True,
     )
-    owner = ForeignKey("auth.User", related_name="created", on_delete=CASCADE)
+    owner = ForeignKey(User, related_name="created_at", on_delete=CASCADE)
     primary_crosslist = CharField(max_length=20, default="", blank=True)
     requested = BooleanField(default=False)
     requested_override = BooleanField(default=False)
@@ -196,13 +193,9 @@ class Course(Model):
         ordering = ["-year", "course_code"]
 
     def __str__(self):
-        return "_".join(
-            [
-                self.subject.abbreviation,
-                self.course_num,
-                self.section_num,
-                f"{self.year}{self.term}",
-            ]
+        return (
+            f"{self.subject.subject_code}_{self.course_num}"
+            f"_{self.section_num}_{self.year}{self.term}"
         )
 
     def get_requested(self):
@@ -351,22 +344,20 @@ class Course(Model):
 
 
 class Notice(Model):
-    creation_date = DateTimeField(auto_now_add=True)
-    notice_heading = CharField(max_length=100)
-    notice_text = TextField(max_length=1000)
-    owner = ForeignKey("auth.User", related_name="notices", on_delete=CASCADE)
-    updated_date = DateTimeField(auto_now=True)
+    header = CharField(max_length=100)
+    content = TextField(max_length=1000)
+    author = ForeignKey(User, related_name="notices", on_delete=CASCADE)
+    created_at = DateTimeField(auto_now_add=True)
+    updated_at = DateTimeField(auto_now=True)
 
     class Meta:
-        get_latest_by = "updated_date"
+        get_latest_by = "updated_at"
 
     def __str__(self):
-        return self.notice_heading
+        return self.header
 
     def get_html(self):
-        return mark_safe(
-            clean(markdown(self.notice_text), markdown_tags, markdown_attrs)
-        )
+        return mark_safe(clean(markdown(self.content), markdown_tags, markdown_attrs))
 
 
 class Request(Model):
@@ -379,8 +370,8 @@ class Request(Model):
         ("LOCKED", "Locked"),
     )
     course_requested = OneToOneField(Course, on_delete=CASCADE, primary_key=True)
-    copy_from_course = CharField(max_length=100, null=True, default=None, blank=True)
-    title_override = CharField(max_length=100, null=True, default=None, blank=True)
+    copy_from_course = IntegerField(null=True, default=None, blank=True)
+    title_override = CharField(max_length=255, null=True, default=None, blank=True)
     lps_online = BooleanField(default=False, verbose_name="LPS Online")
     exclude_announcements = BooleanField(default=False)
     additional_instructions = TextField(blank=True, default=None, null=True)
@@ -397,13 +388,13 @@ class Request(Model):
     status = CharField(
         max_length=20, choices=REQUEST_PROCESS_CHOICES, default="SUBMITTED"
     )
-    created = DateTimeField(auto_now_add=True)
-    updated = DateTimeField(auto_now=True)
-    owner = ForeignKey("auth.User", related_name="requests", on_delete=CASCADE)
+    created_at = DateTimeField(auto_now_add=True)
+    updated_at = DateTimeField(auto_now=True)
+    requester = ForeignKey(User, related_name="requests", on_delete=CASCADE)
     masquerade = CharField(max_length=20, null=True)
 
     class Meta:
-        ordering = ["-status", "-created"]
+        ordering = ("-status", "-created_at")
 
     def save(self, *args, **kwargs):
         super(Request, self).save(*args, **kwargs)
@@ -416,69 +407,53 @@ class Request(Model):
         crosslisted_courses = Course.objects.filter(
             crosslisted_request=course.course_code
         )
-
         if crosslisted_courses:
             for crosslisted_course in crosslisted_courses:
                 crosslisted_course.crosslisted_request = None
                 crosslisted_course.requested = False
                 crosslisted_course.save()
-
         if multi_section_courses:
             for multi_section_course in multi_section_courses:
                 multi_section_course.multisection_request = None
                 multi_section_course.requested = False
                 multi_section_course.save()
-
         super(Request, self).delete()
         course.requested = False
         course.save()
-
         if crosslisted_courses:
             for crosslisted_course in crosslisted_courses:
                 if course != crosslisted_course:
                     crosslisted_course.requested = False
                     crosslisted_course.save()
-
         if multi_section_courses:
             for multi_section_course in multi_section_courses:
                 multi_section_course.requested = False
                 multi_section_course.save()
 
 
+ROLES = (
+    ("TA", "TA"),
+    ("INST", "Instructor"),
+    ("DES", "Designer"),
+    ("LIB", "Librarian"),
+    ("OBS", "Observer"),
+)
+
+
 class AdditionalEnrollment(Model):
-    ENROLLMENT_TYPE = (
-        ("TA", "TA"),
-        ("INST", "Instructor"),
-        ("DES", "Designer"),
-        ("LIB", "Librarian"),
-        ("OBS", "Observer"),
-    )
     user = ForeignKey(User, on_delete=CASCADE)
-    role = CharField(max_length=4, choices=ENROLLMENT_TYPE, default="TA")
+    role = CharField(max_length=4, choices=ROLES, default="TA")
     course_request = ForeignKey(
-        Request,
-        related_name="additional_enrollments",
-        on_delete=CASCADE,
-        default=None,
+        Request, related_name="additional_enrollments", on_delete=CASCADE, default=None
     )
 
 
 class AutoAdd(Model):
-    ROLE_CHOICES = (
-        ("TA", "TA"),
-        ("INST", "Instructor"),
-        ("DES", "Designer"),
-        ("LIB", "Librarian"),
-        ("OBS", "Observer"),
-    )
     user = ForeignKey(User, on_delete=CASCADE, blank=False)
     school = ForeignKey(School, on_delete=CASCADE, blank=False)
     subject = ForeignKey(Subject, on_delete=CASCADE, blank=False)
-    role = CharField(
-        max_length=10,
-        choices=ROLE_CHOICES,
-    )
-    created = DateTimeField(auto_now_add=True, null=True, blank=True)
+    role = CharField(max_length=4, choices=ROLES)
+    created_at = DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         ordering = ("user__username",)
@@ -496,17 +471,15 @@ class UpdateLog(Model):
 
 
 class PageContent(Model):
-    location = CharField(max_length=100)
-    markdown_text = TextField(max_length=4000)
-    updated_date = DateTimeField(auto_now=True)
+    page = CharField(max_length=100)
+    content = TextField(max_length=4000)
+    updated_at = DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.location
+        return self.page
 
     def get_html(self):
-        return mark_safe(
-            clean(markdown(self.markdown_text), markdown_tags, markdown_attrs)
-        )
+        return mark_safe(clean(markdown(self.content), markdown_tags, markdown_attrs))
 
 
 class RequestSummary(Request):
