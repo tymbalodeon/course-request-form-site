@@ -15,11 +15,11 @@ from django.db.models.functions import Trunc
 from .models import (
     AdditionalEnrollment,
     AutoAdd,
-    CanvasCourse,
+    # CanvasCourse,
     Course,
     Notice,
     PageContent,
-    Request,
+    # Request,
     RequestSummary,
     ScheduleType,
     School,
@@ -306,14 +306,14 @@ class RequestSummaryAdmin(ModelAdmin):
 
 
 site.register(User)
-site.register(Course, CourseAdmin)
-site.register(Request, RequestAdmin)
+# site.register(Course, CourseAdmin)
+# site.register(Request, RequestAdmin)
 site.register(Notice)
 site.register(School)
 site.register(ScheduleType)
 site.register(Subject)
-site.register(AutoAdd, AutoAddAdmin)
+# site.register(AutoAdd, AutoAddAdmin)
 site.register(UpdateLog)
 site.register(PageContent)
-site.register(CanvasCourse, CanvasSiteAdmin)
+# site.register(CanvasCourse, CanvasSiteAdmin)
 site.register(RequestSummary, RequestSummaryAdmin)
