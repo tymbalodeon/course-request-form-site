@@ -22,6 +22,17 @@ from django.db.models import (
 from django.utils.safestring import mark_safe
 from markdown import markdown
 
+from canvas.api import get_canvas_user_id_by_pennkey
+from data_warehouse.helpers import (
+    get_cursor,
+    get_dw_user_check_message,
+    get_dw_user_found_message,
+    get_dw_user_not_found_message,
+    get_single_item_from_cursor,
+    get_user_field_from_dw,
+    get_user_field_query,
+)
+
 from .terms import FALL, SPRING, SUMMER, USE_BANNER
 
 logger = getLogger(__name__)
@@ -34,16 +45,22 @@ class User(AbstractUser):
     canvas_id = IntegerField(max_length=10, unique=True, null=True)
 
     def get_penn_id(self):
-        pass
+        penn_id = get_user_field_from_dw(self.username, "penn_id", logger)
+        if penn_id:
+            self.penn_id = int(penn_id)
+            self.save()
 
     def get_email(self):
-        pass
+        email = get_user_field_from_dw(self.username, "email_address", logger)
+        if email:
+            self.email = email
+            self.save()
 
-    def get_penn_id_and_email(self):
-        pass
-
-    def get_canvas_id(self):
-        pass
+    def get_canvas_id(self, test=False):
+        canvas_user_id = get_canvas_user_id_by_pennkey(self.username, test=test)
+        if canvas_user_id:
+            self.canvas_id = canvas_user_id
+            self.save()
 
 
 class Activity(Model):

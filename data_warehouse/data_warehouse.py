@@ -1,23 +1,13 @@
-from configparser import ConfigParser
 from datetime import datetime
 from logging import getLogger
 from re import findall, search, sub
 
-from cx_Oracle import connect
-
 from course.models import Activity, Course, Profile, School, Subject, User
 from course.terms import CURRENT_YEAR_AND_TERM
+from data_warehouse.helpers import get_cursor
 from open_data.open_data import OpenData
 
 logger = getLogger(__name__)
-
-
-def get_cursor():
-    config = ConfigParser()
-    config.read("config/config.ini")
-    values = dict(config.items("data_warehouse"))
-    connection = connect(values["user"], values["password"], values["service"])
-    return connection.cursor()
 
 
 def get_banner_course(srs_course_id, search_term):

@@ -1,9 +1,11 @@
 from logging import getLogger
 from time import sleep
+from typing import Optional
 
 from canvasapi import Canvas
 from canvasapi.exceptions import CanvasException
 from canvasapi.tab import Tab
+from canvasapi.user import User as CanvasUser
 
 from config.config import PROD_KEY, PROD_URL, TEST_KEY, TEST_URL
 from course.models import SIS_PREFIX, CanvasCourse, Course, Request, User
@@ -53,15 +55,20 @@ def create_canvas_user(penn_key, penn_id, email, full_name, test=False):
         return None
 
 
-def get_user_by_sis(login_id, test=False):
+def get_user_by_login_id(login_id: str, test=False) -> Optional[CanvasUser]:
     try:
         return get_canvas(test).get_user(login_id, "sis_login_id")
     except CanvasException:
         return None
 
 
+def get_canvas_user_id_by_pennkey(login_id: str, test=False) -> Optional[int]:
+    user = get_user_by_login_id(login_id, test)
+    return user.id if user else None
+
+
 def get_user_courses(login_id):
-    user = get_user_by_sis(login_id)
+    user = get_user_by_login_id(login_id)
     return user.get_courses(enrollment_type="teacher") if user else []
 
 
@@ -230,7 +237,7 @@ def enroll_user(request, canvas_course, section, user, role, test):
         penn_id = crf_user.profile.penn_id
         email = crf_user.email
         full_name = f"{crf_user.first_name} {crf_user.last_name}"
-    canvas_user = get_user_by_sis(username, test=test)
+    canvas_user = get_user_by_login_id(username, test=test)
     if canvas_user is None:
         try:
             canvas_user = create_canvas_user(
