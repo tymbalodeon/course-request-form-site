@@ -158,7 +158,10 @@ class Subject(Model):
             try:
                 school = School.objects.get(school_code=school_code)
             except Exception:
-                query = "SELECT school_code, school_desc_long FROM dwngss.v_school WHERE school_code = :school_code"
+                query = (
+                    "SELECT school_code, school_desc_long FROM dwngss.v_school WHERE"
+                    " school_code = :school_code"
+                )
                 cursor = get_query_cursor(query, {"school_code": school_code})
                 school, created = School.objects.update_or_create(
                     school_code=school_code,

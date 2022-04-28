@@ -1,6 +1,6 @@
 from configparser import ConfigParser
-from typing import Optional
 from logging import Logger
+from typing import Optional
 
 from cx_Oracle import connect
 
