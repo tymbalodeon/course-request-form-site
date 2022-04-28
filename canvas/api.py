@@ -7,6 +7,7 @@ from canvasapi.account import Account
 from canvasapi.exceptions import CanvasException
 from canvasapi.tab import Tab
 from canvasapi.user import User as CanvasUser
+
 from config.config import PROD_KEY, PROD_URL, TEST_KEY, TEST_URL, USE_TEST_ENV
 
 MAIN_ACCOUNT_ID = 96678
