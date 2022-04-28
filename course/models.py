@@ -23,7 +23,7 @@ from django.utils.safestring import mark_safe
 from markdown import markdown
 
 from canvas.api import get_all_canvas_accounts, get_canvas_user_id_by_pennkey
-from data_warehouse.helpers import get_cursor, get_query_cursor, log_field
+from data_warehouse.helpers import get_query_cursor
 
 from .terms import FALL, SPRING, SUMMER, USE_BANNER
 
@@ -36,31 +36,47 @@ class User(AbstractUser):
     email_address = EmailField(unique=True, null=True)
     canvas_id = IntegerField(unique=True, null=True)
 
+    @staticmethod
+    def log_field_found(field: str, value: str, username: str):
+        logger.info(f"FOUND {field} '{value}' for {username}")
+
+    @staticmethod
+    def log_field_not_found(username: str, field: str):
+        logger.warning(f"{field} NOT FOUND for {username}")
+
+    @classmethod
+    def log_field(cls, username: str, field: str, value: str):
+        if value:
+            cls.log_field_found(username, field, value)
+        else:
+            cls.log_field_not_found(username, field)
+
     def get_dw_info(self):
         logger.info(f"Getting {self.username}'s info from Data Warehouse...")
-        cursor = get_cursor()
         query = """
                 SELECT
                     first_name, last_name, penn_id, email_address
                 FROM employee_general
                 WHERE pennkey = :username
                 """
-        cursor.execute(query, username=self.username)
+        cursor = get_query_cursor(query, {"username": self.username})
+        if not cursor:
+            return
         for first_name, last_name, penn_id, email_address in cursor:
-            log_field(logger, "first name", first_name, self.username)
+            self.log_field(self.username, "first name", first_name)
             self.first_name = first_name
-            log_field(logger, "last name", last_name, self.username)
+            self.log_field(self.username, "last name", last_name)
             self.last_name = last_name
-            log_field(logger, "Penn id", penn_id, self.username)
+            self.log_field(self.username, "Penn id", penn_id)
             self.penn_id = penn_id
-            log_field(logger, "email address", email_address, self.username)
+            self.log_field(self.username, "email address", email_address)
             self.email_address = email_address
         self.save()
 
     def get_canvas_id(self):
         logger.info(f"Getting {self.username}'s Canvas user id...")
         canvas_user_id = get_canvas_user_id_by_pennkey(self.username)
-        log_field(logger, "Canvas user id", str(canvas_user_id), self.username)
+        self.log_field(self.username, "Canvas user id", str(canvas_user_id))
         if canvas_user_id:
             self.canvas_id = canvas_user_id
             self.save()
@@ -80,6 +96,8 @@ class ScheduleType(Model):
     def sync(cls):
         query = "SELECT sched_type_code, sched_type_desc FROM dwngss.v_sched_type"
         cursor = get_query_cursor(query)
+        if not cursor:
+            return
         for sched_type_code, sched_type_desc in cursor:
             schedule_type, created = cls.objects.update_or_create(
                 sched_type_code=sched_type_code,
@@ -105,6 +123,8 @@ class School(Model):
     def sync(cls):
         query = "SELECT school_code, school_desc_long FROM dwngss.v_school"
         cursor = get_query_cursor(query)
+        if not cursor:
+            return
         for school_code, school_desc_long in cursor:
             school, created = cls.objects.update_or_create(
                 school_code=school_code,
@@ -154,6 +174,8 @@ class Subject(Model):
             "SELECT subject_code, subject_desc_long, school_code FROM dwngss.v_subject"
         )
         cursor = get_query_cursor(query)
+        if not cursor:
+            return
         for subject_code, subject_desc_long, school_code in cursor:
             try:
                 school = School.objects.get(school_code=school_code)
@@ -163,6 +185,8 @@ class Subject(Model):
                     " school_code = :school_code"
                 )
                 cursor = get_query_cursor(query, {"school_code": school_code})
+                if not cursor:
+                    return
                 for school_code, school_desc_long in cursor:
                     school, created = School.objects.update_or_create(
                         school_code=school_code,
