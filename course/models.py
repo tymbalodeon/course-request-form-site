@@ -36,17 +36,26 @@ class User(AbstractUser):
     penn_id = IntegerField(unique=True, null=True)
     canvas_id = IntegerField(unique=True, null=True)
 
-    def get_penn_id(self):
-        penn_id = get_user_field_from_dw(self.username, "penn_id", logger)
-        if penn_id:
-            self.penn_id = int(penn_id)
-            self.save()
-
-    def get_email(self):
-        email = get_user_field_from_dw(self.username, "email_address", logger)
-        if email:
-            self.email = email
-            self.save()
+    def get_dw_info(self):
+        logger.info(f"Getting {self.username}'s info from Data Warehouse...")
+        cursor = get_cursor()
+        query = """
+                SELECT
+                    first_name, last_name, penn_id, email_address
+                FROM employee_general
+                WHERE pennkey = :username
+                """
+        cursor.execute(query, username=self.username)
+        for first_name, last_name, penn_id, email_address in cursor:
+            if first_name:
+                self.first_name = first_name
+            if last_name:
+                self.last_name = last_name
+            if penn_id:
+                self.penn_id = penn_id
+            if email_address:
+                self.email = email_address
+        self.save()
 
     def get_canvas_id(self, test=False):
         canvas_user_id = get_canvas_user_id_by_pennkey(self.username, test=test)
@@ -54,10 +63,11 @@ class User(AbstractUser):
             self.canvas_id = canvas_user_id
             self.save()
 
-    def sync_fields(self, test=False):
-        self.get_penn_id()
-        self.get_email()
-        self.get_canvas_id(test=test)
+    def save(self, *args, **kwargs):
+        if self._state.adding:
+            self.get_dw_info()
+            self.get_canvas_id()
+        super().save(*args, **kwargs)
 
 
 class ScheduleType(Model):

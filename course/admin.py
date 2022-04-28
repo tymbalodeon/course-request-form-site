@@ -12,9 +12,9 @@ from django.db.models import (
 )
 from django.db.models.functions import Trunc
 
-from .models import (  # CanvasCourse,; Request,
+from .models import (
     AdditionalEnrollment,
-    AutoAdd,
+    AutoAdd,  # CanvasCourse,; Request,
     Course,
     Notice,
     PageContent,
