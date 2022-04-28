@@ -23,7 +23,7 @@ from django.utils.safestring import mark_safe
 from markdown import markdown
 
 from canvas.api import get_canvas_main_account, get_canvas_user_id_by_pennkey
-from data_warehouse.helpers import get_cursor
+from data_warehouse.helpers import get_cursor, log_field_found, log_field_not_found
 
 from .terms import FALL, SPRING, SUMMER, USE_BANNER
 
@@ -32,8 +32,8 @@ SIS_PREFIX = "BAN" if USE_BANNER else "SRS"
 
 
 class User(AbstractUser):
-    email = EmailField(unique=True, null=True)
     penn_id = IntegerField(unique=True, null=True)
+    email_address = EmailField(unique=True, null=True)
     canvas_id = IntegerField(unique=True, null=True)
 
     def get_dw_info(self):
@@ -47,18 +47,20 @@ class User(AbstractUser):
                 """
         cursor.execute(query, username=self.username)
         for first_name, last_name, penn_id, email_address in cursor:
-            if first_name:
-                self.first_name = first_name
-            if last_name:
-                self.last_name = last_name
-            if penn_id:
-                self.penn_id = penn_id
-            if email_address:
-                self.email = email_address
+            log_field(logger, "first name", first_name, self.username)
+            self.first_name = first_name
+            log_field(logger, "last name", last_name, self.username)
+            self.last_name = last_name
+            log_field(logger, "Penn id", penn_id, self.username)
+            self.penn_id = penn_id
+            log_field(logger, "email address", email_address, self.username)
+            self.email_address = email_address
         self.save()
 
     def get_canvas_id(self):
+        logger.info(f"Getting {self.username}'s Canvas user id...")
         canvas_user_id = get_canvas_user_id_by_pennkey(self.username)
+        log_field(logger, "Canvas user id", canvas_user_id, self.username)
         if canvas_user_id:
             self.canvas_id = canvas_user_id
             self.save()

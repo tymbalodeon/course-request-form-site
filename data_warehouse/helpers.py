@@ -1,4 +1,5 @@
 from configparser import ConfigParser
+from logging import Logger
 
 from cx_Oracle import connect
 
@@ -9,3 +10,18 @@ def get_cursor():
     values = dict(config.items("data_warehouse"))
     connection = connect(values["user"], values["password"], values["service"])
     return connection.cursor()
+
+
+def log_field_found(logger: Logger, field: str, value: str, pennkey: str):
+    logger.info(f"FOUND {field} '{value}' for {pennkey}")
+
+
+def log_field_not_found(logger: Logger, field: str, pennkey: str):
+    logger.warning(f"{field} NOT FOUND for {pennkey}")
+
+
+def log_field(logger: Logger, field: str, value: str, pennkey: str):
+    if value:
+        log_field_found(logger, field, value, pennkey)
+    else:
+        log_field_not_found(logger, field, pennkey)
