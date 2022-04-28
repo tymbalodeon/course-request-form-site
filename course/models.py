@@ -1,5 +1,4 @@
 from logging import getLogger
-from typing import Optional
 
 from bleach import clean
 from bleach_allowlist import markdown_attrs, markdown_tags
