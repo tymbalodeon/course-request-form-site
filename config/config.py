@@ -4,6 +4,7 @@ config = ConfigParser()
 config.read("config/config.ini")
 
 DJANGO_SECTION = "django"
+CANVAS_SECTION = "canvas"
 DEBUG_VALUE = config.getboolean(DJANGO_SECTION, "debug", fallback=False)
 SECRET_KEY_VALUE = config.get(DJANGO_SECTION, "secret_key", raw=True)
 
@@ -14,7 +15,11 @@ def get_config_section_values(section):
 
 USERNAME, PASSWORD, EMAIL = get_config_section_values("user")
 OPEN_DATA_ID, OPEN_DATA_KEY, OPEN_DATA_DOMAIN = get_config_section_values("open_data")
-PROD_URL, PROD_KEY, TEST_URL, TEST_KEY = get_config_section_values("canvas")
+PROD_URL = config.get(CANVAS_SECTION, "prod_url")
+PROD_KEY = config.get(CANVAS_SECTION, "prod_key")
+TEST_URL = config.get(CANVAS_SECTION, "test_url")
+TEST_KEY = config.get(CANVAS_SECTION, "test_key")
+USE_TEST_ENV = config.getboolean(CANVAS_SECTION, "use_test_env", fallback=True)
 (
     DATA_WAREHOUSE_USERNAME,
     DATA_WAREHOUSE_PASSWORD,

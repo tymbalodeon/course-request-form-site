@@ -23,7 +23,7 @@ from django.utils.safestring import mark_safe
 from markdown import markdown
 
 from canvas.api import get_canvas_main_account, get_canvas_user_id_by_pennkey
-from data_warehouse.helpers import get_user_field_from_dw
+from data_warehouse.helpers import get_cursor
 
 from .terms import FALL, SPRING, SUMMER, USE_BANNER
 
@@ -57,8 +57,8 @@ class User(AbstractUser):
                 self.email = email_address
         self.save()
 
-    def get_canvas_id(self, test=False):
-        canvas_user_id = get_canvas_user_id_by_pennkey(self.username, test=test)
+    def get_canvas_id(self):
+        canvas_user_id = get_canvas_user_id_by_pennkey(self.username)
         if canvas_user_id:
             self.canvas_id = canvas_user_id
             self.save()

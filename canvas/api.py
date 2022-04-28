@@ -7,8 +7,7 @@ from canvasapi.account import Account
 from canvasapi.exceptions import CanvasException
 from canvasapi.tab import Tab
 from canvasapi.user import User as CanvasUser
-
-from config.config import PROD_KEY, PROD_URL, TEST_KEY, TEST_URL
+from config.config import PROD_KEY, PROD_URL, TEST_KEY, TEST_URL, USE_TEST_ENV
 
 MAIN_ACCOUNT_ID = 96678
 logger = getLogger(__name__)
@@ -26,30 +25,30 @@ ENROLLMENT_TYPES = {
 }
 
 
-def get_canvas(test=False):
+def get_canvas(test=USE_TEST_ENV):
     return Canvas(TEST_URL if test else PROD_URL, TEST_KEY if test else PROD_KEY)
 
 
-def get_canvas_main_account(test=False) -> Account:
-    return get_canvas(test).get_account(MAIN_ACCOUNT_ID)
+def get_canvas_main_account() -> Account:
+    return get_canvas().get_account(MAIN_ACCOUNT_ID)
 
 
-def get_canvas_user_id_by_pennkey(login_id: str, test=False) -> Optional[int]:
-    user = get_user_by_login_id(login_id, test)
+def get_canvas_user_id_by_pennkey(login_id: str) -> Optional[int]:
+    user = get_user_by_login_id(login_id)
     return user.id if user else None
 
 
-def get_canvas_account(account_id, test=False):
+def get_canvas_account(account_id):
     try:
-        return get_canvas(test).get_account(account_id)
+        return get_canvas().get_account(account_id)
     except CanvasException:
         return None
 
 
-def create_canvas_user(penn_key, penn_id, email, full_name, test=False):
+def create_canvas_user(penn_key, penn_id, email, full_name):
     pseudonym = {"sis_user_id": penn_id, "unique_id": penn_key}
     try:
-        account = get_canvas_account(MAIN_ACCOUNT_ID, test=test)
+        account = get_canvas_account(MAIN_ACCOUNT_ID)
         if not account:
             return None
         user = account.create_user(pseudonym, user={"name": full_name})
@@ -62,9 +61,9 @@ def create_canvas_user(penn_key, penn_id, email, full_name, test=False):
         return None
 
 
-def get_user_by_login_id(login_id: str, test=False) -> Optional[CanvasUser]:
+def get_user_by_login_id(login_id: str) -> Optional[CanvasUser]:
     try:
-        return get_canvas(test).get_user(login_id, "sis_login_id")
+        return get_canvas().get_user(login_id, "sis_login_id")
     except CanvasException:
         return None
 
@@ -74,9 +73,9 @@ def get_user_courses(login_id):
     return user.get_courses(enrollment_type="teacher") if user else []
 
 
-def get_term_id(account_id, sis_term_id, test=False):
+def get_term_id(account_id, sis_term_id):
     try:
-        account = get_canvas_account(account_id, test=test)
+        account = get_canvas_account(account_id)
         if not account:
             return None
         response = account._requester.request(
@@ -93,12 +92,11 @@ def add_request_process_notes(message, request):
     request.save()
 
 
-def get_school_account(request, course_requested, test):
+def get_school_account(request, course_requested):
     account = get_canvas_account(
         LPS_ONLINE_ACCOUNT_ID
         if request.lps_online and course_requested.course_schools.abbreviation == "SAS"
-        else course_requested.course_schools.canvas_subaccount,
-        test=test,
+        else course_requested.course_schools.canvas_subaccount
     )
     if not account:
         add_request_process_notes("failed to locate Canvas Account", request)
@@ -125,14 +123,14 @@ def get_section_code(request, course_requested):
         return None
 
 
-def get_canvas_course(request, account, course, sis_course_id, test):
+def get_canvas_course(request, account, course, sis_course_id):
     already_exists = False
     canvas_course = None
     try:
         canvas_course = account.create_course(course=course)
     except Exception:
         try:
-            canvas_course = get_canvas(test).get_course(sis_course_id, use_sis_id=True)
+            canvas_course = get_canvas().get_course(sis_course_id, use_sis_id=True)
             canvas_course.update(course=course)
             already_exists = True
         except Exception as error:
@@ -200,9 +198,9 @@ def set_reserves(request, canvas_course):
         add_request_process_notes("failed to try to configure ARES", request)
 
 
-def delete_zoom_events(canvas_course, test):
+def delete_zoom_events(canvas_course):
     logger.info("\t* Deleting Zoom events...")
-    canvas = get_canvas(test)
+    canvas = get_canvas()
     course_string = f"course_{canvas_course.id}"
     events = canvas.get_calendar_events(context_codes=[course_string], all_events=True)
     zoom_events = list()
@@ -236,7 +234,7 @@ def delete_announcements(canvas_course):
         logger.info(f"\t- Announcement '{title}' deleted.")
 
 
-def migrate_course(canvas_course, serialized, test):
+def migrate_course(canvas_course, serialized):
     try:
         exclude_announcements = serialized.data.get("exclude_announcements", None)
         source_course_id = serialized.data["copy_from_course"]
@@ -257,7 +255,7 @@ def migrate_course(canvas_course, serialized, test):
             logger.info("\t* Migration running...")
             sleep(8)
         logger.info("\t- MIGRATION COMPLETE")
-        delete_zoom_events(canvas_course, test)
+        delete_zoom_events(canvas_course)
         if exclude_announcements:
             delete_announcements(canvas_course)
     except Exception as error:
