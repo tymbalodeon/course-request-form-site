@@ -22,8 +22,8 @@ from django.db.models import (
 from django.utils.safestring import mark_safe
 from markdown import markdown
 
-from canvas.api import get_canvas_main_account, get_canvas_user_id_by_pennkey
-from data_warehouse.helpers import get_cursor, log_field
+from canvas.api import get_all_canvas_accounts, get_canvas_user_id_by_pennkey
+from data_warehouse.helpers import get_cursor, get_query_cursor, log_field
 
 from .terms import FALL, SPRING, SUMMER, USE_BANNER
 
@@ -60,7 +60,7 @@ class User(AbstractUser):
     def get_canvas_id(self):
         logger.info(f"Getting {self.username}'s Canvas user id...")
         canvas_user_id = get_canvas_user_id_by_pennkey(self.username)
-        log_field(logger, "Canvas user id", canvas_user_id, self.username)
+        log_field(logger, "Canvas user id", str(canvas_user_id), self.username)
         if canvas_user_id:
             self.canvas_id = canvas_user_id
             self.save()
@@ -163,13 +163,14 @@ class Subject(Model):
                     " school_code = :school_code"
                 )
                 cursor = get_query_cursor(query, {"school_code": school_code})
-                school, created = School.objects.update_or_create(
-                    school_code=school_code,
-                    defaults={"school_desc_long": school_desc_long},
-                )
-                school.get_canvas_sub_account()
-                action = "ADDED" if created else "UPDATED"
-                logger.info(f"{action} {school}")
+                for school_code, school_desc_long in cursor:
+                    school, created = School.objects.update_or_create(
+                        school_code=school_code,
+                        defaults={"school_desc_long": school_desc_long},
+                    )
+                    school.get_canvas_sub_account()
+                    action = "ADDED" if created else "UPDATED"
+                    logger.info(f"{action} {school}")
             subject, created = cls.objects.update_or_create(
                 subject_code=subject_code,
                 defaults={"subject_desc_long": subject_desc_long, "school": school},
