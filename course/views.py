@@ -6,25 +6,6 @@ from re import search
 from typing import Dict
 from urllib.parse import unquote
 
-from django.contrib.admin.views.decorators import staff_member_required
-from django.contrib.auth.mixins import AccessMixin, UserPassesTestMixin
-from django.contrib.auth.views import redirect_to_login
-from django.contrib.messages import ERROR, add_message
-from django.contrib.messages import error as messages_error
-from django.db.models import Q
-from django.http import HttpResponse, JsonResponse
-from django.shortcuts import redirect, render
-from django_celery_beat.models import PeriodicTask
-from django_filters import CharFilter, ChoiceFilter, DateTimeFilter, ModelChoiceFilter
-from django_filters.rest_framework import FilterSet
-from rest_framework import permissions, serializers, status
-from rest_framework.exceptions import PermissionDenied
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
-from rest_framework.renderers import TemplateHTMLRenderer
-from rest_framework.response import Response
-from rest_framework.utils.html import parse_html_list
-from rest_framework.viewsets import ModelViewSet
-
 from canvas.api import (
     MAIN_ACCOUNT_ID,
     CanvasException,
@@ -36,11 +17,27 @@ from canvas.helpers import create_canvas_sites
 from data_warehouse.data_warehouse import (
     get_banner_course,
     get_course,
-    get_staff_account,
-    get_student_account,
     get_user_by_pennkey,
 )
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth.mixins import AccessMixin, UserPassesTestMixin
+from django.contrib.auth.views import redirect_to_login
+from django.contrib.messages import ERROR, add_message
+from django.contrib.messages import error as messages_error
+from django.db.models import Q
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import redirect, render
+from django_celery_beat.models import PeriodicTask
+from django_filters import CharFilter, ChoiceFilter, DateTimeFilter, ModelChoiceFilter
+from django_filters.rest_framework import FilterSet
 from open_data.open_data import OpenData
+from rest_framework import permissions, serializers, status
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.renderers import TemplateHTMLRenderer
+from rest_framework.response import Response
+from rest_framework.utils.html import parse_html_list
+from rest_framework.viewsets import ModelViewSet
 
 from .forms import CanvasSiteForm, EmailChangeForm, SubjectForm, UserForm
 from .models import (
@@ -75,7 +72,7 @@ from .terms import (
     NEXT_YEAR_AND_TERM,
     get_term_letters,
 )
-from .utils import DATA_DIRECTORY_NAME, get_data_directory, update_user_courses
+from .utils import DATA_DIRECTORY_NAME, get_data_directory
 
 FIVE_OR_MORE_ALPHABETIC_CHARACTERS = r"[a-z]{5,}"
 SPRING, SUMMER, FALL = get_term_letters()
@@ -89,10 +86,8 @@ logger = getLogger(__name__)
 
 def get_search_term(request):
     search_term = request.GET.get("search", None)
-
     if search_term and not search(FIVE_OR_MORE_ALPHABETIC_CHARACTERS, search_term):
         search_term = search_term.replace(" ", "").replace("-", "").replace("_", "")
-
     return search_term
 
 
@@ -102,12 +97,9 @@ def emergency_redirect(request):
 
 def print_log_message(request, object_type, action_type):
     search_term = request.GET.get("search", None)
-
     if not search_term:
         search_term = request.GET.get("subject", None)
-
     search_term_display = f'using search term "{search_term}" ' if search_term else ""
-
     logger.info(
         f"Retrieving {object_type} {action_type.upper()} {search_term_display}for"
         f' "{request.user}"...'
@@ -277,9 +269,7 @@ class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
 
 
 class RequestFilter(FilterSet):
-    status = ChoiceFilter(
-        choices=Request.REQUEST_PROCESS_CHOICES, field_name="status", label="Status"
-    )
+    status = ChoiceFilter(choices=Request.STATUSES, field_name="status", label="Status")
     requestor = CharFilter(field_name="owner__username", label="Requestor")
     date = DateTimeFilter(field_name="created", label="Created")
     school = ModelChoiceFilter(
@@ -762,19 +752,6 @@ class CanvasSiteViewSet(MixedPermissionModelViewSet, ModelViewSet):
         )
 
 
-def create_profile_from_dw_data(user, user_name, user_data):
-    try:
-        user.first_name = user_data["first_name"].title()
-        user.last_name = user_data["last_name"].title()
-        user.email = user_data["email"]
-        update_user_courses(user.username)
-        logger.info(f'CREATED user "{user_name}".')
-        return True
-    except Exception as error:
-        logger.info(f'Failed to create Profile for user "{user_name}" ({error}).')
-        return False
-
-
 class HomePage(UserPassesTestMixin, ModelViewSet):
     lookup_field = "course_code"
     renderer_classes = [TemplateHTMLRenderer]
@@ -790,25 +767,6 @@ class HomePage(UserPassesTestMixin, ModelViewSet):
         user = User.objects.get(username=self.request.user.get_username())
         if not user:
             logger.error(f'User "{user_name}" does not exist in the CRF.')
-        try:
-            if user.profile:
-                logger.info(f'FOUND Profile for "{user_name}".')
-                return True
-        except Exception:
-            user_data = get_staff_account(penn_key=user.username)
-            if user_data:
-                return create_profile_from_dw_data(user, user_name, user_data)
-            else:
-                user_data = get_student_account(penn_key=user.username)
-                if user_data:
-                    return create_profile_from_dw_data(user, user_name, user_data)
-                else:
-                    message = (
-                        f'FAILED to create Profile for "{user_name}" '
-                        "(user data not found in the Data Warehouse)."
-                    )
-                    logger.error(message)
-                    return False
 
     def get(self, request):
         self.test_func()

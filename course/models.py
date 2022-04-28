@@ -2,6 +2,8 @@ from logging import getLogger
 
 from bleach import clean
 from bleach_allowlist import markdown_attrs, markdown_tags
+from canvas.api import get_all_canvas_accounts, get_canvas_user_id_by_pennkey
+from data_warehouse.helpers import get_query_cursor
 from django.contrib.auth.models import AbstractUser
 from django.db.models import (
     CASCADE,
@@ -22,9 +24,6 @@ from django.db.models import (
 from django.utils.safestring import mark_safe
 from markdown import markdown
 
-from canvas.api import get_all_canvas_accounts, get_canvas_user_id_by_pennkey
-from data_warehouse.helpers import get_query_cursor
-
 from .terms import FALL, SPRING, SUMMER, USE_BANNER
 
 logger = getLogger(__name__)
@@ -37,19 +36,11 @@ class User(AbstractUser):
     canvas_id = IntegerField(unique=True, null=True)
 
     @staticmethod
-    def log_field_found(username: str, field: str, value):
-        logger.info(f"FOUND {field} '{value}' for {username}")
-
-    @staticmethod
-    def log_field_not_found(username: str, field: str):
-        logger.warning(f"{field} NOT FOUND for {username}")
-
-    @classmethod
-    def log_field(cls, username: str, field: str, value):
+    def log_field(username: str, field: str, value):
         if value:
-            cls.log_field_found(username, field, value)
+            logger.info(f"FOUND {field} '{value}' for {username}")
         else:
-            cls.log_field_not_found(username, field)
+            logger.warning(f"{field} NOT FOUND for {username}")
 
     def get_dw_info(self):
         logger.info(f"Getting {self.username}'s info from Data Warehouse...")
@@ -180,6 +171,7 @@ class Subject(Model):
             try:
                 school = School.objects.get(school_code=school_code)
             except Exception:
+                school = None
                 query = (
                     "SELECT school_code, school_desc_long FROM dwngss.v_school WHERE"
                     " school_code = :school_code"
@@ -281,7 +273,7 @@ class Course(Model):
     objects = Manager()
 
     class Meta:
-        ordering = ["-year", "course_code"]
+        ordering = ("-year", "course_code")
 
     def __str__(self):
         return (
@@ -361,7 +353,6 @@ class Course(Model):
                 request = self.crosslisted_request
             else:
                 request = None
-
             if not request and self.requested:
                 logger.warning(f"Request NOT FOUND for {self.course_code} ({error}).")
             return request
@@ -410,11 +401,9 @@ class Course(Model):
     def sis_format_primary(self, sis_id=True):
         primary_crosslist = self.primary_crosslist
         year_and_term = self.get_year_and_term()
-
         if primary_crosslist:
             if year_and_term in primary_crosslist and len(primary_crosslist) > 9:
                 primary_crosslist = primary_crosslist.replace(year_and_term, "")
-
             subject = "".join(
                 character for character in primary_crosslist if str.isalpha(character)
             )
@@ -425,7 +414,6 @@ class Course(Model):
             )
             number = number_section[:4] if self.term.isnumeric() else number_section[:3]
             section = number_section[3:]
-
             if sis_id:
                 return f"{subject}-{number}-{section} {year_and_term}"
             else:
@@ -452,7 +440,7 @@ class Notice(Model):
 
 
 class Request(Model):
-    REQUEST_PROCESS_CHOICES = (
+    STATUSES = (
         ("COMPLETED", "Completed"),
         ("IN_PROCESS", "In Process"),
         ("CANCELED", "Canceled"),
@@ -476,9 +464,7 @@ class Request(Model):
         null=True,
         blank=True,
     )
-    status = CharField(
-        max_length=20, choices=REQUEST_PROCESS_CHOICES, default="SUBMITTED"
-    )
+    status = CharField(max_length=20, choices=STATUSES, default="SUBMITTED")
     created_at = DateTimeField(auto_now_add=True)
     updated_at = DateTimeField(auto_now=True)
     requester = ForeignKey(User, related_name="requests", on_delete=CASCADE)
