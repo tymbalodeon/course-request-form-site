@@ -1,4 +1,5 @@
 from configparser import ConfigParser
+from typing import Optional
 from logging import Logger
 
 from cx_Oracle import connect
@@ -10,6 +11,12 @@ def get_cursor():
     values = dict(config.items("data_warehouse"))
     connection = connect(values["user"], values["password"], values["service"])
     return connection.cursor()
+
+
+def get_query_cursor(query: str, kwargs: Optional[dict] = None):
+    cursor = get_cursor()
+    cursor.execute(query, **kwargs)
+    return cursor
 
 
 def log_field_found(logger: Logger, field: str, value: str, pennkey: str):

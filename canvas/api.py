@@ -1,3 +1,4 @@
+from functools import lru_cache
 from logging import getLogger
 from time import sleep
 from typing import Optional
@@ -7,7 +8,6 @@ from canvasapi.account import Account
 from canvasapi.exceptions import CanvasException
 from canvasapi.tab import Tab
 from canvasapi.user import User as CanvasUser
-
 from config.config import PROD_KEY, PROD_URL, TEST_KEY, TEST_URL, USE_TEST_ENV
 
 MAIN_ACCOUNT_ID = 96678
@@ -32,6 +32,11 @@ def get_canvas(test=USE_TEST_ENV):
 
 def get_canvas_main_account() -> Account:
     return get_canvas().get_account(MAIN_ACCOUNT_ID)
+
+
+@lru_cache
+def get_all_canvas_accounts() -> list[Account]:
+    return list(get_canvas_main_account().get_subaccounts(recursive=True))
 
 
 def get_canvas_user_id_by_pennkey(login_id: str) -> Optional[int]:
