@@ -1,5 +1,6 @@
 from logging import getLogger
 
+from typing import Optional
 from bleach import clean
 from bleach_allowlist import markdown_attrs, markdown_tags
 from django.contrib.auth.models import AbstractUser
@@ -37,7 +38,7 @@ class User(AbstractUser):
     canvas_id = IntegerField(unique=True, null=True)
 
     @staticmethod
-    def log_field_found(field: str, value: str, username: str):
+    def log_field_found(username: str, field: str, value):
         logger.info(f"FOUND {field} '{value}' for {username}")
 
     @staticmethod
@@ -45,7 +46,7 @@ class User(AbstractUser):
         logger.warning(f"{field} NOT FOUND for {username}")
 
     @classmethod
-    def log_field(cls, username: str, field: str, value: str):
+    def log_field(cls, username: str, field: str, value):
         if value:
             cls.log_field_found(username, field, value)
         else:
@@ -76,7 +77,7 @@ class User(AbstractUser):
     def get_canvas_id(self):
         logger.info(f"Getting {self.username}'s Canvas user id...")
         canvas_user_id = get_canvas_user_id_by_pennkey(self.username)
-        self.log_field(self.username, "Canvas user id", str(canvas_user_id))
+        self.log_field(self.username, "Canvas user id", canvas_user_id)
         if canvas_user_id:
             self.canvas_id = canvas_user_id
             self.save()
