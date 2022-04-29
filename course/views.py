@@ -32,11 +32,7 @@ from canvas.api import (
     get_user_by_login_id,
 )
 from canvas.helpers import create_canvas_sites
-from data_warehouse.data_warehouse import (
-    get_banner_course,
-    get_course,
-    get_user_by_pennkey,
-)
+from data_warehouse.data_warehouse import get_user_by_pennkey
 
 from .forms import EmailChangeForm, SubjectForm, UserForm
 from .models import (
@@ -65,7 +61,6 @@ from .terms import (
     NEXT_TERM,
     NEXT_YEAR,
     NEXT_YEAR_AND_TERM,
-    get_term_letters,
 )
 from .utils import DATA_DIRECTORY_NAME, get_data_directory
 
@@ -1111,62 +1106,6 @@ def quick_config(request):
                     }
                     data["Info"]["User"] = {"pennkey": pennkey}
         return render(request, "admin/quickconfig.html", {"data": data})
-
-
-def search_banner_courses(request):
-    courses = list()
-    size = 0
-    if request.GET:
-        try:
-            srs_course_id = request.GET.get("srs_course_id")
-            term = request.GET.get("term")
-            courses = get_banner_course(srs_course_id, term)
-            if courses:
-                size = len(courses)
-            else:
-                courses = ["COURSE(S) NOT FOUND"]
-        except Exception as error:
-            logger.error(f"ERROR (Data Warehouse): {error}")
-    return render(
-        request, "admin/banner_lookup.html", {"courses": courses, "size": size}
-    )
-
-
-def check_data_warehouse_for_course(request):
-    courses = {}
-    size = 0
-    if request.GET:
-        try:
-            headers = [
-                "section id",
-                "term",
-                "subject",
-                "school",
-                "crosslisting",
-                "crosslist code",
-                "activity",
-                "section department",
-                "section division",
-                "title",
-                "status",
-                "revision",
-                "instructors",
-            ]
-            course_code = request.GET.get("course_code")
-            results = get_course(course_code)
-            if results:
-                size = len(results)
-                courses = {"courses": dict()}
-                for course in results:
-                    course_code = course[0]
-                    courses["courses"][course_code] = dict()
-                    for index, item in enumerate(course[1:]):
-                        courses["courses"][course_code][headers[index]] = item
-            else:
-                courses = {"courses": "COURSE(S) NOT FOUND"}
-        except Exception as error:
-            logger.error(f"ERROR (Data Warehouse): {error}")
-    return render(request, "admin/dw_lookup.html", {"data": courses, "size": size})
 
 
 def autocomplete(request):

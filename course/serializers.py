@@ -74,7 +74,6 @@ class CourseSerializer(DynamicFieldsModelSerializer):
 
     def get_associated_request(self, obj):
         request = obj.get_request()
-
         return request.course_requested.course_code if request else None
 
     def get_sections(self, obj):
@@ -86,14 +85,11 @@ class CourseSerializer(DynamicFieldsModelSerializer):
     def create(self, validated_data):
         instructors_data = validated_data.pop("instructors")
         course = Course.objects.create(**validated_data)
-
         for instructor_data in instructors_data:
             course.instructors.add(instructor_data)
-
         if "crosslisted" in validated_data:
             for cross_course in validated_data.pop("crosslisted"):
                 course.crosslisted.add(cross_course)
-
         return course
 
     def update(self, instance, validated_data):
@@ -103,14 +99,12 @@ class CourseSerializer(DynamicFieldsModelSerializer):
             )
             instance.save()
             crosslistings = validated_data.get("crosslisted", instance.crosslisted)
-
             for course in crosslistings:
                 crosslistings.remove(course)
                 current = course.crosslisted.all()
                 new = list(current) + list(crosslistings)
                 course.crosslisted.set(new)
                 course.requested = validated_data.get("requested", instance.requested)
-
             return instance
         else:
             instance.course_code = validated_data.get(
@@ -128,14 +122,12 @@ class CourseSerializer(DynamicFieldsModelSerializer):
             )
             instance.save()
             crosslistings = validated_data.get("crosslisted", instance.crosslisted)
-
             for course in crosslistings:
                 crosslistings.remove(course)
                 current = course.crosslisted.all()
                 new = list(current) + list(crosslistings)
                 course.crosslisted.set(new)
                 course.requested = validated_data.get("requested", instance.requested)
-
             return instance
 
 
@@ -240,10 +232,8 @@ class RequestSerializer(DynamicFieldsModelSerializer):
             for enrollment in data["additional_enrollments"]:
                 print(f"Checking Users for {enrollment['user']}...")
                 user = get_user_by_pennkey(enrollment["user"])
-
-                if user is None:
+                if not user:
                     print(f"FAILED to find User {enrollment['user']}.")
-
                     raise ValidationError(
                         {
                             "error": (
@@ -347,7 +337,6 @@ class SubjectSerializer(ModelSerializer):
         )
         instance.visible = validated_data.get("visible", instance.visible)
         instance.save()
-
         return instance
 
 

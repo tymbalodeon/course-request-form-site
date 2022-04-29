@@ -18,7 +18,6 @@ from canvas.api import (
 )
 from course.models import SIS_PREFIX, Course, Request, User
 from course.serializers import RequestSerializer
-from course.terms import USE_BANNER
 
 logger = getLogger(__name__)
 
@@ -35,7 +34,7 @@ def enroll_user(request, canvas_course, section, user, role, test):
         penn_id = crf_user.profile.penn_id
         email = crf_user.email
         full_name = f"{crf_user.first_name} {crf_user.last_name}"
-    canvas_user = get_user_by_login_id(username, test=test)
+    canvas_user = get_user_by_login_id(username)
     if canvas_user is None:
         try:
             canvas_user = create_canvas_user(
@@ -43,7 +42,6 @@ def enroll_user(request, canvas_course, section, user, role, test):
                 penn_id,
                 email,
                 full_name,
-                test=test,
             )
             add_request_process_notes(f"created account for user: {username}", request)
         except Exception as error:
@@ -86,7 +84,7 @@ def create_canvas_sites(requested_courses=None, sections=None, test=False):
     section_already_exists = False
     for request in requested_courses:
         course_requested = request.course_requested
-        if USE_BANNER and not (
+        if not (
             course_requested.course_term.isnumeric()
             or len(course_requested.course_number) == 4
         ):
@@ -97,7 +95,7 @@ def create_canvas_sites(requested_courses=None, sections=None, test=False):
         serialized = RequestSerializer(request)
         additional_sections = list()
         logger.info(f"Creating Canvas site for {course_requested}...")
-        account = get_school_account(request, course_requested, test)
+        account = get_school_account(request, course_requested)
         if not account:
             continue
         section_code = get_section_code(request, course_requested)
