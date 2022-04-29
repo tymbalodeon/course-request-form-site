@@ -10,27 +10,19 @@ from django.db.models import (
     Q,
     Sum,
 )
-from django.db.models.functions import Trunc
 
-from .models import AutoAdd  # CanvasCourse,; Request,
 from .models import (
     AdditionalEnrollment,
+    AutoAdd,
     Course,
     Notice,
     PageContent,
-    RequestSummary,
+    Request,
     ScheduleType,
     School,
     Subject,
-    UpdateLog,
     User,
 )
-
-
-class AdditionalEnrollmentInline(StackedInline):
-    model = AdditionalEnrollment
-    extra = 2
-    autocomplete_fields = ["user"]
 
 
 class CourseAdmin(ModelAdmin):
@@ -44,7 +36,6 @@ class CourseAdmin(ModelAdmin):
         "schedule_type",
         "requested",
     ]
-
     list_filter = ("schedule_type", "term", "school")
     search_fields = ("instructors__username", "course_code", "name")
     autocomplete_fields = [
@@ -53,7 +44,6 @@ class CourseAdmin(ModelAdmin):
         "multisection_request",
         "crosslisted_request",
     ]
-
     fieldsets = (
         (
             None,
@@ -134,6 +124,12 @@ class CourseAdmin(ModelAdmin):
         obj.save()
 
 
+class AdditionalEnrollmentInline(StackedInline):
+    model = AdditionalEnrollment
+    extra = 2
+    autocomplete_fields = ["user"]
+
+
 class RequestAdmin(ModelAdmin):
     list_display = [
         "course_requested",
@@ -205,113 +201,18 @@ class RequestAdmin(ModelAdmin):
         obj.save()
 
 
-class CanvasSiteAdmin(ModelAdmin):
-    autocomplete_fields = ["owners", "added_permissions", "request"]
-    list_display = ["name", "get_owners", "get_added_permissions"]
-    search_fields = ("owners__username", "added_permissions__username", "name")
-
-
 class AutoAddAdmin(ModelAdmin):
     autocomplete_fields = ["user"]
     list_display = [field.name for field in AutoAdd._meta.get_fields()]
 
 
-def get_next_in_date_hierarchy(request, date_hierarchy):
-    if date_hierarchy + "__day" in request.GET:
-        return "hour"
-    elif date_hierarchy + "__month" in request.GET:
-        return "day"
-    elif date_hierarchy + "__year" in request.GET:
-        return "week"
-    else:
-        return "month"
-
-
-class RequestSummaryAdmin(ModelAdmin):
-    change_list_template = "admin/request_summary_change_list.html"
-    date_hierarchy = "created_at"
-    list_filter = ("course_requested__term",)
-
-    def changelist_view(self, request, extra_context=None):
-        response = super().changelist_view(request, extra_context=extra_context)
-        try:
-            query_set = response.context_data["cl"].queryset
-        except (AttributeError, KeyError):
-            return response
-        multisectionExists = query_set.filter(
-            course_requested=OuterRef("pk"), additional_sections__isnull=False
-        )
-        metrics = {
-            "total": Count("course_requested", distinct=True),
-            "ares": Count("reserves", filter=Q(reserves=True)),
-            "multisection": Sum(
-                Exists(multisectionExists), output_field=IntegerField()
-            ),
-            "content_copy": Count("copy_from_course", filter=~Q(copy_from_course="")),
-            "not_completed": Count(
-                "status",
-                filter=Q(
-                    status__in=[
-                        "IN_PROCESS",
-                        "CANCELED",
-                        "APPROVED",
-                        "SUBMITTED",
-                        "LOCKED",
-                    ]
-                ),
-            ),
-        }
-        response.context_data["summary"] = list(
-            query_set.values("course_requested__school__abbreviation")
-            .annotate()
-            .order_by("course_requested__school__abbreviation")
-        )
-        response.context_data["summary_total"] = dict(query_set.aggregate(**metrics))
-        period = get_next_in_date_hierarchy(
-            request,
-            self.date_hierarchy,
-        )
-        response.context_data["period"] = period
-        summary_over_time = (
-            query_set.annotate(
-                period=Trunc(
-                    "created_at",
-                    period,
-                    output_field=DateTimeField(),
-                ),
-            )
-            .values("period")
-            .annotate(total=Count("course_requested"))
-            .order_by("period")
-        )
-        summary_range = summary_over_time.aggregate(
-            low=Min("total"),
-            high=Max("total"),
-        )
-        high = summary_range.get("high", 0)
-        low = summary_range.get("low", 0)
-        response.context_data["summary_over_time"] = [
-            {
-                "period": x["period"],
-                "total": x["total"] or 0,
-                "pct": ((x["total"] or 0) - low) / (high - low) * 100
-                if high > low
-                else 0,
-            }
-            for x in summary_over_time
-        ]
-        return response
-
-
 site.register(User)
-# site.register(Course, CourseAdmin)
-# site.register(Request, RequestAdmin)
-site.register(Notice)
-site.register(School)
 site.register(ScheduleType)
+site.register(School)
 site.register(Subject)
-# site.register(AutoAdd, AutoAddAdmin)
-site.register(UpdateLog)
+site.register(Course, CourseAdmin)
+site.register(Request, RequestAdmin)
+site.register(AdditionalEnrollment, AdditionalEnrollmentInline)
+site.register(AutoAdd, AutoAddAdmin)
+site.register(Notice)
 site.register(PageContent)
-# site.register(CanvasCourse, CanvasSiteAdmin)
-site.register(RequestSummary, RequestSummaryAdmin)

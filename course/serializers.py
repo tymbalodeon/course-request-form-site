@@ -18,14 +18,12 @@ from data_warehouse.data_warehouse import get_user_by_pennkey
 from .models import (
     AdditionalEnrollment,
     AutoAdd,
-    CanvasCourse,
     Course,
     Notice,
     Request,
     ScheduleType,
     School,
     Subject,
-    UpdateLog,
     User,
 )
 
@@ -38,7 +36,6 @@ class DynamicFieldsModelSerializer(ModelSerializer):
         if fields is not None:
             allowed = set(fields)
             existing = set(self.fields)
-
             for field_name in existing - allowed:
                 self.fields.pop(field_name)
 
@@ -423,23 +420,18 @@ class NoticeSerializer(HyperlinkedModelSerializer):
     def update(self, instance, validated_data):
         instance.notice_text = validated_data.get("notice_text", instance.notice_text)
         instance.save()
-
         return instance
 
 
 class AutoAddSerializer(HyperlinkedModelSerializer):
     user = SlugRelatedField(
-        many=False,
-        queryset=User.objects.all(),
-        slug_field="username",
+        many=False, queryset=User.objects.all(), slug_field="username"
     )
     school = SlugRelatedField(
-        many=False, queryset=School.objects.all(), slug_field="abbreviation"
+        many=False, queryset=School.objects.all(), slug_field="school_code"
     )
     subject = SlugRelatedField(
-        many=False,
-        queryset=Subject.objects.all(),
-        slug_field="abbreviation",
+        many=False, queryset=Subject.objects.all(), slug_field="subject_code"
     )
     id = ReadOnlyField()
 
@@ -452,19 +444,4 @@ class AutoAddSerializer(HyperlinkedModelSerializer):
 
     def update(self, instance, validated_data):
         instance.save()
-
-        return instance
-
-
-class UpdateLogSerializer(ModelSerializer):
-    class Meta:
-        model = UpdateLog
-        fields = "__all__"
-
-    def create(self, validated_data):
-        return AutoAdd.objects.create(**validated_data)
-
-    def update(self, instance, validated_data):
-        instance.save()
-
         return instance

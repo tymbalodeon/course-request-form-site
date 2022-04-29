@@ -1,4 +1,5 @@
 from logging import getLogger
+from django.utils.functional import cached_property
 
 from bleach import clean
 from bleach_allowlist import markdown_attrs, markdown_tags
@@ -201,50 +202,24 @@ class Subject(Model):
         return f"{self.subject_desc_long} ({self.subject_code})"
 
 
-class CanvasCourse(Model):
-    canvas_id = IntegerField(blank=False, default=None, primary_key=True)
-    name = CharField(max_length=255, blank=False, default=None)
-    sis_course_id = CharField(max_length=50, blank=True, default=None, null=True)
-    workflow_state = CharField(max_length=15, blank=False, default=None)
-    request = ForeignKey(
-        "Request", on_delete=SET_NULL, null=True, default=None, blank=True
-    )
-    owners = ManyToManyField(User, related_name="canvas_sites", blank=True)
-    added_permissions = ManyToManyField(
-        User, related_name="added_permissions", blank=True, default=None
-    )
-
-    class Meta:
-        ordering = ["canvas_id"]
-
-    def __str__(self):
-        return self.name
-
-    def get_owners(self):
-        return "\n".join(owner.username for owner in self.owners.all())
-
-    def get_added_permissions(self):
-        return "\n".join(owner.username for owner in self.added_permissions.all())
-
-
 class Course(Model):
-    TERM_CHOICES = (
-        (SPRING, "Spring"),
-        (SUMMER, "Summer"),
-        (FALL, "Fall"),
-    )
+    TERM_CHOICES = ((SPRING, "Spring"), (SUMMER, "Summer"), (FALL, "Fall"))
     course_code = CharField(
         max_length=150, unique=True, primary_key=True, editable=False
     )
-    schedule_type = ForeignKey(ScheduleType, related_name="courses", on_delete=CASCADE)
-    title = CharField(max_length=250)
-    course_num = CharField(max_length=4, blank=False)
-    primary_subject = ForeignKey(Subject, on_delete=CASCADE)
     school = ForeignKey(School, related_name="courses", on_delete=CASCADE)
-    section_num = CharField(max_length=4, blank=False)
     subject = ForeignKey(Subject, on_delete=CASCADE, related_name="courses")
+    primary_subject = ForeignKey(Subject, on_delete=CASCADE)
+    course_num = CharField(max_length=4, blank=False)
+    section_num = CharField(max_length=4, blank=False)
+    schedule_type = ForeignKey(ScheduleType, related_name="courses", on_delete=CASCADE)
+    year = CharField(max_length=4, blank=False)
     term = CharField(max_length=2, choices=TERM_CHOICES)
-    created_at = DateTimeField(auto_now_add=True)
+    title = CharField(max_length=250)
+    instructors = ManyToManyField(User, related_name="courses", blank=True)
+    owner = ForeignKey(User, related_name="created_at", on_delete=CASCADE)
+    sections = ManyToManyField("self", blank=True, symmetrical=True, default=None)
+    primary_crosslist = CharField(max_length=20, default="", blank=True)
     crosslisted = ManyToManyField("self", blank=True, symmetrical=True, default=None)
     crosslisted_request = ForeignKey(
         "course.Request",
@@ -254,7 +229,6 @@ class Course(Model):
         blank=True,
         null=True,
     )
-    instructors = ManyToManyField(User, related_name="courses", blank=True)
     multisection_request = ForeignKey(
         "course.Request",
         on_delete=SET_NULL,
@@ -263,13 +237,10 @@ class Course(Model):
         blank=True,
         null=True,
     )
-    owner = ForeignKey(User, related_name="created_at", on_delete=CASCADE)
-    primary_crosslist = CharField(max_length=20, default="", blank=True)
     requested = BooleanField(default=False)
     requested_override = BooleanField(default=False)
-    sections = ManyToManyField("self", blank=True, symmetrical=True, default=None)
-    updated = DateTimeField(auto_now=True)
-    year = CharField(max_length=4, blank=False)
+    created_at = DateTimeField(auto_now_add=True)
+    updated_at = DateTimeField(auto_now=True)
     objects = Manager()
 
     class Meta:
@@ -278,7 +249,7 @@ class Course(Model):
     def __str__(self):
         return (
             f"{self.subject.subject_code}_{self.course_num}"
-            f"_{self.section_num}_{self.year}{self.term}"
+            f"_{self.section_num}_{self.year_and_term}"
         )
 
     def get_requested(self):
@@ -293,7 +264,7 @@ class Course(Model):
                 request or self.multisection_request or self.crosslisted_request
             )
 
-    def set_requested(self, requested):
+    def set_requested(self, requested: bool):
         self.requested = requested
         self.save()
 
@@ -329,19 +300,17 @@ class Course(Model):
 
     def save(self, *args, **kwargs):
         self.course_code = (
-            f"{self.subject.abbreviation}"
+            f"{self.subject.subject_code}"
             f"{self.course_num}"
             f"{self.section_num}"
             f"{self.year}"
             f"{self.term}"
         )
-        if self._state.adding is True:
-            super().save(*args, **kwargs)
-        else:
+        if not self._state.adding:
             self.sections.set(self.find_sections())
             self.requested = self.get_requested()
             self.update_crosslists()
-            super().save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
     def get_request(self):
         try:
@@ -357,23 +326,24 @@ class Course(Model):
                 logger.warning(f"Request NOT FOUND for {self.course_code} ({error}).")
             return request
 
-    def get_subjects(self):
-        return self.subject.abbreviation
+    @cached_property
+    def school_code(self):
+        return self.school.school_code
 
-    def get_schools(self):
-        return self.school
+    @cached_property
+    def subject_code(self):
+        return self.subject.subject_code
 
-    def get_instructors(self):
-        return (
-            "STAFF"
-            if not self.instructors.all().exists()
-            else ", ".join(
-                [instructor.username for instructor in self.instructors.all()]
-            )
-        )
-
-    def get_year_and_term(self):
+    @cached_property
+    def year_and_term(self):
         return f"{self.year}{self.term}"
+
+    @cached_property
+    def instructor_list(self):
+        instructors = self.instructors.all().exists()
+        if not instructors:
+            return "STAFF"
+        return ", ".join(instructor.username for instructor in self.instructors.all())
 
     def find_sections(self):
         courses = list(
@@ -390,53 +360,34 @@ class Course(Model):
                 courses.remove(course)
         return courses
 
-    def sis_format(self):
+    @cached_property
+    def sis_course_code(self):
         return (
-            f"{self.subject.abbreviation}-"
+            f"{self.subject.subject_code}-"
             f"{self.course_num}-"
             f"{self.section_num}"
-            f" {self.year}{self.term}"
+            f" {self.year_and_term}"
         )
 
     def sis_format_primary(self, sis_id=True):
         primary_crosslist = self.primary_crosslist
-        year_and_term = self.get_year_and_term()
-        if primary_crosslist:
-            if year_and_term in primary_crosslist and len(primary_crosslist) > 9:
-                primary_crosslist = primary_crosslist.replace(year_and_term, "")
-            subject = "".join(
-                character for character in primary_crosslist if str.isalpha(character)
-            )
-            number_section = "".join(
-                character
-                for character in primary_crosslist
-                if not str.isalpha(character)
-            )
-            number = number_section[:4] if self.term.isnumeric() else number_section[:3]
-            section = number_section[3:]
-            if sis_id:
-                return f"{subject}-{number}-{section} {year_and_term}"
-            else:
-                return f"{subject} {number}-{section} {year_and_term}"
+        year_and_term = self.year_and_term
+        if not primary_crosslist:
+            return self.sis_course_code()
+        if year_and_term in primary_crosslist and len(primary_crosslist) > 9:
+            primary_crosslist = primary_crosslist.replace(year_and_term, "")
+        subject = "".join(
+            character for character in primary_crosslist if str.isalpha(character)
+        )
+        number_section = "".join(
+            character for character in primary_crosslist if not str.isalpha(character)
+        )
+        number = number_section[:4] if self.term.isnumeric() else number_section[:3]
+        section = number_section[3:]
+        if sis_id:
+            return f"{subject}-{number}-{section} {year_and_term}"
         else:
-            return self.sis_format()
-
-
-class Notice(Model):
-    header = CharField(max_length=100)
-    content = TextField(max_length=1000)
-    author = ForeignKey(User, related_name="notices", on_delete=CASCADE)
-    created_at = DateTimeField(auto_now_add=True)
-    updated_at = DateTimeField(auto_now=True)
-
-    class Meta:
-        get_latest_by = "updated_at"
-
-    def __str__(self):
-        return self.header
-
-    def get_html(self):
-        return mark_safe(clean(markdown(self.content), markdown_tags, markdown_attrs))
+            return f"{subject} {number}-{section} {year_and_term}"
 
 
 class Request(Model):
@@ -449,32 +400,22 @@ class Request(Model):
         ("LOCKED", "Locked"),
     )
     course_requested = OneToOneField(Course, on_delete=CASCADE, primary_key=True)
-    copy_from_course = IntegerField(null=True, default=None, blank=True)
+    requester = ForeignKey(User, related_name="requests", on_delete=CASCADE)
+    masquerade = CharField(max_length=20, null=True)
     title_override = CharField(max_length=255, null=True, default=None, blank=True)
+    copy_from_course = IntegerField(null=True, default=None, blank=True)
+    reserves = BooleanField(default=False)
     lps_online = BooleanField(default=False, verbose_name="LPS Online")
     exclude_announcements = BooleanField(default=False)
     additional_instructions = TextField(blank=True, default=None, null=True)
     admin_additional_instructions = TextField(blank=True, default=None, null=True)
-    reserves = BooleanField(default=False)
     process_notes = TextField(blank=True, default="")
-    canvas_instance = ForeignKey(
-        CanvasCourse,
-        related_name="canvas",
-        on_delete=CASCADE,
-        null=True,
-        blank=True,
-    )
     status = CharField(max_length=20, choices=STATUSES, default="SUBMITTED")
     created_at = DateTimeField(auto_now_add=True)
     updated_at = DateTimeField(auto_now=True)
-    requester = ForeignKey(User, related_name="requests", on_delete=CASCADE)
-    masquerade = CharField(max_length=20, null=True)
 
     class Meta:
         ordering = ("-status", "-created_at")
-
-    def save(self, *args, **kwargs):
-        super(Request, self).save(*args, **kwargs)
 
     def delete(self):
         course = Course.objects.get(course_code=self.course_requested.course_code)
@@ -508,7 +449,7 @@ class Request(Model):
                 multi_section_course.save()
 
 
-ROLES = (
+CANVAS_ROLES = (
     ("TA", "TA"),
     ("INST", "Instructor"),
     ("DES", "Designer"),
@@ -519,8 +460,8 @@ ROLES = (
 
 class AdditionalEnrollment(Model):
     user = ForeignKey(User, on_delete=CASCADE)
-    role = CharField(max_length=4, choices=ROLES, default="TA")
-    course_request = ForeignKey(
+    role = CharField(max_length=4, choices=CANVAS_ROLES, default="TA")
+    request = ForeignKey(
         Request, related_name="additional_enrollments", on_delete=CASCADE, default=None
     )
 
@@ -529,37 +470,35 @@ class AutoAdd(Model):
     user = ForeignKey(User, on_delete=CASCADE, blank=False)
     school = ForeignKey(School, on_delete=CASCADE, blank=False)
     subject = ForeignKey(Subject, on_delete=CASCADE, blank=False)
-    role = CharField(max_length=4, choices=ROLES)
+    role = CharField(max_length=4, choices=CANVAS_ROLES)
     created_at = DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         ordering = ("user__username",)
 
 
-class UpdateLog(Model):
-    MANAGER_CHOICES = (
-        ("a", "A"),
-        ("b", "B"),
-        ("c", "C"),
-    )
-    created = DateTimeField(auto_now_add=True, null=True, blank=True)
-    finished = DateTimeField(null=True, blank=True)
-    process = CharField(max_length=10, choices=MANAGER_CHOICES)
-
-
-class PageContent(Model):
-    page = CharField(max_length=100)
+class Message(Model):
     content = TextField(max_length=4000)
+    created_at = DateTimeField(auto_now_add=True)
     updated_at = DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return self.page
 
     def get_html(self):
         return mark_safe(clean(markdown(self.content), markdown_tags, markdown_attrs))
 
 
-class RequestSummary(Request):
+class Notice(Message):
+    header = CharField(max_length=100)
+    author = ForeignKey(User, related_name="notices", on_delete=CASCADE)
+
     class Meta:
-        proxy = True
-        verbose_name_plural = "Requests summaries"
+        get_latest_by = "updated_at"
+
+    def __str__(self):
+        return self.header
+
+
+class PageContent(Message):
+    page = CharField(max_length=100)
+
+    def __str__(self):
+        return self.page

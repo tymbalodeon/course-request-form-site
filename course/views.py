@@ -27,7 +27,6 @@ from django.contrib.messages import error as messages_error
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
-from django_celery_beat.models import PeriodicTask
 from django_filters import CharFilter, ChoiceFilter, DateTimeFilter, ModelChoiceFilter
 from django_filters.rest_framework import FilterSet
 from open_data.open_data import OpenData
@@ -42,14 +41,12 @@ from rest_framework.viewsets import ModelViewSet
 from .forms import CanvasSiteForm, EmailChangeForm, SubjectForm, UserForm
 from .models import (
     AutoAdd,
-    CanvasCourse,
     Course,
     Notice,
     Request,
     ScheduleType,
     School,
     Subject,
-    UpdateLog,
     User,
 )
 from .serializers import (
@@ -60,7 +57,6 @@ from .serializers import (
     RequestSerializer,
     SchoolSerializer,
     SubjectSerializer,
-    UpdateLogSerializer,
     UserSerializer,
 )
 from .terms import (
@@ -80,7 +76,6 @@ TASKS_LOG_PATH = get_data_directory(DATA_DIRECTORY_NAME) / "tasks"
 PROCESS_REQUESTS_LOG = TASKS_LOG_PATH / "processed-requests.json"
 DELETE_REQUESTS_LOG = TASKS_LOG_PATH / "deleted-courses.json"
 CHECK_CANCELED_LOG = TASKS_LOG_PATH / "canceled-courses.json"
-
 logger = getLogger(__name__)
 
 
@@ -107,18 +102,16 @@ def print_log_message(request, object_type, action_type):
 
 
 class MixedPermissionModelViewSet(AccessMixin, ModelViewSet):
-    permission_classes_by_action: Dict[str, list] = {}
+    permission_classes_by_action: dict[str, list] = {}
     login_url = "/accounts/login/"
 
     def get_permissions(self):
-        return (
-            [
+        if self.permission_classes_by_action:
+            return [
                 permission()
                 for permission in self.permission_classes_by_action[self.action]
             ]
-            if self.permission_classes_by_action
-            else [permission() for permission in self.permission_classes]
-        )
+        return [permission() for permission in self.permission_classes]
 
     def handle_no_permission(self):
         if self.raise_exception or self.request.user.is_authenticated:
@@ -131,32 +124,24 @@ class MixedPermissionModelViewSet(AccessMixin, ModelViewSet):
 
 
 class CourseFilter(FilterSet):
-    activity = ModelChoiceFilter(
+    schedule_type = ModelChoiceFilter(
         queryset=ScheduleType.objects.all(),
-        field_name="course_activity",
+        field_name="course_schedule_type",
         label="ScheduleType",
     )
     instructor = CharFilter(field_name="instructors__username", label="Instructor")
     school = ModelChoiceFilter(
         queryset=School.objects.all(),
         field_name="school",
-        to_field_name="abbreviation",
-        label="School (abbreviation)",
+        to_field_name="schol_code",
+        label="School",
     )
-    subject = CharFilter(
-        field_name="subject__abbreviation", label="Subject (abbreviation)"
-    )
+    subject = CharFilter(field_name="subject__subject_code", label="Subject")
     term = ChoiceFilter(choices=Course.TERM_CHOICES, field_name="term", label="Term")
 
     class Meta:
         model = Course
-        fields = [
-            "term",
-            "activity",
-            "school",
-            "instructor",
-            "subject",
-        ]
+        fields = ["term", "schedule_type", "school", "instructor", "subject"]
 
 
 class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
@@ -177,8 +162,8 @@ class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
     )
     serializer_class = CourseSerializer
     filterset_class = CourseFilter
-    search_fields = ("$course_name", "$course_code")
-    permission_classes_by_action: Dict[str, list] = {
+    search_fields = ("$course_title", "$course_code")
+    permission_classes_by_action: dict[str, list] = {
         "create": [IsAdminUser],
         "list": [IsAuthenticated],
         "retrieve": [IsAuthenticated],
@@ -891,24 +876,6 @@ class AutoAddViewSet(MixedPermissionModelViewSet, ModelViewSet):
             return redirect("UI-autoadd-list")
         else:
             return response
-
-
-class UpdateLogViewSet(MixedPermissionModelViewSet, ModelViewSet):
-    queryset = UpdateLog.objects.all()
-    serializer_class = UpdateLogSerializer
-    permission_classes_by_action = {
-        "create": [IsAdminUser],
-        "list": [IsAdminUser],
-        "retrieve": [IsAdminUser],
-        "update": [IsAdminUser],
-        "partial_update": [IsAdminUser],
-        "delete": [IsAdminUser],
-    }
-
-    def list(self, request, *args, **kwargs):
-        periodic_tasks = PeriodicTask.objects.all()
-
-        return Response({"data": periodic_tasks}, template_name="admin/log_list.html")
 
 
 def user_info(request):
