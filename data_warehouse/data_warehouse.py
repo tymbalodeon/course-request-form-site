@@ -1,12 +1,19 @@
+from dataclasses import dataclass
+from functools import lru_cache
 from logging import getLogger
 from re import findall, search, sub
 
-from course.models import Course, ScheduleType, School, Subject, User
-from course.terms import CURRENT_YEAR_AND_TERM
+from config.config import USERNAME
+from course.models import Course, ScheduleType, Subject, User
+from course.terms import CURRENT_YEAR_AND_TERM, split_year_and_term
 
 from data_warehouse.helpers import get_cursor
 
 logger = getLogger(__name__)
+try:
+    OWNER = User.objects.get(username=USERNAME)
+except Exception:
+    OWNER = User.objects.create(username="admin")
 
 
 def format_title(title):
@@ -100,33 +107,6 @@ def get_staff_account(penn_key=None, penn_id=None):
             }
 
 
-def get_student_account(penn_key):
-    cursor = get_cursor()
-    logger.info(f"Checking Data Warehouse for pennkey {penn_key}...")
-    cursor.execute(
-        """
-        SELECT
-            first_name, last_name, email_address, penn_id
-        FROM
-            person_all_v
-        WHERE
-            pennkey = :pennkey
-        """,
-        pennkey=penn_key,
-    )
-    for first_name, last_name, email, dw_penn_id in cursor:
-        logger.info(
-            f'FOUND "{penn_key}": {first_name} {last_name} ({dw_penn_id})'
-            f" {email.strip() if email else email}"
-        )
-        return {
-            "first_name": first_name,
-            "last_name": last_name,
-            "email": email,
-            "penn_id": dw_penn_id,
-        }
-
-
 def get_user_by_pennkey(pennkey):
     if isinstance(pennkey, str):
         pennkey = pennkey.lower()
@@ -149,367 +129,184 @@ def get_user_by_pennkey(pennkey):
     return user
 
 
-def get_course(section, term=None):
-    section = (
-        section.replace("SRS_", "")
-        .replace("BAN_", "")
-        .replace("_", "")
-        .replace("-", "")
-        .replace(" ", "")
-        .upper()
-    )
-    if len(section) > 10:
-        term = section[-5:]
-        section = section[:-5]
+@dataclass(frozen=True)
+class Instructor:
+    first_name: str
+    last_name: str
+    penn_id: str
+    penn_key: str
+    email: str
+
+
+@lru_cache
+def get_instructor_object(instructor: Instructor):
+    try:
+        instructor_object = User.objects.update_or_create(
+            username=instructor.penn_key,
+            defaults={
+                "first_name": instructor.first_name,
+                "last_name": instructor.last_name,
+                "email": instructor.email or "",
+            },
+        )[0]
+        return instructor_object
+    except Exception as error:
+        logger.error(
+            "- ERROR: Failed to create User object for instructor"
+            f" {instructor.first_name} {instructor.last_name} ({instructor.penn_id})"
+            f" -- {error}"
+        )
+        return None
+
+
+def get_instructors(section_id, term):
     cursor = get_cursor()
+    if not cursor:
+        return
     cursor.execute(
         """
         SELECT
-            cs.section_id || cs.term section,
-            cs.section_id,
-            cs.term,
-            cs.subject_area subject_id,
-            cs.tuition_school school_id,
-            cs.xlist,
-            cs.xlist_primary,
-            cs.activity,
-            cs.section_dept department,
-            cs.section_division division,
-            trim(cs.title) srs_title,
-            cs.status srs_status,
-            cs.schedule_revision,
-            cs.timetable_instructor
-        FROM dwadmin.course_section cs
-        WHERE
-            cs.activity IN (
-                'LEC',
-                'REC',
-                'LAB',
-                'SEM',
-                'CLN',
-                'CRT',
-                'PRE',
-                'STU',
-                'ONL',
-                'HYB'
-            )
-        AND cs.tuition_school NOT IN ('WH', 'LW')
-        AND cs.status in ('O')
-        AND cs.section_id = :section
+            instructor.instructor_first_name,
+            instructor.instructor_last_name,
+            instructor.instructor_penn_id,
+            employee.pennkey,
+            instructor.instructor_email
+        FROM dwngss_ps.crse_sect_instructor instructor
+        JOIN employee_general_v employee
+        ON instructor.instructor_penn_id = employee.penn_id
+        WHERE section_id = :section_id
+        AND term = :term
         """,
-        section=section,
-    )
-    results = list()
-    for (
-        course_code,
-        section_id,
-        course_term,
-        subject_area,
-        school,
-        xc,
-        xc_code,
-        activity,
-        section_dept,
-        section_division,
-        title,
-        status,
-        rev,
-        instructors,
-    ) in cursor:
-        if not term:
-            results.append(
-                [
-                    course_code,
-                    section_id,
-                    course_term,
-                    subject_area,
-                    school,
-                    xc,
-                    xc_code,
-                    activity,
-                    section_dept,
-                    section_division,
-                    title,
-                    status,
-                    rev,
-                    instructors,
-                ]
-            )
-        elif course_term == term:
-            results.append(
-                [
-                    course_code,
-                    section_id,
-                    course_term,
-                    subject_area,
-                    school,
-                    xc,
-                    xc_code,
-                    activity,
-                    section_dept,
-                    section_division,
-                    title,
-                    status,
-                    rev,
-                    instructors,
-                ]
-            )
-    return results
-
-
-def get_instructor(pennkey, term=CURRENT_YEAR_AND_TERM):
-    cursor = get_cursor()
-    cursor.execute(
-        """
-        SELECT
-            e.FIRST_NAME,
-            e.LAST_NAME,
-            e.PENNKEY,
-            e.PENN_ID,
-            e.EMAIL_ADDRESS,
-            cs.Section_Id,
-            cs.term
-        FROM dwadmin.course_section_instructor cs
-        JOIN dwadmin.employee_general_v e
-        ON cs.Instructor_Penn_Id=e.PENN_ID
-        WHERE e.PENNKEY = :pennkey
-        AND cs.term = :term
-        """,
-        pennkey=pennkey,
+        section_id=section_id,
         term=term,
     )
-    for first_name, last_name, pennkey, penn_id, email, section_id, term in cursor:
-        return {
-            "first name": first_name,
-            "last name": last_name,
-            "pennkey": pennkey,
-            "penn id": penn_id,
-            "email": email,
-            "section": section_id,
-            "term": term,
-        }
+    instructors = list()
+    for first_name, last_name, penn_id, penn_key, email in cursor:
+        instructor = Instructor(first_name, last_name, penn_id, penn_key, email)
+        instructors.append(instructor)
+    return instructors
 
 
 def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
     logger.info(") Pulling courses from the Data Warehouse...")
     term = term.upper()
     cursor = get_cursor()
+    if not cursor:
+        return
     cursor.execute(
         """
         SELECT
-            section.section_id || section.term section,
-            section.term,
-            section.subject_area subject_id,
-            section.tuition_school school_id,
-            section.xlist,
-            section.xlist_primary,
-            section.activity,
-            trim(section.title) srs_title
+            trim(subject),
+            primary_subject,
+            course_num,
+            section_num,
+            term,
+            schedule_type,
+            school,
+            trim(title),
+            xlist_enrlmt,
+            xlist_family,
+            section_id,
+            section_status
         FROM
-            dwadmin.course_section section
-        WHERE section.activity IN (
-            'LEC',
-            'REC',
-            'LAB',
-            'SEM',
-            'CLN',
-            'CRT',
-            'PRE',
-            'STU',
-            'ONL',
-            'HYB'
+            dwngss_ps.crse_section
+        WHERE schedule_type NOT IN (
+            'MED',
+            'DIS',
+            'FLD',
+            'F01',
+            'F02',
+            'F03',
+            'F04',
+            'IND',
+            'I01',
+            'I02',
+            'I03',
+            'I04',
+            'MST',
+            'SRT'
         )
-        AND section.tuition_school NOT IN ('WH', 'LW')
-        AND section.status IN ('O')
-        AND section.term = :term
+        AND school NOT IN ('W', 'L')
+        AND term = :term
         """,
         term=term,
     )
     for (
-        course_code,
-        term,
-        subject_area,
+        subject,
+        primary_subject,
+        course_num,
+        section_num,
+        year_and_term,
+        schedule_type,
         school,
+        title,
         crosslist,
         crosslist_code,
-        activity,
-        title,
+        section_id,
+        section_status,
     ) in cursor:
-        course_code = course_code.replace(" ", "")
-        subject_area = subject_area.replace(" ", "")
-        crosslist_code = crosslist_code.replace(" ", "")
+        course_code = f"{subject}{course_num}{section_num}{year_and_term}"
+        subject = Subject.objects.get(subject_code=subject)
+        primary_subject = Subject.objects.get(subject_code=primary_subject)
+        schedule_type = ScheduleType.objects.get(sched_type_code=schedule_type)
+        year, term = split_year_and_term(year_and_term)
+        title = format_title(title)
         primary_crosslist = ""
+        if crosslist and crosslist == "S":
+            if crosslist_code:
+                crosslist_code = crosslist_code.replace(" ", "")
+            primary_crosslist = f"{crosslist_code}{term}"
+        school = primary_subject.schools if primary_subject else subject.schools
+        primary_subject = primary_subject or subject
         try:
-            subject = Subject.objects.get(abbreviation=subject_area)
-        except Exception:
-            try:
-                school_code = open_data.get_school_by_subject(subject_area)
-                school = School.objects.get(open_data_abbreviation=school_code)
-                subject = Subject.objects.create(
-                    abbreviation=subject_area, name=subject_area, schools=school
-                )
-            except Exception as error:
-                subject = ""
-                logger.error(
-                    f"{course_code}: Subject {subject_area} not found ({error})"
-                )
-        if crosslist:
-            if crosslist == "S":
-                primary_crosslist = f"{crosslist_code}{term}"
-            p_subj = crosslist_code[:-6]
-            try:
-                primary_subject = Subject.objects.get(abbreviation=p_subj)
-            except Exception:
-                try:
-                    school_code = open_data.get_school_by_subject(p_subj)
-                    school = School.objects.get(open_data_abbreviation=school_code)
-                    primary_subject = Subject.objects.create(
-                        abbreviation=p_subj, name=p_subj, schools=school
-                    )
-                except Exception as error:
-                    primary_subject = ""
-                    logger.error(f"{course_code}: Primary subject not found ({error})")
-        else:
-            primary_subject = subject
-        if primary_subject:
-            school = primary_subject.schools
-        else:
-            school = ""
-        try:
-            activity = ScheduleType.objects.get(abbr=activity)
-        except Exception:
-            try:
-                activity = ScheduleType.objects.create(abbr=activity, name=activity)
-            except Exception:
-                activity = ""
-                logger.error(f"{course_code}: ScheduleType not found")
-        course_number_and_section = course_code[:-5][-6:]
-        course_number = course_number_and_section[:3]
-        section_number = course_number_and_section[-3:]
-        year = term[:4]
-        try:
-            title = format_title(title) if title else title
-            created = Course.objects.update_or_create(
+            course, created = Course.objects.update_or_create(
                 course_code=course_code,
                 defaults={
-                    "owner": User.objects.get(username="benrosen"),
-                    "course_term": term[-1],
-                    "course_activity": activity,
+                    "owner": OWNER,
+                    "course_term": term,
+                    "course_activity": schedule_type,
                     "course_subject": subject,
                     "course_primary_subject": primary_subject,
                     "primary_crosslist": primary_crosslist,
                     "course_schools": school,
-                    "course_number": course_number,
-                    "course_section": section_number,
+                    "course_number": course_num,
+                    "course_section": section_num,
                     "course_name": title,
                     "year": year,
                 },
-            )[1]
+            )
             logger.info(
                 f"- Added course {course_code}"
                 if created
                 else f"- Updated course {course_code}"
             )
         except Exception as error:
+            course = None
             logger.error(
                 f"- ERROR: Failed to add or update course {course_code} ({error})"
             )
-    logger.info("FINISHED")
-
-
-def get_data_warehouse_instructors(term=CURRENT_YEAR_AND_TERM, logger=logger):
-    logger.info(") Pulling instructors...")
-    term = term.upper()
-    cursor = get_cursor()
-    cursor.execute(
-        """
-        SELECT
-            employee.first_name,
-            employee.last_name,
-            employee.pennkey,
-            employee.penn_id,
-            employee.email_address,
-            instructor.section_id
-        FROM dwadmin.employee_general_v employee
-        INNER JOIN dwadmin.course_section_instructor instructor
-        ON employee.penn_id = instructor.instructor_penn_id
-        AND instructor.term = :term
-        INNER JOIN dwadmin.course_section section
-        ON instructor.section_id = section.section_id
-        WHERE section.activity
-        IN (
-                'LEC',
-                'REC',
-                'LAB',
-                'SEM',
-                'CLN',
-                'CRT',
-                'PRE',
-                'STU',
-                'ONL',
-                'HYB'
-            )
-        AND section.tuition_school NOT IN ('WH', 'LW')
-        AND section.status in ('O')
-        AND section.term = :term
-        """,
-        term=term,
-    )
-    NEW_INSTRUCTOR_VALUES = dict()
-    for first_name, last_name, pennkey, penn_id, email, section_id in cursor:
-        course_code = (section_id + term).replace(" ", "")
-        if not pennkey:
-            message = (
-                f"(section: {section_id}) Failed to create account for"
-                f" {first_name} {last_name} (missing pennkey)"
-            )
-            logger.error(message)
-        else:
+        if course:
             try:
-                course = Course.objects.get(course_code=course_code)
-                if not course.requested:
-                    error_message = ""
-                    try:
-                        instructor = User.objects.get(username=pennkey)
-                    except Exception:
-                        try:
-                            first_name = first_name.title()
-                            last_name = last_name.title()
-                            instructor = User.objects.create_user(
-                                username=pennkey,
-                                first_name=first_name,
-                                last_name=last_name,
-                                email=email,
-                            )
-                        except Exception as error:
-                            error_message = error
-                            instructor = None
-                    if instructor:
-                        try:
-                            NEW_INSTRUCTOR_VALUES[course_code].append(instructor)
-                        except Exception:
-                            NEW_INSTRUCTOR_VALUES[course_code] = [instructor]
-                    else:
-                        message = (
-                            f"(section: {section_id}) Failed to create account"
-                            f" for: {first_name} {last_name} ({error_message})"
+                instructors = get_instructors(section_id, year_and_term)
+                if instructors:
+                    instructors = [
+                        get_instructor_object(instructor) for instructor in instructors
+                    ]
+                    instructors = [
+                        instructor for instructor in instructors if instructor
+                    ]
+                    course.instructors.clear()
+                    for instructor in instructors:
+                        course.instructors.add(instructor)
+                        logger.info(
+                            f"- Updated course {course_code} with instructor:"
+                            f" {instructor.username}"
                         )
-                        logger.error(message)
-            except Exception:
-                message = f"Failed to find course {course_code}"
+                    course.save()
+            except Exception as error:
+                message = f"Failed to add new instructor(s) to course ({error})"
                 logger.error(message)
-    for course_code, instructors in NEW_INSTRUCTOR_VALUES.items():
-        try:
-            course = Course.objects.get(course_code=course_code)
-            course.instructors.clear()
-            for instructor in instructors:
-                course.instructors.add(instructor)
-            course.save()
-            logger.info(
-                f"- Updated {course_code} with instructors:"
-                f" {', '.join([instructor.username for instructor in instructors])}"
-            )
-        except Exception as error:
-            message = f"Failed to add new instructor(s) to course ({error})"
-            logger.error(message)
+        if section_status != "A" and course:
+            logger.info(f") Deleting canceled course '{course_code}'...")
+            course.delete()
     logger.info("FINISHED")
