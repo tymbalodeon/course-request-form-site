@@ -61,11 +61,11 @@ from .terms import (
     NEXT_TERM,
     NEXT_YEAR,
     NEXT_YEAR_AND_TERM,
+    is_fall,
 )
 from .utils import DATA_DIRECTORY_NAME, get_data_directory
 
 FIVE_OR_MORE_ALPHABETIC_CHARACTERS = r"[a-z]{5,}"
-SPRING, SUMMER, FALL = get_term_letters()
 TASKS_LOG_PATH = get_data_directory(DATA_DIRECTORY_NAME) / "tasks"
 PROCESS_REQUESTS_LOG = TASKS_LOG_PATH / "processed-requests.json"
 DELETE_REQUESTS_LOG = TASKS_LOG_PATH / "deleted-courses.json"
@@ -147,7 +147,7 @@ class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
             subject__visible=True,
             school__visible=True,
         )
-        if CURRENT_TERM != FALL
+        if not is_fall()
         else Course.objects.filter(
             Q(term=NEXT_TERM, year=NEXT_YEAR) | Q(term=CURRENT_TERM, year=CURRENT_YEAR),
             subject__visible=True,

@@ -40,7 +40,8 @@ class EmailChangeForm(Form):
             "Confirmation does not match. Please type the email address again."
         ),
         "not_changed": (
-            "New email address is the same as the existing one. Please choose a different email address."
+            "New email address is the same as the existing one. Please choose a"
+            " different email address."
         ),
     }
     new_email = EmailField(label="New email address", widget=EmailInput)

@@ -16,13 +16,14 @@ from canvas.api import (
     set_reserves,
     set_storage_quota,
 )
-from course.models import SIS_PREFIX, Course, Request, User
+from course.models import Course, Request, User
 from course.serializers import RequestSerializer
 
 logger = getLogger(__name__)
+SIS_PREFIX = "BAN"
 
 
-def enroll_user(request, canvas_course, section, user, role, test):
+def enroll_user(request, canvas_course, section, user, role):
     try:
         username = user.username
         penn_id = user.penn_id
@@ -113,9 +114,7 @@ def create_canvas_sites(requested_courses=None, sections=None, test=False):
         )
         sis_course_id = f"{SIS_PREFIX}_{course_requested.sis_format_primary()}"
         term_id = get_term_id(
-            MAIN_ACCOUNT_ID,
-            f"{course_requested.year}{course_requested.course_term}",
-            test=test,
+            MAIN_ACCOUNT_ID, f"{course_requested.year}{course_requested.course_term}"
         )
         course = {
             "name": name,
@@ -124,7 +123,7 @@ def create_canvas_sites(requested_courses=None, sections=None, test=False):
             "term_id": term_id,
         }
         already_exists, canvas_course = get_canvas_course(
-            request, account, course, sis_course_id, test
+            request, account, course, sis_course_id
         )
         if not canvas_course:
             continue
@@ -165,7 +164,6 @@ def create_canvas_sites(requested_courses=None, sections=None, test=False):
                 section,
                 enrollment["user"],
                 enrollment["role"],
-                test,
             )
         if serialized.data["reserves"]:
             set_reserves(request, canvas_course)
@@ -220,5 +218,4 @@ def handle_sections(
                 section["course_section"].id,
                 user,
                 "instructor",
-                test,
             )
