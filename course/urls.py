@@ -7,21 +7,18 @@ from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.routers import DefaultRouter
 from rest_framework_swagger.views import get_swagger_view
 
-from .autocomplete import CanvasSiteAutocomplete, SubjectAutocomplete, UserAutocomplete
+from .autocomplete import SubjectAutocomplete, UserAutocomplete
 from .views import (
     AutoAddViewSet,
-    CanvasSiteViewSet,
     CourseViewSet,
     HomePage,
     NoticeViewSet,
     RequestViewSet,
     SchoolViewSet,
     SubjectViewSet,
-    UpdateLogViewSet,
     UserViewSet,
     autocomplete_canvas_course,
     check_data_warehouse_for_course,
-    check_open_data_for_course,
     contact,
     delete_canceled_requests,
     emergency_redirect,
@@ -45,7 +42,6 @@ router.register(r"requests", RequestViewSet)
 router.register(r"schools", SchoolViewSet)
 router.register(r"subjects", SubjectViewSet)
 router.register(r"autoadds", AutoAddViewSet)
-router.register(r"canvassites", CanvasSiteViewSet)
 urlpatterns = [
     path("siterequest/", emergency_redirect),
     path("admin/process_requests/", process_requests),
@@ -64,7 +60,6 @@ urlpatterns = [
         TemplateView.as_view(template_name="admin/user_lookup.html"),
         name="user_lookup",
     ),
-    path("courselookup/", check_open_data_for_course),
     path("dwlookup/", check_data_warehouse_for_course),
     path("bannerlookup/", search_banner_courses),
     path("api/", include(router.urls)),
@@ -80,21 +75,6 @@ urlpatterns = [
             {"get": "retrieve"}, renderer_classes=[TemplateHTMLRenderer]
         ),
         name="UI-course-detail",
-    ),
-    path(
-        "canvassites/",
-        CanvasSiteViewSet.as_view(
-            {"get": "list"}, renderer_classes=[TemplateHTMLRenderer]
-        ),
-        name="UI-canvas_site-list",
-    ),
-    path(
-        "canvassites/<canvas_id>/",
-        CanvasSiteViewSet.as_view(
-            {"get": "retrieve", "put": "update"},
-            renderer_classes=[TemplateHTMLRenderer],
-        ),
-        name="UI-canvas_site-detail",
     ),
     path(
         "requests/",
@@ -177,13 +157,6 @@ urlpatterns = [
     path("contact/", contact, name="contact"),
     path("accounts/userinfo/", user_info, name="userinfo"),
     path(
-        "logs/",
-        UpdateLogViewSet.as_view(
-            {"get": "list"}, renderer_classes=[TemplateHTMLRenderer]
-        ),
-        name="UI-updatelog-list",
-    ),
-    path(
         "accounts/login/",
         LoginView.as_view(
             template_name="login.html",
@@ -208,11 +181,6 @@ urlpatterns = [
         "subject-autocomplete/",
         SubjectAutocomplete.as_view(),
         name="subject-autocomplete",
-    ),
-    path(
-        "canvas_site-autocomplete/",
-        CanvasSiteAutocomplete.as_view(),
-        name="canvas_site-autocomplete",
     ),
 ]
 

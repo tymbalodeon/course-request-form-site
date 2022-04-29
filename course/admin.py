@@ -1,15 +1,4 @@
 from django.contrib.admin import ModelAdmin, StackedInline, site
-from django.db.models import (
-    Count,
-    DateTimeField,
-    Exists,
-    IntegerField,
-    Max,
-    Min,
-    OuterRef,
-    Q,
-    Sum,
-)
 
 from .models import (
     AdditionalEnrollment,

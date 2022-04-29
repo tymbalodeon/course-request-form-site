@@ -14,11 +14,6 @@ test_url = # url
 test_key = # key
 use_test_env = # true for evelopment and false for production
 
-[open_data]
-id = # id
-key = # key
-domain = # domain
-
 [data_warehouse]
 user = # user
 password = # password

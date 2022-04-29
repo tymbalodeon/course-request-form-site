@@ -74,16 +74,6 @@ def enroll_user(request, canvas_course, section, user, role, test):
             )
 
 
-def add_site_owners(canvas_course, canvas_site):
-    instructors = canvas_course.get_enrollments(type="TeacherEnrollment")._elements
-    for instructor in instructors:
-        try:
-            user = User.objects.get(username=instructor)
-            canvas_site.owners.add(user)
-        except Exception as error:
-            logger.error(f"Failed to add {instructor} to site owners ({error})")
-
-
 def create_canvas_sites(requested_courses=None, sections=None, test=False):
     logger.info("Creating Canvas sites for requested courses...")
     if requested_courses is None:
@@ -182,25 +172,10 @@ def create_canvas_sites(requested_courses=None, sections=None, test=False):
         if serialized.data["reserves"]:
             set_reserves(request, canvas_course)
         if serialized.data["copy_from_course"]:
-            migrate_course(canvas_course, serialized, test)
-        canvas_site = CanvasCourse.objects.update_or_create(
-            canvas_id=canvas_course.id,
-            defaults={
-                "request_instance": request,
-                "name": canvas_course.name,
-                "sis_course_id": canvas_course.sis_course_id,
-                "workflow_state": canvas_course.workflow_state,
-            },
-        )[0]
-        request.canvas_instance = canvas_site
-        add_site_owners(canvas_course, canvas_site)
+            migrate_course(canvas_course, serialized)
         request.status = "COMPLETED"
         request.save()
-        logger.info(
-            f"UPDATED Canvas site: {canvas_course}"
-            if already_exists
-            else f"CREATED Canvas site: {canvas_site}."
-        )
+        logger.info(f"UPDATED Canvas site: {canvas_course}")
     logger.info("FINISHED")
     return True if section_already_exists else False
 

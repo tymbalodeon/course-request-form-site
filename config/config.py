@@ -14,7 +14,6 @@ def get_config_section_values(section):
 
 
 USERNAME, PASSWORD, EMAIL = get_config_section_values("user")
-OPEN_DATA_ID, OPEN_DATA_KEY, OPEN_DATA_DOMAIN = get_config_section_values("open_data")
 PROD_URL = config.get(CANVAS_SECTION, "prod_url")
 PROD_KEY = config.get(CANVAS_SECTION, "prod_key")
 TEST_URL = config.get(CANVAS_SECTION, "test_url")

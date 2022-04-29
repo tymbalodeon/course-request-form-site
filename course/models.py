@@ -1,10 +1,7 @@
 from logging import getLogger
-from django.utils.functional import cached_property
 
 from bleach import clean
 from bleach_allowlist import markdown_attrs, markdown_tags
-from canvas.api import get_all_canvas_accounts, get_canvas_user_id_by_pennkey
-from data_warehouse.helpers import get_query_cursor
 from django.contrib.auth.models import AbstractUser
 from django.db.models import (
     CASCADE,
@@ -22,8 +19,12 @@ from django.db.models import (
     Q,
     TextField,
 )
+from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 from markdown import markdown
+
+from canvas.api import get_all_canvas_accounts, get_canvas_user_id_by_pennkey
+from data_warehouse.helpers import get_query_cursor
 
 from .terms import FALL, SPRING, SUMMER, USE_BANNER
 

@@ -181,7 +181,6 @@ class AdditionalEnrollmentSerializer(ModelSerializer):
 class RequestSerializer(DynamicFieldsModelSerializer):
     owner = ReadOnlyField(source="owner.username", required=False)
     course_info = CourseSerializer(source="course_requested", read_only=True)
-    canvas_instance = CanvasSiteSerializer(read_only=True)
     masquerade = ReadOnlyField()
     course_requested = SlugRelatedField(
         many=False,

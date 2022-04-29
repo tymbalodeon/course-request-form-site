@@ -2,7 +2,6 @@ from django.test import TestCase
 
 from config.config import USERNAME
 from course.models import (
-    CanvasCourse,
     Course,
     Notice,
     PageContent,
@@ -35,36 +34,6 @@ class ScheduleTypeTest(TestCase):
     def test_str(self):
         activity = ScheduleType.objects.get(abbr=ACTIVITY_ABBR)
         self.assertEqual(str(activity), ACTIVITY_ABBR)
-
-
-class CanvasSiteTest(TestCase):
-    canvas_id = 1
-    name = "Canvas Site"
-    workflow_state = "active"
-    owners = ["user_one", "user_two"]
-    owners_string = "\n".join(owners)
-
-    def setUp(self):
-        owners = [User.objects.create(username=owner) for owner in self.owners]
-        canvas_site = CanvasCourse.objects.create(
-            canvas_id=self.canvas_id,
-            name=self.name,
-            workflow_state=self.workflow_state,
-        )
-        canvas_site.owners.set(owners)
-        canvas_site.added_permissions.set(owners)
-
-    def test_str(self):
-        canvas_site = CanvasCourse.objects.get(canvas_id=self.canvas_id)
-        self.assertEqual(str(canvas_site), f"{self.name}")
-
-    def test_get_owners(self):
-        canvas_site = CanvasCourse.objects.get(canvas_id=self.canvas_id)
-        self.assertEqual(canvas_site.get_owners(), self.owners_string)
-
-    def test_get_added_permissions(self):
-        canvas_site = CanvasCourse.objects.get(canvas_id=self.canvas_id)
-        self.assertEqual(canvas_site.get_added_permissions(), self.owners_string)
 
 
 class CourseTest(TestCase):

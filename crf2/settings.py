@@ -163,8 +163,6 @@ MODULES = [
     "course",
     "crf2",
     "data_warehouse",
-    "open_data",
-    "report",
 ]
 LOGGING = {
     "version": 1,

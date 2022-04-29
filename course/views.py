@@ -6,6 +6,24 @@ from re import search
 from typing import Dict
 from urllib.parse import unquote
 
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth.mixins import AccessMixin, UserPassesTestMixin
+from django.contrib.auth.views import redirect_to_login
+from django.contrib.messages import ERROR, add_message
+from django.contrib.messages import error as messages_error
+from django.db.models import Q
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import redirect, render
+from django_filters import CharFilter, ChoiceFilter, DateTimeFilter, ModelChoiceFilter
+from django_filters.rest_framework import FilterSet
+from rest_framework import permissions, serializers, status
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.renderers import TemplateHTMLRenderer
+from rest_framework.response import Response
+from rest_framework.utils.html import parse_html_list
+from rest_framework.viewsets import ModelViewSet
+
 from canvas.api import (
     MAIN_ACCOUNT_ID,
     CanvasException,
@@ -19,26 +37,8 @@ from data_warehouse.data_warehouse import (
     get_course,
     get_user_by_pennkey,
 )
-from django.contrib.admin.views.decorators import staff_member_required
-from django.contrib.auth.mixins import AccessMixin, UserPassesTestMixin
-from django.contrib.auth.views import redirect_to_login
-from django.contrib.messages import ERROR, add_message
-from django.contrib.messages import error as messages_error
-from django.db.models import Q
-from django.http import HttpResponse, JsonResponse
-from django.shortcuts import redirect, render
-from django_filters import CharFilter, ChoiceFilter, DateTimeFilter, ModelChoiceFilter
-from django_filters.rest_framework import FilterSet
-from open_data.open_data import OpenData
-from rest_framework import permissions, serializers, status
-from rest_framework.exceptions import PermissionDenied
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
-from rest_framework.renderers import TemplateHTMLRenderer
-from rest_framework.response import Response
-from rest_framework.utils.html import parse_html_list
-from rest_framework.viewsets import ModelViewSet
 
-from .forms import CanvasSiteForm, EmailChangeForm, SubjectForm, UserForm
+from .forms import EmailChangeForm, SubjectForm, UserForm
 from .models import (
     AutoAdd,
     Course,
@@ -51,7 +51,6 @@ from .models import (
 )
 from .serializers import (
     AutoAddSerializer,
-    CanvasSiteSerializer,
     CourseSerializer,
     NoticeSerializer,
     RequestSerializer,
@@ -199,7 +198,6 @@ class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
                     "is_staff": request.user.is_staff,
                     "autocomplete_user": UserForm(),
                     "autocomplete_subject": SubjectForm(),
-                    "autocomplete_canvas_site": CanvasSiteForm(),
                     "style": {"template_pack": "rest_framework/vertical/"},
                     "current_term": CURRENT_YEAR_AND_TERM,
                     "next_term": NEXT_YEAR_AND_TERM,
@@ -243,7 +241,6 @@ class CourseViewSet(MixedPermissionModelViewSet, ModelViewSet):
                     "course": response.data,
                     "request_instance": request_instance,
                     "request_form": this_form,
-                    "autocomplete_canvas_site": CanvasSiteForm(),
                     "is_staff": request.user.is_staff,
                     "style": {"template_pack": "rest_framework/vertical/"},
                 },
@@ -486,7 +483,6 @@ class RequestViewSet(MixedPermissionModelViewSet, ModelViewSet):
                         "request_instance": response.data,
                         "permissions": permissions,
                         "request_form": here,
-                        "autocomplete_canvas_site": CanvasSiteForm(),
                         "style": {"template_pack": "rest_framework/vertical/"},
                     },
                     template_name="request_detail_edit.html",
@@ -688,55 +684,6 @@ class NoticeViewSet(MixedPermissionModelViewSet, ModelViewSet):
         serializer.save(owner=self.request.user)
 
 
-class CanvasSiteViewSet(MixedPermissionModelViewSet, ModelViewSet):
-    queryset = CanvasCourse.objects.all()
-    serializer_class = CanvasSiteSerializer
-    lookup_field = "canvas_id"
-
-    def get_queryset(self):
-        user = self.request.user
-
-        return CanvasCourse.objects.filter(Q(owners=user) | Q(added_permissions=user))
-
-    def list(self, request):
-        queryset = self.filter_queryset(self.get_queryset())
-        page = self.paginate_queryset(queryset)
-
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            response = self.get_paginated_response(serializer.data)
-
-            if request.accepted_renderer.format == "html":
-                response.template_name = "canvas_site_list.html"
-                response.data = {"results": response.data, "paginator": self.paginator}
-
-            return response
-
-    def retrieve(self, request, *args, **kwargs):
-        response = super(CanvasSiteViewSet, self).retrieve(request, *args, **kwargs)
-
-        return (
-            Response(
-                {"data": response.data, "autocomplete_user": UserForm()},
-                template_name="canvas_site_detail.html",
-            )
-            if request.accepted_renderer.format == "html"
-            else response
-        )
-
-    def update(self, request):
-        instance = self.get_object()
-        data = {"added_permissions": [request.data["username"]]}
-        serializer = self.get_serializer(instance, data=data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-
-        return Response(
-            {"data": serializer.data, "autocomplete_user": UserForm()},
-            template_name="canvas_site_detail.html",
-        )
-
-
 class HomePage(UserPassesTestMixin, ModelViewSet):
     lookup_field = "course_code"
     renderer_classes = [TemplateHTMLRenderer]
@@ -776,9 +723,6 @@ class HomePage(UserPassesTestMixin, ModelViewSet):
         )
         requests_count = requests.count()
         requests = requests[:15]
-        canvas_sites = CanvasCourse.objects.filter(Q(owners=user_account))
-        canvas_sites_count = canvas_sites.count()
-        canvas_sites = canvas_sites[:15]
         page = self.paginate_queryset(courses)
         serializer = self.get_serializer(page, many=True)
         response = self.get_paginated_response(serializer.data)
@@ -788,11 +732,8 @@ class HomePage(UserPassesTestMixin, ModelViewSet):
             "requests_count": requests_count,
             "courses": response.data,
             "courses_count": courses_count,
-            "canvas_sites": canvas_sites,
-            "canvas_sites_count": canvas_sites_count,
             "username": request.user,
             "user_account": user_account,
-            "autocomplete_canvas_site": CanvasSiteForm(),
             "style": {"template_pack": "rest_framework/vertical/"},
         }
         return response
@@ -1172,32 +1113,6 @@ def quick_config(request):
         return render(request, "admin/quickconfig.html", {"data": data})
 
 
-def check_open_data_for_course(request):
-    courses = {}
-    size = 0
-    if request.GET:
-        try:
-            course_id = request.GET.get("course_id", None)
-            term = request.GET.get("term", None)
-            instructor = request.GET.get("instructor", None)
-            open_data = OpenData()
-            open_data.set_uri("section_num_search")
-            open_data.set_param("course_id", course_id)
-            if term:
-                open_data.set_param("term", term)
-            open_data.set_param("number_of_results_per_page", 5)
-            if instructor:
-                open_data.set_param("instructor", instructor)
-            courses["courses"] = open_data.call_api() or "COURSE(S) NOT FOUND"
-            if isinstance(courses["courses"], list):
-                size = len(courses["courses"])
-            else:
-                size = 1
-        except Exception as error:
-            logger.error(f"ERROR (OpenData): {error}")
-    return render(request, "admin/course_lookup.html", {"data": courses, "size": size})
-
-
 def search_banner_courses(request):
     courses = list()
     size = 0
@@ -1272,21 +1187,6 @@ def autocomplete_subject(request):
         query = request.GET.get("term", "").capitalize()
         search_results = Subject.objects.filter(abbreviation__startswith=query)
         results = [abbreviation for abbreviation in search_results]
-        data = dumps(results)
-    else:
-        data = "fail"
-    mimetype = "application/json"
-
-    return HttpResponse(data, mimetype)
-
-
-def autocomplete_canvas_site(request):
-    if request.is_ajax():
-        query = request.GET.get("term", "").capitalize()
-        search_results = CanvasCourse.objects.filter(
-            Q(owners=query) | Q(added_permissions=query)
-        )
-        results = [site.name for site in search_results]
         data = dumps(results)
     else:
         data = "fail"

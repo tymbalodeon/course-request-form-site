@@ -6,7 +6,6 @@ from re import findall, search, sub
 from config.config import USERNAME
 from course.models import Course, ScheduleType, Subject, User
 from course.terms import CURRENT_YEAR_AND_TERM, split_year_and_term
-
 from data_warehouse.helpers import get_cursor
 
 logger = getLogger(__name__)
