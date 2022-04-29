@@ -16,7 +16,7 @@ from canvas.api import (
     set_reserves,
     set_storage_quota,
 )
-from course.models import SIS_PREFIX, CanvasCourse, Course, Request, User
+from course.models import SIS_PREFIX, Course, Request, User
 from course.serializers import RequestSerializer
 from course.terms import USE_BANNER
 
@@ -26,8 +26,8 @@ logger = getLogger(__name__)
 def enroll_user(request, canvas_course, section, user, role, test):
     try:
         username = user.username
-        penn_id = user.profile.penn_id
-        email = user.email
+        penn_id = user.penn_id
+        email = user.email_address
         full_name = (f"{user.first_name} {user.last_name}",)
     except Exception:
         crf_user = User.objects.get(username=user)

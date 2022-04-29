@@ -178,31 +178,6 @@ class AdditionalEnrollmentSerializer(ModelSerializer):
         exclude = ("id", "course_request")
 
 
-class CanvasSiteSerializer(ModelSerializer):
-    owners = SlugRelatedField(
-        many=True, queryset=User.objects.all(), slug_field="username"
-    )
-    added_permissions = SlugRelatedField(
-        many=True, queryset=User.objects.all(), slug_field="username"
-    )
-
-    class Meta:
-        model = CanvasCourse
-        fields = "__all__"
-
-    def validate(self, data):
-        return data
-
-    def update(self, instance, validated_data):
-        names = validated_data.pop("added_permissions")
-
-        for name in names:
-            instance.added_permissions.add(name)
-        instance.save()
-
-        return instance
-
-
 class RequestSerializer(DynamicFieldsModelSerializer):
     owner = ReadOnlyField(source="owner.username", required=False)
     course_info = CourseSerializer(source="course_requested", read_only=True)

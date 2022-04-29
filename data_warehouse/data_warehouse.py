@@ -1,40 +1,12 @@
-from datetime import datetime
 from logging import getLogger
 from re import findall, search, sub
 
 from course.models import Course, ScheduleType, School, Subject, User
 from course.terms import CURRENT_YEAR_AND_TERM
+
 from data_warehouse.helpers import get_cursor
-from open_data.open_data import OpenData
 
 logger = getLogger(__name__)
-
-
-def get_banner_course(srs_course_id, search_term):
-    srs_course_id = srs_course_id.replace(" ", "").replace("-", "").replace("_", "")
-    subject = "".join(character for character in srs_course_id if character.isalpha())
-    if len(subject) == 3:
-        srs_course_id = srs_course_id.replace(subject, f"{subject} ")
-    cursor = get_cursor()
-    cursor.execute(
-        """
-        SELECT
-            banner.subject, banner.course_num, banner.section_num, banner.term
-        FROM
-            dwngss.xwalk_crse_number xwalk
-        JOIN
-            dwngss_ps.crse_section banner
-        ON xwalk.ngss_course_id=banner.course_id
-        WHERE
-            srs_course_id = :srs_course_id
-        """,
-        srs_course_id=srs_course_id,
-    )
-    results = list()
-    for subject, course_num, section_num, term in cursor:
-        if not search_term or term[-2:] == search_term:
-            results.append(f"{subject}-{course_num}-{section_num} {term}")
-    return results
 
 
 def format_title(title):
@@ -73,6 +45,8 @@ def format_title(title):
 
 def get_staff_account(penn_key=None, penn_id=None):
     cursor = get_cursor()
+    if not cursor:
+        return
     if not penn_key and not penn_id:
         logger.warning("Checking Data Warehouse: NO PENNKEY OR PENN ID PROVIDED.")
         return False
@@ -319,7 +293,6 @@ def get_instructor(pennkey, term=CURRENT_YEAR_AND_TERM):
 def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
     logger.info(") Pulling courses from the Data Warehouse...")
     term = term.upper()
-    open_data = OpenData()
     cursor = get_cursor()
     cursor.execute(
         """
@@ -540,77 +513,3 @@ def get_data_warehouse_instructors(term=CURRENT_YEAR_AND_TERM, logger=logger):
             message = f"Failed to add new instructor(s) to course ({error})"
             logger.error(message)
     logger.info("FINISHED")
-
-
-def delete_data_warehouse_canceled_courses(
-    term=CURRENT_YEAR_AND_TERM,
-    log_path="course/static/log/canceled_courses.log",
-    logger=logger,
-):
-    cursor = get_cursor()
-    cursor.execute(
-        """
-        SELECT
-            cs.section_id || cs.term section,
-            cs.term,
-            cs.subject_area subject_id,
-            cs.xlist_primary
-        FROM dwadmin.course_section cs
-        WHERE
-            cs.activity IN (
-                'LEC',
-                'REC',
-                'LAB',
-                'SEM',
-                'CLN',
-                'CRT',
-                'PRE',
-                'STU',
-                'ONL',
-                'HYB'
-            )
-        AND cs.status IN ('X')
-        AND cs.tuition_school NOT IN ('WH', 'LW')
-        AND cs.term = :term
-        """,
-        term=term,
-    )
-    start = datetime.now().strftime("%Y-%m-%d")
-    with open(log_path, "a") as log:
-        log.write(f"-----{start}-----\n")
-        for (
-            course_code,
-            term,
-            subject_area,
-            crosslist_code,
-        ) in cursor:
-            course_code = course_code.replace(" ", "")
-            subject_area = subject_area.replace(" ", "")
-            crosslist_code = crosslist_code.replace(" ", "")
-            try:
-                course = Course.objects.get(course_code=course_code)
-                if course.requested:
-                    try:
-                        canvas_site = course.request.canvas_instance
-                    except Exception:
-                        logger.info(f"- No main request for {course.course_code}.")
-                        if course.multisection_request:
-                            canvas_site = course.multisection_request.canvas_instance
-                        elif course.crosslisted_request:
-                            canvas_site = course.crosslisted_request.canvas_instance
-                        else:
-                            canvas_site = None
-                    if canvas_site and canvas_site.workflow_state != "deleted":
-                        log.write(f"- Canvas site already exists for {course_code}.\n")
-                    else:
-                        log.write(
-                            "- Canceled course requested but no Canvas site for"
-                            f" {course_code}.\n"
-                        )
-                else:
-                    logger.info(") Deleting {course_code}...")
-                    course.delete()
-            except Exception:
-                logger.info(
-                    f"- The canceled course {course_code} doesn't exist in the CRF yet."
-                )

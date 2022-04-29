@@ -8,7 +8,6 @@ from canvasapi.account import Account
 from canvasapi.exceptions import CanvasException
 from canvasapi.tab import Tab
 from canvasapi.user import User as CanvasUser
-
 from config.config import PROD_KEY, PROD_URL, TEST_KEY, TEST_URL, USE_TEST_ENV
 
 MAIN_ACCOUNT_ID = 96678
@@ -27,7 +26,7 @@ ENROLLMENT_TYPES = {
 }
 
 
-def get_canvas(test=USE_TEST_ENV):
+def get_canvas(test=USE_TEST_ENV) -> Canvas:
     return Canvas(TEST_URL if test else PROD_URL, TEST_KEY if test else PROD_KEY)
 
 

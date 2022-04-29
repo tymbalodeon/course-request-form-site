@@ -40,8 +40,8 @@ check-django: ## Check for Django project problems
 	$(MANAGE) check
 
 courses: ## Populate the database with the current term's courses
-	$(MANAGE) add_courses -t $(YEAR)$(TERM) -odi && \
-	$(MANAGE) add_courses -t $(NEXT_YEAR)$(NEXT_TERM) -odi
+	$(MANAGE) sync --courses --term $(YEAR)$(TERM) && \
+	$(MANAGE) sync --courses --term $(NEXT_YEAR)$(NEXT_TERM)
 
 coverage: ## Show the coverage report
 ifdef fail-under
@@ -133,7 +133,7 @@ migrations: migration migrate ## Make migrations and migrate
 mypy: ## Type-check code
 	pre-commit install && pre-commit run mypy -a
 
-populate: schools subjects courses ## Populate the database with schools, subjects, and courses
+populate: sync ## Populate the database with schools, subjects, and courses
 
 restart: migrations ## Restart the app
 	touch /home/django/crf2/crf2/wsgi.py
@@ -145,7 +145,7 @@ sass: ## Compile the scss files
 	$(MANAGE) sass course/scss/style.scss course/static/css/style.css -t compressed
 
 schools: ## Populate the database with schools
-	$(MANAGE) add_schools
+	$(MANAGE) sync --schools
 
 shell: ## Open an app-aware python shell
 	$(MANAGE) shell_plus
@@ -157,7 +157,7 @@ static: sass ## Collect static files
 start: install migrations superuser populate static run ## Run everything necessary to start the project from scratch
 
 subjects: ## Populate the database with subjects
-	$(MANAGE) add_subjects -o
+	$(MANAGE) sync --subjects
 
 superuser: ## Create a user with admin privileges
 	$(MANAGE) createsuperuser
