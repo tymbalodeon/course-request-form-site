@@ -16,11 +16,11 @@ from canvas.api import (
     set_reserves,
     set_storage_quota,
 )
-from course.models import SIS_PREFIX, Course, Request, User
+from course.models import Course, Request, User
 from course.serializers import RequestSerializer
-from course.terms import USE_BANNER
 
 logger = getLogger(__name__)
+SIS_PREFIX = "BAN"
 
 
 def enroll_user(request, canvas_course, section, user, role):
@@ -85,7 +85,7 @@ def create_canvas_sites(requested_courses=None, sections=None):
     section_already_exists = False
     for request in requested_courses:
         course_requested = request.course_requested
-        if USE_BANNER and not (
+        if not (
             course_requested.course_term.isnumeric()
             or len(course_requested.course_number) == 4
         ):

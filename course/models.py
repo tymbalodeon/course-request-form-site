@@ -26,10 +26,9 @@ from markdown import markdown
 
 from canvas.api import get_all_canvas_accounts, get_canvas_user_id_by_pennkey
 
-from .terms import FALL, SPRING, SUMMER, USE_BANNER
+from .terms import FALL, SPRING, SUMMER
 
 logger = getLogger(__name__)
-SIS_PREFIX = "BAN" if USE_BANNER else "SRS"
 
 
 class User(AbstractUser):

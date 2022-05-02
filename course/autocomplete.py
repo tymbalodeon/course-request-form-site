@@ -9,11 +9,8 @@ logger = getLogger(__name__)
 
 class UserAutocomplete(Select2QuerySetView):
     def get_queryset(self):
-        if not self.request.user.is_authenticated:
-            return User.objects.none()
-        query_set = User.objects.all()
-        if self.q:
-            return query_set.filter(username__contains=self.q)
+        if self.request.user.is_authenticated and self.q:
+            return User.objects.filter(username__contains=self.q)
         else:
             return User.objects.none()
 
@@ -23,11 +20,8 @@ class UserAutocomplete(Select2QuerySetView):
 
 class SubjectAutocomplete(Select2QuerySetView):
     def get_queryset(self):
-        if not self.request.user.is_authenticated:
-            return Subject.objects.none()
-        query_set = Subject.objects.all()
-        if self.q:
-            return query_set.filter(abbreviation__contains=self.q)
+        if self.request.user.is_authenticated and self.q:
+            return Subject.objects.filter(abbreviation__contains=self.q)
         else:
             return Subject.objects.none()
 
