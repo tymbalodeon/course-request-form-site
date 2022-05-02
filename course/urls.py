@@ -51,11 +51,6 @@ urlpatterns = [
     path("admin/view_deleted_requests/", view_deleted_requests),
     path("quickconfig/", quick_config),
     path(
-        "documentation/",
-        TemplateView.as_view(template_name="documentation.html"),
-        name="documentation",
-    ),
-    path(
         "userlookup/",
         TemplateView.as_view(template_name="admin/user_lookup.html"),
         name="user_lookup",

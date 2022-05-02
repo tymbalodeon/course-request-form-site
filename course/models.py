@@ -2,6 +2,7 @@ from logging import getLogger
 
 from bleach import clean
 from bleach_allowlist import markdown_attrs, markdown_tags
+from data_warehouse.helpers import get_cursor
 from django.contrib.auth.models import AbstractUser
 from django.db.models import (
     CASCADE,
@@ -24,7 +25,6 @@ from django.utils.safestring import mark_safe
 from markdown import markdown
 
 from canvas.api import get_all_canvas_accounts, get_canvas_user_id_by_pennkey
-from data_warehouse.helpers import get_query_cursor
 
 from .terms import FALL, SPRING, SUMMER, USE_BANNER
 
@@ -46,15 +46,16 @@ class User(AbstractUser):
 
     def get_dw_info(self):
         logger.info(f"Getting {self.username}'s info from Data Warehouse...")
+        cursor = get_cursor()
+        if not cursor:
+            return
         query = """
                 SELECT
                     first_name, last_name, penn_id, email_address
                 FROM employee_general
                 WHERE pennkey = :username
                 """
-        cursor = get_query_cursor(query, {"username": self.username})
-        if not cursor:
-            return
+        cursor.execute(query, username=self.username)
         for first_name, last_name, penn_id, email_address in cursor:
             self.log_field(self.username, "first name", first_name)
             self.first_name = first_name
@@ -87,10 +88,11 @@ class ScheduleType(Model):
 
     @classmethod
     def sync(cls):
-        query = "SELECT sched_type_code, sched_type_desc FROM dwngss.v_sched_type"
-        cursor = get_query_cursor(query)
+        cursor = get_cursor()
         if not cursor:
             return
+        query = "SELECT sched_type_code, sched_type_desc FROM dwngss.v_sched_type"
+        cursor.execute(query)
         for sched_type_code, sched_type_desc in cursor:
             schedule_type, created = cls.objects.update_or_create(
                 sched_type_code=sched_type_code,
@@ -114,8 +116,11 @@ class School(Model):
 
     @classmethod
     def sync(cls):
+        cursor = get_cursor()
+        if not cursor:
+            return
         query = "SELECT school_code, school_desc_long FROM dwngss.v_school"
-        cursor = get_query_cursor(query)
+        cursor.execute(query)
         if not cursor:
             return
         for school_code, school_desc_long in cursor:
@@ -166,9 +171,10 @@ class Subject(Model):
         query = (
             "SELECT subject_code, subject_desc_long, school_code FROM dwngss.v_subject"
         )
-        cursor = get_query_cursor(query)
+        cursor = get_cursor()
         if not cursor:
             return
+        cursor.execute(query)
         for subject_code, subject_desc_long, school_code in cursor:
             try:
                 school = School.objects.get(school_code=school_code)
@@ -178,7 +184,7 @@ class Subject(Model):
                     "SELECT school_code, school_desc_long FROM dwngss.v_school WHERE"
                     " school_code = :school_code"
                 )
-                cursor = get_query_cursor(query, {"school_code": school_code})
+                cursor.execute(query, {"school_code": school_code})
                 if not cursor:
                     return
                 for school_code, school_desc_long in cursor:

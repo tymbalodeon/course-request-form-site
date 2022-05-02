@@ -1,10 +1,9 @@
-from django.core.management.base import BaseCommand
-
 from course.models import ScheduleType, School, Subject
 from data_warehouse.data_warehouse import (
     get_data_warehouse_courses,
     get_data_warehouse_instructors,
 )
+from django.core.management.base import BaseCommand
 
 
 class Command(BaseCommand):

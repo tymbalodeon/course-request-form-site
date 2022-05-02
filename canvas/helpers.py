@@ -23,7 +23,7 @@ from course.terms import USE_BANNER
 logger = getLogger(__name__)
 
 
-def enroll_user(request, canvas_course, section, user, role, test):
+def enroll_user(request, canvas_course, section, user, role):
     try:
         username = user.username
         penn_id = user.penn_id
@@ -35,7 +35,7 @@ def enroll_user(request, canvas_course, section, user, role, test):
         penn_id = crf_user.profile.penn_id
         email = crf_user.email
         full_name = f"{crf_user.first_name} {crf_user.last_name}"
-    canvas_user = get_user_by_login_id(username, test=test)
+    canvas_user = get_user_by_login_id(username)
     if canvas_user is None:
         try:
             canvas_user = create_canvas_user(
@@ -43,7 +43,6 @@ def enroll_user(request, canvas_course, section, user, role, test):
                 penn_id,
                 email,
                 full_name,
-                test=test,
             )
             add_request_process_notes(f"created account for user: {username}", request)
         except Exception as error:
@@ -74,7 +73,7 @@ def enroll_user(request, canvas_course, section, user, role, test):
             )
 
 
-def create_canvas_sites(requested_courses=None, sections=None, test=False):
+def create_canvas_sites(requested_courses=None, sections=None):
     logger.info("Creating Canvas sites for requested courses...")
     if requested_courses is None:
         requested_courses = Request.objects.filter(status="APPROVED")
@@ -97,7 +96,7 @@ def create_canvas_sites(requested_courses=None, sections=None, test=False):
         serialized = RequestSerializer(request)
         additional_sections = list()
         logger.info(f"Creating Canvas site for {course_requested}...")
-        account = get_school_account(request, course_requested, test)
+        account = get_school_account(request, course_requested)
         if not account:
             continue
         section_code = get_section_code(request, course_requested)
@@ -115,9 +114,7 @@ def create_canvas_sites(requested_courses=None, sections=None, test=False):
         )
         sis_course_id = f"{SIS_PREFIX}_{course_requested.sis_format_primary()}"
         term_id = get_term_id(
-            MAIN_ACCOUNT_ID,
-            f"{course_requested.year}{course_requested.course_term}",
-            test=test,
+            MAIN_ACCOUNT_ID, f"{course_requested.year}{course_requested.course_term}"
         )
         course = {
             "name": name,
@@ -126,7 +123,7 @@ def create_canvas_sites(requested_courses=None, sections=None, test=False):
             "term_id": term_id,
         }
         already_exists, canvas_course = get_canvas_course(
-            request, account, course, sis_course_id, test
+            request, account, course, sis_course_id
         )
         if not canvas_course:
             continue
@@ -155,7 +152,6 @@ def create_canvas_sites(requested_courses=None, sections=None, test=False):
             course_title,
             additional_sections,
             sections,
-            test,
         )
         section = next(
             (section for section in canvas_course.get_sections()), canvas_course
@@ -167,7 +163,6 @@ def create_canvas_sites(requested_courses=None, sections=None, test=False):
                 section,
                 enrollment["user"],
                 enrollment["role"],
-                test,
             )
         if serialized.data["reserves"]:
             set_reserves(request, canvas_course)
@@ -181,13 +176,7 @@ def create_canvas_sites(requested_courses=None, sections=None, test=False):
 
 
 def handle_sections(
-    request,
-    serialized,
-    canvas_course,
-    course_title,
-    additional_sections,
-    sections,
-    test,
+    request, serialized, canvas_course, course_title, additional_sections, sections
 ):
     if sections:
         sections = [section.course_code for section in sections]
@@ -217,10 +206,5 @@ def handle_sections(
     for section in additional_sections:
         for user in section["instructors"]:
             enroll_user(
-                request,
-                canvas_course,
-                section["course_section"].id,
-                user,
-                "instructor",
-                test,
+                request, canvas_course, section["course_section"].id, user, "instructor"
             )

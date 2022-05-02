@@ -1,6 +1,5 @@
 from configparser import ConfigParser
 from logging import getLogger
-from typing import Optional
 
 from cx_Oracle import connect
 
@@ -15,13 +14,5 @@ def get_cursor():
         connection = connect(values["user"], values["password"], values["service"])
     except Exception as error:
         logger.error(f"FAILED to connect to Data Warehouse: '{error}'")
-        return
-    return connection.cursor()
-
-
-def get_query_cursor(query: str, kwargs: Optional[dict] = None):
-    cursor = get_cursor()
-    if not cursor:
         return None
-    cursor.execute(query, **kwargs)
-    return cursor
+    return connection.cursor()

@@ -269,10 +269,10 @@ def request_course(course, reserves, status="APPROVED", verbose=True):
         return False
 
 
-def enable_tools(canvas_id, tools, label, test):
+def enable_tools(canvas_id, tools, label):
     for tool in tools:
         try:
-            canvas = get_canvas(test)
+            canvas = get_canvas()
             canvas_site = canvas.get_course(canvas_id)
             tabs = canvas_site.get_tabs()
             if label:
@@ -288,10 +288,10 @@ def enable_tools(canvas_id, tools, label, test):
             print(f"\t* ERROR: Failed to enable {tool} ({error}).")
 
 
-def publish_site(canvas_id, test):
+def publish_site(canvas_id):
     canvas_site = None
     try:
-        canvas = get_canvas(test)
+        canvas = get_canvas()
         canvas_site = canvas.get_course(canvas_id)
         canvas_site.update(course={"event": "offer"})
         print(f"\t* Published {canvas_site}.")
@@ -324,7 +324,6 @@ def bulk_create_canvas_sites(
     },
     label=True,
     publish=False,
-    test=False,
 ):
     if type(tools) == dict and label:
         tools = [tool for tool in tools.values()]
@@ -358,9 +357,7 @@ def bulk_create_canvas_sites(
         try:
             course_request = request_course(course, reserves)
             sections = None if not include_sections else list(course.sections.all())
-            creation_error = create_canvas_sites(
-                course_request, sections=sections, test=test
-            )
+            creation_error = create_canvas_sites(course_request, sections=sections)
             if creation_error:
                 print("\t> Aborting... (SITE ALREADY EXISTS)")
                 if course_request:
@@ -377,9 +374,9 @@ def bulk_create_canvas_sites(
             if tools or publish:
                 canvas_id = request.canvas_instance.canvas_id
                 if tools:
-                    enable_tools(canvas_id, tools, label, test)
+                    enable_tools(canvas_id, tools, label)
                 if publish:
-                    publish_site(canvas_id, test)
+                    publish_site(canvas_id)
         except Exception as error:
             print(f"\t* ERROR: Failed to create site ({error}).")
         print("\tCOMPLETE")
