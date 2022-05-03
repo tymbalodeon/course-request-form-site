@@ -223,7 +223,7 @@ class Course(Model):
     term = CharField(max_length=2, choices=TERM_CHOICES)
     title = CharField(max_length=250)
     instructors = ManyToManyField(User, related_name="courses", blank=True)
-    owner = ForeignKey(User, related_name="created_at", on_delete=CASCADE)
+    owner = ForeignKey(User, related_name="owner", on_delete=CASCADE)
     sections = ManyToManyField("self", blank=True, symmetrical=True, default=None)
     primary_crosslist = CharField(max_length=20, default="", blank=True)
     crosslisted = ManyToManyField("self", blank=True, symmetrical=True, default=None)

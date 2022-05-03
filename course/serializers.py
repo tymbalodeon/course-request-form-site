@@ -5,7 +5,6 @@ from rest_framework.serializers import (
     CharField,
     DateTimeField,
     HyperlinkedModelSerializer,
-    HyperlinkedRelatedField,
     ModelSerializer,
     ReadOnlyField,
     SerializerMethodField,
@@ -28,19 +27,64 @@ from .models import (
 )
 
 
+class SubjectSerializer(ModelSerializer):
+    class Meta:
+        model = Subject
+        fields = "__all__"
+
+    def create(self, validated_data):
+        return Subject.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get("name", instance.name)
+        instance.subject_code = validated_data.get(
+            "subject_code", instance.subject_code
+        )
+        instance.visible = validated_data.get("visible", instance.visible)
+        instance.save()
+        return instance
+
+
+class SchoolSerializer(ModelSerializer):
+    subjects = SubjectSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = School
+        fields = (
+            "school_code",
+            "school_desc_long",
+            "visible",
+            "subjects",
+            "canvas_sub_account_id",
+        )
+
+    def create(self, validated_data):
+        return School.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get("name", instance.name)
+        instance.school_code = validated_data.get("school_code", instance.school_code)
+        instance.visible = validated_data.get("visible", instance.visible)
+        instance.canvas_sub_account_id = validated_data.get(
+            "canvas_sub_account_id", instance.canvas_subaccount
+        )
+        instance.save()
+        return instance
+
+
 class DynamicFieldsModelSerializer(ModelSerializer):
     def __init__(self, *args, **kwargs):
         fields = kwargs.pop("fields", None)
-        super(DynamicFieldsModelSerializer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
-        if fields is not None:
-            allowed = set(fields)
-            existing = set(self.fields)
-            for field_name in existing - allowed:
-                self.fields.pop(field_name)
+        if fields:
+            disallowed_fields = set(self.fields) - set(fields)
+            for field in disallowed_fields:
+                self.fields.pop(field)
 
 
 class CourseSerializer(DynamicFieldsModelSerializer):
+    id = ReadOnlyField()
     owner = ReadOnlyField(source="owner.username")
     course_code = CharField()
     crosslisted = SlugRelatedField(
@@ -50,20 +94,19 @@ class CourseSerializer(DynamicFieldsModelSerializer):
         required=False,
     )
     requested = BooleanField(default=False)
-    sections = SerializerMethodField()  #
+    sections = SerializerMethodField()
     instructors = SlugRelatedField(
         many=True, queryset=User.objects.all(), slug_field="username"
     )
     course_schools = SlugRelatedField(
-        many=False, queryset=School.objects.all(), slug_field="abbreviation"
+        many=False, queryset=School.objects.all(), slug_field="school_code"
     )
     course_subject = SlugRelatedField(
-        many=False, queryset=Subject.objects.all(), slug_field="abbreviation"
+        many=False, queryset=Subject.objects.all(), slug_field="subject_code"
     )
-    course_activity = SlugRelatedField(
-        many=False, queryset=ScheduleType.objects.all(), slug_field="abbr"
+    schedule_type = SlugRelatedField(
+        many=False, queryset=ScheduleType.objects.all(), slug_field="sched_type_code"
     )
-    id = ReadOnlyField()
     requested_override = ReadOnlyField()
     associated_request = SerializerMethodField()
 
@@ -74,19 +117,22 @@ class CourseSerializer(DynamicFieldsModelSerializer):
 
     def get_associated_request(self, obj):
         request = obj.get_request()
-        return request.course_requested.course_code if request else None
+        if not request:
+            return None
+        return request.course_requested.course_code
 
     def get_sections(self, obj):
+        sections = obj.sections.all()
         return [
-            (course.course_code, course.course_activity.abbr, course.requested)
-            for course in obj.sections.all()
+            (course.course_code, course.schedule_type.sched_type_code, course.requested)
+            for course in sections
         ]
 
     def create(self, validated_data):
-        instructors_data = validated_data.pop("instructors")
+        instructors = validated_data.pop("instructors")
         course = Course.objects.create(**validated_data)
-        for instructor_data in instructors_data:
-            course.instructors.add(instructor_data)
+        for instructor in instructors:
+            course.instructors.add(instructor)
         if "crosslisted" in validated_data:
             for cross_course in validated_data.pop("crosslisted"):
                 course.crosslisted.add(cross_course)
@@ -131,33 +177,6 @@ class CourseSerializer(DynamicFieldsModelSerializer):
             return instance
 
 
-class UserSerializer(ModelSerializer):
-    requests = HyperlinkedRelatedField(
-        many=True, view_name="request-detail", read_only=True
-    )
-    penn_id = CharField(source="profile.penn_id")
-
-    class Meta:
-        model = User
-        fields = (
-            "id",
-            "penn_id",
-            "username",
-            "courses",
-            "requests",
-            "email",
-        )
-        read_only_fields = ("courses",)
-
-    def create(self, validated_data):
-        return User.objects.create(**validated_data)
-
-    def update(self, instance, validated_data):
-        instance.name = validated_data.get("username", instance.username)
-        instance.save()
-        return instance
-
-
 class AdditionalEnrollmentSerializer(ModelSerializer):
     user = SlugRelatedField(
         queryset=User.objects.all(),
@@ -167,7 +186,7 @@ class AdditionalEnrollmentSerializer(ModelSerializer):
 
     class Meta:
         model = AdditionalEnrollment
-        exclude = ("id", "course_request")
+        exclude = ("id", "request")
 
 
 class RequestSerializer(DynamicFieldsModelSerializer):
@@ -322,56 +341,9 @@ class RequestSerializer(DynamicFieldsModelSerializer):
         return instance
 
 
-class SubjectSerializer(ModelSerializer):
-    class Meta:
-        model = Subject
-        fields = "__all__"
-
-    def create(self, validated_data):
-        return Subject.objects.create(**validated_data)
-
-    def update(self, instance, validated_data):
-        instance.name = validated_data.get("name", instance.name)
-        instance.abbreviation = validated_data.get(
-            "abbreviation", instance.abbreviation
-        )
-        instance.visible = validated_data.get("visible", instance.visible)
-        instance.save()
-        return instance
-
-
-class SchoolSerializer(ModelSerializer):
-    subjects = SubjectSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = School
-        fields = (
-            "name",
-            "abbreviation",
-            "visible",
-            "subjects",
-            "canvas_subaccount",
-        )
-
-    def create(self, validated_data):
-        return School.objects.create(**validated_data)
-
-    def update(self, instance, validated_data):
-        instance.name = validated_data.get("name", instance.name)
-        instance.abbreviation = validated_data.get(
-            "abbreviation", instance.abbreviation
-        )
-        instance.visible = validated_data.get("visible", instance.visible)
-        instance.canvas_subaccount = validated_data.get(
-            "canvas_subaccount", instance.canvas_subaccount
-        )
-        instance.save()
-        return instance
-
-
 class NoticeSerializer(HyperlinkedModelSerializer):
-    owner = ReadOnlyField(source="owner.username")
     id = ReadOnlyField()
+    author = ReadOnlyField(source="author.username")
 
     class Meta:
         model = Notice
@@ -381,12 +353,13 @@ class NoticeSerializer(HyperlinkedModelSerializer):
         return Notice.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
-        instance.notice_text = validated_data.get("notice_text", instance.notice_text)
+        instance.content = validated_data.get("content", instance.content)
         instance.save()
         return instance
 
 
 class AutoAddSerializer(HyperlinkedModelSerializer):
+    id = ReadOnlyField()
     user = SlugRelatedField(
         many=False, queryset=User.objects.all(), slug_field="username"
     )
@@ -396,7 +369,6 @@ class AutoAddSerializer(HyperlinkedModelSerializer):
     subject = SlugRelatedField(
         many=False, queryset=Subject.objects.all(), slug_field="subject_code"
     )
-    id = ReadOnlyField()
 
     class Meta:
         model = AutoAdd
@@ -406,5 +378,7 @@ class AutoAddSerializer(HyperlinkedModelSerializer):
         return AutoAdd.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
+        instance.school = validated_data.get("school", instance.school)
+        instance.subject = validated_data.get("subject", instance.subject)
         instance.save()
         return instance
