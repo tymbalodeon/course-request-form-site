@@ -34,13 +34,11 @@ from canvas.api import (
     get_user_by_sis,
 )
 from data_warehouse.data_warehouse import (
-    get_banner_course,
-    get_course,
+    get_banner_sections,
     get_staff_account,
     get_student_account,
     get_user_by_pennkey,
 )
-from open_data.open_data import OpenData
 
 from .forms import CanvasSiteForm, EmailChangeForm, SubjectForm, UserForm
 from .models import (
@@ -74,6 +72,7 @@ from .terms import (
     NEXT_TERM,
     NEXT_YEAR,
     NEXT_YEAR_AND_TERM,
+    YEAR_PLUS_ONE,
     get_term_letters,
 )
 from .utils import DATA_DIRECTORY_NAME, get_data_directory, update_user_courses
@@ -1251,86 +1250,56 @@ def quick_config(request):
         return render(request, "admin/quickconfig.html", {"data": data})
 
 
-def check_open_data_for_course(request):
-    courses = {}
-    size = 0
-    if request.GET:
-        try:
-            course_id = request.GET.get("course_id", None)
-            term = request.GET.get("term", None)
-            instructor = request.GET.get("instructor", None)
-            open_data = OpenData()
-            open_data.set_uri("course_section_search")
-            open_data.set_param("course_id", course_id)
-            if term:
-                open_data.set_param("term", term)
-            open_data.set_param("number_of_results_per_page", 5)
-            if instructor:
-                open_data.set_param("instructor", instructor)
-            courses["courses"] = open_data.call_api() or "COURSE(S) NOT FOUND"
-            if isinstance(courses["courses"], list):
-                size = len(courses["courses"])
-            else:
-                size = 1
-        except Exception as error:
-            logger.error(f"ERROR (OpenData): {error}")
-    return render(request, "admin/course_lookup.html", {"data": courses, "size": size})
-
-
-def search_banner_courses(request):
-    courses = list()
-    size = 0
-    if request.GET:
-        try:
-            srs_course_id = request.GET.get("srs_course_id")
-            term = request.GET.get("term")
-            courses = get_banner_course(srs_course_id, term)
-            if courses:
-                size = len(courses)
-            else:
-                courses = ["COURSE(S) NOT FOUND"]
-        except Exception as error:
-            logger.error(f"ERROR (Data Warehouse): {error}")
-    return render(
-        request, "admin/banner_lookup.html", {"courses": courses, "size": size}
-    )
-
-
 def check_data_warehouse_for_course(request):
-    courses = {}
+    results = dict()
     size = 0
     if request.GET:
         try:
-            headers = [
-                "section id",
-                "term",
-                "subject",
-                "school",
-                "crosslisting",
-                "crosslist code",
-                "activity",
-                "section department",
-                "section division",
-                "title",
-                "status",
-                "revision",
-                "instructors",
-            ]
-            course_code = request.GET.get("course_code")
-            results = get_course(course_code)
-            if results:
-                size = len(results)
-                courses = {"courses": dict()}
-                for course in results:
-                    course_code = course[0]
-                    courses["courses"][course_code] = dict()
-                    for index, item in enumerate(course[1:]):
-                        courses["courses"][course_code][headers[index]] = item
+            subject = request.GET.get("subject", None)
+            course_number = request.GET.get("course-number", None)
+            year_and_term = request.GET.get("year-and-term", None)
+            if not all({subject, course_number, year_and_term}):
+                results = "Please enter a value for all three fields"
             else:
-                courses = {"courses": "COURSE(S) NOT FOUND"}
+                courses = get_banner_sections(subject, course_number, year_and_term)
+                if not courses:
+                    results = (
+                        f"Course matching subject '{subject}', course number"
+                        f" '{course_number}', and term '{year_and_term}' NOT FOUND"
+                    )
+                else:
+                    size = len(courses)
+                    for course in courses:
+                        (
+                            subject,
+                            course_num,
+                            section_num,
+                            term,
+                            schedule_type,
+                            school,
+                            title,
+                            xlist_enrlmt,
+                            xlist_family,
+                            section_id,
+                            section_status,
+                        ) = course
+                        results[f"{subject}_{course_num}_{section_num}_{term}"] = {
+                            "subject": subject,
+                            "course_num": course_num,
+                            "section_num": section_num,
+                            "term": term,
+                            "schedule_type": schedule_type,
+                            "school": school,
+                            "title": title,
+                            "xlist_enrlmt": xlist_enrlmt,
+                            "xlist_family": xlist_family,
+                            "section_id": section_id,
+                            "section_status": section_status,
+                        }
+                        logger.info(course)
         except Exception as error:
-            logger.error(f"ERROR (Data Warehouse): {error}")
-    return render(request, "admin/dw_lookup.html", {"data": courses, "size": size})
+            logger.error(error)
+    return render(request, "admin/course_lookup.html", {"data": results, "size": size})
 
 
 def autocomplete(request):

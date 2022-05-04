@@ -10,7 +10,7 @@ from django.contrib.auth.models import User
 
 from config.config import USERNAME
 from course.models import Activity, Course, Profile, School, Subject
-from course.terms import CURRENT_YEAR_AND_TERM, NEXT_YEAR_AND_TERM, split_year_and_term
+from course.terms import CURRENT_YEAR_AND_TERM, split_year_and_term
 from open_data.open_data import OpenData
 
 logger = getLogger(__name__)
@@ -278,7 +278,7 @@ def get_user_by_pennkey(pennkey):
     return user
 
 
-def get_banner_sections(subject, course_number, term=NEXT_YEAR_AND_TERM):
+def get_banner_sections(subject, course_number, term=CURRENT_YEAR_AND_TERM):
     cursor = get_cursor()
     cursor.execute(
         """
@@ -296,8 +296,7 @@ def get_banner_sections(subject, course_number, term=NEXT_YEAR_AND_TERM):
             section_status
         FROM
             dwngss_ps.crse_section
-        WHERE
-            subject = :subject
+        WHERE subject = :subject
         AND course_num = :course_number
         AND term = :term
         """,
@@ -305,8 +304,10 @@ def get_banner_sections(subject, course_number, term=NEXT_YEAR_AND_TERM):
         course_number=course_number,
         term=term,
     )
+    courses = list()
     for course in cursor:
-        print(course)
+        courses.append(course)
+    return courses
 
 
 def get_course(section, term=None):

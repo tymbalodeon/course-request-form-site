@@ -7,31 +7,30 @@
 
 {% block content %}
     <h1>Course Lookup</h1>
-    <p>Look up course information in the Registrar.</p>
-    <dl>
-        <dt>Code</dt>
-        <dd>Subject code (required), plus course number (optional if no section number), plus section number (optional); must be in CAPS</dd>
-        <dt>Year and Term (optional)</dt>
-        <dd>Year plus term code ("A" for spring, "B" for summer, "C" for fall)</dd>
-        <dt>Instructor (optional)</dt>
-        <dd>Valid pennkey; must be lowercase</dd>
-    </dl>
-    <em>Results are capped at 5 courses and labs are not listed as courses.</em>
+    <p>
+        The CRF pulls course information from the Data Warehouse. If a course
+        that you expect to be in the CRF is missing, use this tool to query the
+        Data Warehouse directly, to see if that course exists there. If it is
+        found in the DW, but not in the CRF, it is most likely a delay in
+        syncing information (the CRF syncs data only once per day), but feel
+        free to report this so that the course can be pulled in manually. If the
+        course is NOT found here, then there is nothing we can do but wait...
+    </p>
     <fieldset>
         <legend>Course Lookup</legend>
         <form>
             <div class="flex-row">
                 <div class="flex-large">
-                    <label for="course_id">Code</label>
-                    <input type="text" id="course_id" name="course_id" placeholder="SUBJ or SUBJ123 or SUBJ123456">
+                    <label for="subject">Subject</label>
+                    <input type="text" id="subject" name="subject" placeholder="SUBJ">
                 </div>
                 <div class="flex-large">
-                    <label for="term">Year/Term</label>
-                    <input type="text" id="term" name="term" placeholder="e.g., 2022A">
+                    <label for="course-number">Course Number</label>
+                    <input type="text" id="course-number" name="course-number" placeholder="1234">
                 </div>
                 <div class="flex-large">
-                    <label for="instructor">Instructor</label>
-                    <input type="text" id="instructor" name="instructor" placeholder="pennkey">
+                    <label for="year-and-term">Year and Term</label>
+                    <input type="text" id="year-and-term" name="year-and-term" placeholder="202230">
                 </div>
             </div>
             <br>
