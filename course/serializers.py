@@ -1,4 +1,5 @@
 import collections
+from logging import getLogger
 
 from rest_framework.serializers import (
     BooleanField,
@@ -25,6 +26,8 @@ from .models import (
     Subject,
     User,
 )
+
+logger = getLogger(__name__)
 
 
 class SubjectSerializer(ModelSerializer):
@@ -190,7 +193,7 @@ class AdditionalEnrollmentSerializer(ModelSerializer):
 
 
 class RequestSerializer(DynamicFieldsModelSerializer):
-    owner = ReadOnlyField(source="owner.username", required=False)
+    requester = ReadOnlyField(source="requester.username", required=False)
     course_info = CourseSerializer(source="course_requested", read_only=True)
     masquerade = ReadOnlyField()
     course_requested = SlugRelatedField(
@@ -213,8 +216,8 @@ class RequestSerializer(DynamicFieldsModelSerializer):
         style={"base_template": "list_fieldset.html"},
         required=False,
     )
-    created = DateTimeField(format="%I:%M%p %b,%d %Y", required=False)
-    updated = DateTimeField(format="%I:%M%p %b,%d %Y", required=False)
+    created_at = DateTimeField(format="%I:%M%p %b,%d %Y", required=False)
+    updated_at = DateTimeField(format="%I:%M%p %b,%d %Y", required=False)
     additional_sections = SlugRelatedField(
         many=True,
         default=[],
@@ -230,10 +233,10 @@ class RequestSerializer(DynamicFieldsModelSerializer):
     def to_internal_value(self, data):
         def check_for_crf_account(enrollments):
             for enrollment in enrollments:
-                print(f"Checking Users for {enrollment['user']}...")
+                logger.info(f"Checking Users for {enrollment['user']}...")
                 user = get_user_by_pennkey(enrollment["user"])
-                if user is None:
-                    print(f"FAILED to find User {enrollment['user']}.")
+                if not user:
+                    logger.error(f"FAILED to find User {enrollment['user']}.")
 
         data = dict(data)
         if data.get("title_override", None) == "":
@@ -244,32 +247,25 @@ class RequestSerializer(DynamicFieldsModelSerializer):
             data["reserves"] = False
         if data.get("additional_enrollments", None) is not None:
             check_for_crf_account(data["additional_enrollments"])
-        return super(RequestSerializer, self).to_internal_value(data)
+        return super().to_internal_value(data)
 
     def validate(self, data):
         if "additional_enrollments" in data.keys() and data["additional_enrollments"]:
             for enrollment in data["additional_enrollments"]:
-                print(f"Checking Users for {enrollment['user']}...")
+                logger.info(f"Checking Users for {enrollment['user']}...")
                 user = get_user_by_pennkey(enrollment["user"])
                 if not user:
-                    print(f"FAILED to find User {enrollment['user']}.")
-                    raise ValidationError(
-                        {
-                            "error": (
-                                "An error occurred. Please check that the pennkeys"
-                                " you entered are correct and add the course"
-                                " information to the additional instructions field."
-                            )
-                        }
-                    )
+                    logger.error(f"FAILED to find User {enrollment['user']}.")
+                    error_message = "An error occurred. Please check that the pennkeys you entered are correct and add the course information to the additional instructions field."
+                    raise ValidationError({"error": error_message})
         return data
 
     def create(self, validated_data):
         add_enrolls_data = validated_data.pop("additional_enrollments")
         add_sections_data = validated_data.pop("additional_sections")
-        autoadds = AutoAdd.objects.filter(
-            school=validated_data["course_requested"].course_schools
-        ).filter(subject=validated_data["course_requested"].course_subject)
+        school = validated_data["course_requested"].school
+        subject = validated_data["course_requested"].subject
+        autoadds = AutoAdd.objects.filter(school=school).filter(subject=subject)
         request_object = Request.objects.create(**validated_data)
         if add_enrolls_data:
             for enroll_data in add_enrolls_data:

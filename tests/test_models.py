@@ -1,16 +1,8 @@
 from django.test import TestCase
 
 from config.config import USERNAME
-from course.models import (
-    Course,
-    Notice,
-    PageContent,
-    Request,
-    ScheduleType,
-    School,
-    Subject,
-    User,
-)
+from course.models import (Course, Notice, PageContent, Request, ScheduleType,
+                           School, Subject, User)
 from course.terms import CURRENT_YEAR, get_current_term
 
 SCHOOL_NAME = "School"

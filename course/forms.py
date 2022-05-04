@@ -1,12 +1,6 @@
 from dal.autocomplete import ModelSelect2
-from django.forms import (
-    EmailField,
-    EmailInput,
-    Form,
-    ModelChoiceField,
-    ModelForm,
-    ValidationError,
-)
+from django.forms import (EmailField, EmailInput, Form, ModelChoiceField,
+                          ModelForm, ValidationError)
 
 from .models import Subject, User
 

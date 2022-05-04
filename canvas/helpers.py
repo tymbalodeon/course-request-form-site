@@ -1,21 +1,10 @@
 from logging import getLogger
 
-from canvas.api import (
-    ENROLLMENT_TYPES,
-    LIBRARIAN_ROLE_ID,
-    MAIN_ACCOUNT_ID,
-    add_request_process_notes,
-    create_canvas_user,
-    create_section,
-    get_canvas_course,
-    get_school_account,
-    get_section_code,
-    get_term_id,
-    get_user_by_login_id,
-    migrate_course,
-    set_reserves,
-    set_storage_quota,
-)
+from canvas.api import (ENROLLMENT_TYPES, LIBRARIAN_ROLE_ID, MAIN_ACCOUNT_ID,
+                        add_request_process_notes, create_canvas_user,
+                        create_section, get_canvas_course, get_school_account,
+                        get_section_code, get_term_id, get_user_by_login_id,
+                        migrate_course, set_reserves, set_storage_quota)
 from course.models import Course, Request, User
 from course.serializers import RequestSerializer
 

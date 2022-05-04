@@ -1,17 +1,7 @@
 from django.contrib.admin import ModelAdmin, StackedInline, site
 
-from .models import (
-    AdditionalEnrollment,
-    AutoAdd,
-    Course,
-    Notice,
-    PageContent,
-    Request,
-    ScheduleType,
-    School,
-    Subject,
-    User,
-)
+from .models import (AdditionalEnrollment, AutoAdd, Course, Notice,
+                     PageContent, Request, ScheduleType, School, Subject, User)
 
 
 class CourseAdmin(ModelAdmin):
