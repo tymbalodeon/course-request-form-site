@@ -3,10 +3,22 @@ from logging import getLogger
 from bleach import clean
 from bleach_allowlist import markdown_attrs, markdown_tags
 from django.contrib.auth.models import AbstractUser
-from django.db.models import (CASCADE, SET_NULL, BooleanField, CharField,
-                              DateTimeField, EmailField, ForeignKey,
-                              IntegerField, Manager, ManyToManyField, Model,
-                              OneToOneField, Q, TextField)
+from django.db.models import (
+    CASCADE,
+    SET_NULL,
+    BooleanField,
+    CharField,
+    DateTimeField,
+    EmailField,
+    ForeignKey,
+    IntegerField,
+    Manager,
+    ManyToManyField,
+    Model,
+    OneToOneField,
+    Q,
+    TextField,
+)
 from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 from markdown import markdown

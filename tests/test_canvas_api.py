@@ -2,9 +2,14 @@ from datetime import datetime
 
 from django.test import TestCase
 
-from canvas.api import (MAIN_ACCOUNT_ID, create_canvas_user,
-                        get_canvas_account, get_term_id, get_user_by_login_id,
-                        get_user_courses)
+from canvas.api import (
+    MAIN_ACCOUNT_ID,
+    create_canvas_user,
+    get_canvas_account,
+    get_term_id,
+    get_user_by_login_id,
+    get_user_courses,
+)
 from config.config import USERNAME
 
 

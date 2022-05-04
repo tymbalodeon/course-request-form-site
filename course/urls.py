@@ -8,18 +8,31 @@ from rest_framework.routers import DefaultRouter
 from rest_framework_swagger.views import get_swagger_view
 
 from .autocomplete import SubjectAutocomplete, UserAutocomplete
-from .views import (AutoAddViewSet, CourseViewSet, HomePage, NoticeViewSet,
-                    RequestViewSet, SchoolViewSet, SubjectViewSet, UserViewSet,
-                    autocomplete_canvas_course, contact,
-                    delete_canceled_requests, emergency_redirect,
-                    process_requests, quick_config, user_courses, user_info,
-                    view_canceled_SIS, view_deleted_requests, view_requests)
+from .views import (
+    AutoAddViewSet,
+    CourseViewSet,
+    HomePage,
+    NoticeViewSet,
+    RequestViewSet,
+    SchoolViewSet,
+    SubjectViewSet,
+    autocomplete_canvas_course,
+    contact,
+    delete_canceled_requests,
+    emergency_redirect,
+    process_requests,
+    quick_config,
+    user_courses,
+    user_info,
+    view_canceled_SIS,
+    view_deleted_requests,
+    view_requests,
+)
 
 schema_view = get_swagger_view(title="Pastebin API")
 
 router = DefaultRouter()
 router.register(r"courses", CourseViewSet)
-router.register(r"users", UserViewSet)
 router.register(r"notices", NoticeViewSet)
 router.register(r"requests", RequestViewSet)
 router.register(r"schools", SchoolViewSet)

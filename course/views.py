@@ -14,8 +14,7 @@ from django.contrib.messages import error as messages_error
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
-from django_filters import (CharFilter, ChoiceFilter, DateTimeFilter,
-                            ModelChoiceFilter)
+from django_filters import CharFilter, ChoiceFilter, DateTimeFilter, ModelChoiceFilter
 from django_filters.rest_framework import FilterSet
 from rest_framework import permissions, serializers, status
 from rest_framework.exceptions import PermissionDenied
@@ -25,19 +24,44 @@ from rest_framework.response import Response
 from rest_framework.utils.html import parse_html_list
 from rest_framework.viewsets import ModelViewSet
 
-from canvas.api import (MAIN_ACCOUNT_ID, CanvasException, create_canvas_user,
-                        get_canvas, get_user_by_login_id)
+from canvas.api import (
+    MAIN_ACCOUNT_ID,
+    CanvasException,
+    create_canvas_user,
+    get_canvas,
+    get_user_by_login_id,
+)
 from canvas.helpers import create_canvas_sites
 from data_warehouse.data_warehouse import get_user_by_pennkey
 
 from .forms import EmailChangeForm, SubjectForm, UserForm
-from .models import (AutoAdd, Course, Notice, Request, ScheduleType, School,
-                     Subject, User)
-from .serializers import (AutoAddSerializer, CourseSerializer,
-                          NoticeSerializer, RequestSerializer,
-                          SchoolSerializer, SubjectSerializer, UserSerializer)
-from .terms import (CURRENT_TERM, CURRENT_YEAR, CURRENT_YEAR_AND_TERM,
-                    NEXT_TERM, NEXT_YEAR, NEXT_YEAR_AND_TERM, is_fall)
+from .models import (
+    AutoAdd,
+    Course,
+    Notice,
+    Request,
+    ScheduleType,
+    School,
+    Subject,
+    User,
+)
+from .serializers import (
+    AutoAddSerializer,
+    CourseSerializer,
+    NoticeSerializer,
+    RequestSerializer,
+    SchoolSerializer,
+    SubjectSerializer,
+)
+from .terms import (
+    CURRENT_TERM,
+    CURRENT_YEAR,
+    CURRENT_YEAR_AND_TERM,
+    NEXT_TERM,
+    NEXT_YEAR,
+    NEXT_YEAR_AND_TERM,
+    is_fall,
+)
 from .utils import DATA_DIRECTORY_NAME, get_data_directory
 
 FIVE_OR_MORE_ALPHABETIC_CHARACTERS = r"[a-z]{5,}"
@@ -560,14 +584,6 @@ def clean_custom_input(adds):
             final_add += [new_add]
 
     return final_add
-
-
-class UserViewSet(MixedPermissionModelViewSet, ModelViewSet):
-    permission_classes = (permissions.IsAdminUser,)
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    lookup_field = "username"
-    filterset_fields = ("profile__penn_id",)
 
 
 class SchoolViewSet(MixedPermissionModelViewSet, ModelViewSet):

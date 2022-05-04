@@ -7,8 +7,13 @@ from config.config import EMAIL, USERNAME
 from course.models import User
 from course.terms import CURRENT_YEAR_AND_TERM
 from data_warehouse.data_warehouse import (
-    delete_data_warehouse_canceled_courses, format_title, get_course,
-    get_instructor, get_staff_account, get_user_by_pennkey)
+    delete_data_warehouse_canceled_courses,
+    format_title,
+    get_course,
+    get_instructor,
+    get_staff_account,
+    get_user_by_pennkey,
+)
 from open_data.open_data import OpenData
 
 

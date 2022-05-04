@@ -199,7 +199,6 @@ if DEBUG:
         "django.contrib.auth.backends.ModelBackend",
     ]
     INSTALLED_APPS.append("django_sass")
-    # MIDDLEWARE.append("livereload.middleware.LiveReloadScript")
     CSRF_TRUSTED_ORIGINS = ["https://reqform-local.library.upenn.edu"]
     if platform.system() == "Darwin":
         lib_dir = Path.home() / LIB_DIR

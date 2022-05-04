@@ -256,7 +256,11 @@ class RequestSerializer(DynamicFieldsModelSerializer):
                 user = get_user_by_pennkey(enrollment["user"])
                 if not user:
                     logger.error(f"FAILED to find User {enrollment['user']}.")
-                    error_message = "An error occurred. Please check that the pennkeys you entered are correct and add the course information to the additional instructions field."
+                    error_message = (
+                        "An error occurred. Please check that the pennkeys you entered"
+                        " are correct and add the course information to the additional"
+                        " instructions field."
+                    )
                     raise ValidationError({"error": error_message})
         return data
 
