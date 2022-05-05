@@ -278,6 +278,34 @@ def get_user_by_pennkey(pennkey):
     return user
 
 
+def get_all_sections_by_subject(subject, term=CURRENT_YEAR_AND_TERM):
+    cursor = get_cursor()
+    cursor.execute(
+        """
+        SELECT
+            trim(subject),
+            course_num,
+            section_num,
+            term,
+            schedule_type,
+            school,
+            trim(title),
+            xlist_enrlmt,
+            xlist_family,
+            section_id,
+            section_status
+        FROM
+            dwngss_ps.crse_section
+        WHERE subject = :subject
+        AND term = :term
+        """,
+        subject=subject,
+        term=term,
+    )
+    for course in cursor:
+        print(course)
+
+
 def get_banner_sections(subject, course_number, term=CURRENT_YEAR_AND_TERM):
     cursor = get_cursor()
     cursor.execute(
