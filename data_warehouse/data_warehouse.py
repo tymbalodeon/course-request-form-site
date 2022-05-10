@@ -727,6 +727,7 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
         cursor.execute(
             """
             SELECT
+                section_id || term,
                 trim(subject),
                 primary_subject,
                 course_num,
@@ -735,9 +736,8 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
                 schedule_type,
                 school,
                 trim(title),
-                xlist_enrlmt,
-                xlist_family,
                 section_id,
+                primary_section_id || term,
                 section_status
             FROM
                 dwngss_ps.crse_section
@@ -763,6 +763,7 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
             term=term,
         )
         for (
+            course_code,
             subject,
             primary_subject,
             course_number,
@@ -771,22 +772,19 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
             schedule_type,
             school,
             title,
-            crosslist,
-            crosslist_code,
             section_id,
+            primary_section_code,
             section_status,
         ) in cursor:
-            course_code = f"{subject}{course_number}{section_number}{year_and_term}"
             subject = get_subject_object(subject, course_code)
             primary_subject = get_subject_object(primary_subject, course_code)
             year, term = split_year_and_term(year_and_term)
             schedule_type = get_schedule_type_object(schedule_type, course_code)
             title = format_title(title)
-            primary_crosslist = ""
-            if crosslist and crosslist == "S":
-                if crosslist_code:
-                    crosslist_code = crosslist_code.replace(" ", "")
-                primary_crosslist = f"{crosslist_code}{term}"
+            if primary_section_code != course_code:
+                primary_crosslist = primary_section_code
+            else:
+                primary_crosslist = ""
             school = primary_subject.schools if primary_subject else subject.schools
             primary_subject = primary_subject or subject
             try:
@@ -839,7 +837,7 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
                     logger.error(message)
             if section_status != "A":
                 delete_data_warehouse_canceled_courses(
-                    term, query=False, course=(course_code, crosslist_code)
+                    term, query=False, course=course_code
                 )
         logger.info("FINISHED")
 
@@ -943,10 +941,8 @@ def get_data_warehouse_instructors(term=CURRENT_YEAR_AND_TERM, logger=logger):
     logger.info("FINISHED")
 
 
-def delete_canceled_course(course_code, crosslist_code, log, logger):
+def delete_canceled_course(course_code, log, logger):
     course_code = course_code.replace(" ", "")
-    if crosslist_code:
-        crosslist_code = crosslist_code.replace(" ", "")
     try:
         course = Course.objects.get(course_code=course_code)
         if not course.requested:
@@ -1013,8 +1009,7 @@ def delete_data_warehouse_canceled_courses(
                 """,
                 term=term,
             )
-            for (course_code, term, crosslist_code) in cursor:
-                delete_canceled_course(course_code, crosslist_code, log, logger)
+            for course_code, term in cursor:
+                delete_canceled_course(course_code, log, logger)
         elif course:
-            course_code, crosslist_code = course
-            delete_canceled_course(course_code, crosslist_code, log, logger)
+            delete_canceled_course(course, log, logger)
