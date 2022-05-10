@@ -835,6 +835,7 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
                 except Exception as error:
                     message = f"Failed to add new instructor(s) to course ({error})"
                     logger.error(message)
+                course.get_crosslisted()
             if section_status != "A":
                 delete_data_warehouse_canceled_courses(
                     term, query=False, course=course_code
