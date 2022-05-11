@@ -282,7 +282,10 @@ class Course(Model):
             ).exclude(course_code=self.course_code)
         )
         for course in courses:
-            section = int(course.course_section)
+            try:
+                section = int(course.course_section)
+            except Exception:
+                continue
             if section >= 300 and section < 400:
                 courses.remove(course)
         return courses
