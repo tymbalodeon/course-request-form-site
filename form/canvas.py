@@ -66,7 +66,7 @@ def create_course_section(name: str, sis_course_id: str, canvas_course: Course):
     course_section = {"name": name, "sis_section_id": sis_course_id}
     canvas_course.create_course_section(
         course_section=course_section, enable_sis_reactivation=True
-    ),
+    )
 
 
 def update_canvas_course(course: dict) -> Optional[Course]:

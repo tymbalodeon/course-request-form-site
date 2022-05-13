@@ -1,6 +1,6 @@
+[run]
+omit = manage.py, form/data_warehouse.py
+
 [report]
-omit = manage.py
-exclude_lines =
-              pragma: no cover
-              if DEBUG:
-              if settings.DEBUG:
+skip_covered = true
+sort = Cover

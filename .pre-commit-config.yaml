@@ -39,22 +39,22 @@ repos:
         pass_filenames: false
   - repo: local
     hooks:
-      - id: django-check
-        name: django-check
-        entry: make check-django
+      - id: check
+        name: check
+        entry: make check
         language: system
         pass_filenames: false
-  # - repo: local
-  #   hooks:
-  #     - id: django-test
-  #       name: django-test
-  #       entry: make test
-  #       language: system
-  #       pass_filenames: false
-  # - repo: local
-  #   hooks:
-  #     - id: coverage
-  #       name: coverage
-  #       entry: make coverage fail-under=52
-  #       language: system
-  #       pass_filenames: false
+  - repo: local
+    hooks:
+      - id: test
+        name: test
+        entry: make test
+        language: system
+        pass_filenames: false
+  - repo: local
+    hooks:
+      - id: coverage
+        name: coverage
+        entry: make coverage fail-under=100
+        language: system
+        pass_filenames: false

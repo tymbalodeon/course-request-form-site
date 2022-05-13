@@ -19,7 +19,6 @@ from django.db.models import (
     TextChoices,
     TextField,
 )
-from django.db.models.query import QuerySet
 
 from .canvas import (
     create_course_section,
@@ -150,7 +149,13 @@ class School(Model):
             SELECT school_code, school_desc_long
             FROM dwngss.v_school
             """
+    DENTAL_MEDICINE_CODE = "D"
+    DENTAL_MEDICINE_NAME = "Penn Dental Medicine"
+    LAW_SCHOOL_CODE = "L"
+    PROVOST_CENTER_CODE = "P"
     SAS_SCHOOL_CODE = "A"
+    VETERINARY_MEDICINE_CODE = "V"
+    VETERINARY_MEDICINE_NAME = "Penn Vet"
     LPS_ONLINE_ACCOUNT_ID = 132413
     school_code = CharField(max_length=10, primary_key=True)
     school_desc_long = CharField(max_length=50, unique=True)
@@ -169,10 +174,19 @@ class School(Model):
     def get_subjects(self):
         return Subject.objects.filter(school=self)
 
+    def get_canvas_school_name(self) -> str:
+        if self.school_code == self.VETERINARY_MEDICINE_CODE:
+            return self.VETERINARY_MEDICINE_NAME
+        elif self.school_code == self.DENTAL_MEDICINE_CODE:
+            return self.DENTAL_MEDICINE_NAME
+        else:
+            return self.school_desc_long.replace("&", "and")
+
     def get_canvas_sub_account(self):
         accounts = get_all_canvas_accounts()
+        school_name = self.get_canvas_school_name()
         account_ids = (
-            account.id for account in accounts if self.school_desc_long == account.name
+            account.id for account in accounts if account.name in school_name
         )
         account_id = next(account_ids, None)
         if account_id:
@@ -180,10 +194,19 @@ class School(Model):
             self.save()
 
     @classmethod
+    def is_canvas_school(cls, school_code: str) -> bool:
+        return not (
+            school_code == cls.LAW_SCHOOL_CODE or school_code == cls.PROVOST_CENTER_CODE
+        )
+
+    @classmethod
     def update_or_create(cls, query: str, kwargs: Optional[dict] = None):
         cursor = execute_query(query, kwargs)
         school = None
         for school_code, school_desc_long in cursor:
+            if not cls.is_canvas_school(school_code):
+                logger.info(f"SKIPPING school '{school_desc_long}' (not in Canvas)")
+                continue
             try:
                 school, created = cls.objects.update_or_create(
                     school_code=school_code,
@@ -653,39 +676,44 @@ class Request(Model):
             return self.section.school.canvas_sub_account_id
 
     def create_related_sections(self, canvas_course: Course):
-        related_sections = self.section.related_sections
+        related_sections = self.section.course_sections.all()
         for section in related_sections:
             name = section.get_canvas_name(self.title_override, related_section=True)
             sis_course_id = section.get_canvas_sis_id()
             create_course_section(name, sis_course_id, canvas_course)
 
-    def get_enrollments(self) -> QuerySet[Union[Enrollment, AutoAdd]]:
+    def get_enrollments(self) -> list[Union[Enrollment, AutoAdd]]:
         section = self.section
         instructors = section.instructors.all()
         instructor_enrollments = [
-            Enrollment(instructor, Enrollment.CanvasRole.INSTRUCTOR)
+            Enrollment(user=instructor, role=Enrollment.CanvasRole.INSTRUCTOR)
             for instructor in instructors
         ]
-        additional_enrollments = self.additional_enrollments.all()
+        additional_enrollments = list(self.additional_enrollments.all())
         school = section.school
         subject = section.subject
-        auto_adds = AutoAdd.objects.filter(school=school, subject=subject)
+        auto_adds = list(AutoAdd.objects.filter(school=school, subject=subject))
         enrollments = instructor_enrollments + additional_enrollments + auto_adds
         return enrollments
 
     def enroll_users(
-        self, enrollments: QuerySet[Union[Enrollment, AutoAdd]], canvas_course: Course
+        self, enrollments: list[Union[Enrollment, AutoAdd]], canvas_course: Course
     ):
         for enrollment in enrollments:
             canvas_id = enrollment.user.get_canvas_id()
+            sections = canvas_course.get_sections()
+            name = canvas_course.name
+            course_section = next(
+                section for section in sections if section.name == name
+            )
             enrollment_data = {
                 "enrollment_state": "active",
-                "course_section_id": canvas_course,
+                "course_section_id": course_section.id,
             }
             if enrollment.role == Enrollment.CanvasRole.LIBRARIAN:
                 enrollment_data["role_id"] = Enrollment.LIBRARIAN_ROLE_ID
             canvas_course.enroll_user(
-                canvas_id, enrollment.role, enrollment=enrollment_data
+                canvas_id, enrollment.role.value, enrollment=enrollment_data
             )
 
     def set_canvas_course_reserves(self, canvas_course: Course):
@@ -749,7 +777,9 @@ class Request(Model):
         self.enroll_users(enrollments, canvas_course)
         self.set_canvas_course_reserves(canvas_course)
         action = "CREATED" if created else "UPDATED"
-        logger.info(f"{action} Canvas course '{canvas_course}'")
+        name = canvas_course.name
+        canvas_id = canvas_course.id
+        logger.info(f"{action} Canvas course '{name} ({canvas_id})'")
         self.set_status(self.Status.COMPLETED)
 
     @classmethod
@@ -760,4 +790,4 @@ class Request(Model):
     def create_all_approved_sites(cls):
         approved_requests = cls.get_approved_requests()
         for request in approved_requests:
-            request.create_cavas_site()
+            request.create_canvas_site()
