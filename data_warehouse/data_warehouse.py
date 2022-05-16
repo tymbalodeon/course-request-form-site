@@ -350,10 +350,10 @@ def get_banner_sections(subject, course_number, term=CURRENT_YEAR_AND_TERM):
         course_number=course_number,
         term=term,
     )
-    update_or_create_course(cursor)
     courses = list()
     for course in cursor:
         courses.append(course)
+    update_or_create_course(cursor)
     return courses
 
 
