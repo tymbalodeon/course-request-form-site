@@ -1271,29 +1271,33 @@ def check_data_warehouse_for_course(request):
                     size = len(courses)
                     for course in courses:
                         (
+                            course_code,
                             subject,
-                            course_num,
-                            section_num,
-                            term,
+                            primary_subject,
+                            course_number,
+                            section_number,
+                            year_and_term,
                             schedule_type,
                             school,
                             title,
-                            xlist_enrlmt,
-                            xlist_family,
                             section_id,
+                            primary_section_code,
                             section_status,
                         ) = course
-                        results[f"{subject}_{course_num}_{section_num}_{term}"] = {
+                        results[
+                            f"{subject}_{course_number}_{section_number}_{year_and_term}"
+                        ] = {
+                            "course_code": course_code,
                             "subject": subject,
-                            "course_num": course_num,
-                            "section_num": section_num,
-                            "term": term,
+                            "primary_subject": primary_subject,
+                            "course_number": course_number,
+                            "section_number": section_number,
+                            "year_and_term": year_and_term,
                             "schedule_type": schedule_type,
                             "school": school,
                             "title": title,
-                            "xlist_enrlmt": xlist_enrlmt,
-                            "xlist_family": xlist_family,
                             "section_id": section_id,
+                            "primary_section_code": primary_section_code,
                             "section_status": section_status,
                         }
                         logger.info(course)
