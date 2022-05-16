@@ -342,8 +342,9 @@ def get_banner_sections(subject, course_number, term=CURRENT_YEAR_AND_TERM):
             'SRT'
         )
         AND school NOT IN ('W', 'L')
-        AND term = :term
+        AND subject = :subject
         AND course_num = :course_number
+        AND term = :term
         """,
         subject=subject,
         course_number=course_number,
