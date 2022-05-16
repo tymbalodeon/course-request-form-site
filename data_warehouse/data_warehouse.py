@@ -350,11 +350,7 @@ def get_banner_sections(subject, course_number, term=CURRENT_YEAR_AND_TERM):
         course_number=course_number,
         term=term,
     )
-    courses = list()
-    for course in cursor:
-        courses.append(course)
-    update_or_create_course(cursor)
-    return courses
+    return update_or_create_course(cursor)
 
 
 def get_course(section, term=None):
@@ -735,6 +731,7 @@ def get_instructor_object(instructor: Instructor):
 
 
 def update_or_create_course(cursor):
+    courses_response = list()
     for (
         course_code,
         subject,
@@ -749,6 +746,21 @@ def update_or_create_course(cursor):
         primary_section_code,
         section_status,
     ) in cursor:
+        response = {
+            "course_code": course_code,
+            "subject": subject,
+            "primary_subject": primary_subject,
+            "course_number": course_number,
+            "section_number": section_number,
+            "year_and_term": year_and_term,
+            "schedule_type": schedule_type,
+            "school": school,
+            "title": title,
+            "section_id": section_id,
+            "primary_section_code": primary_section_code,
+            "section_status": section_status,
+        }
+        courses_response.append(response)
         subject = get_subject_object(subject, course_code)
         primary_subject = get_subject_object(primary_subject, course_code)
         year, term = split_year_and_term(year_and_term)
@@ -812,6 +824,7 @@ def update_or_create_course(cursor):
                 term, query=False, course=course_code
             )
     logger.info("FINISHED")
+    return courses_response
 
 
 def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
