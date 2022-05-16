@@ -1283,7 +1283,7 @@ def check_data_warehouse_for_course(request):
                             section_id,
                             primary_section_code,
                             section_status,
-                        ) = course
+                        ) = course.values()
                         results[
                             f"{subject}_{course_number}_{section_number}_{year_and_term}"
                         ] = {
