@@ -311,27 +311,45 @@ def get_banner_sections(subject, course_number, term=CURRENT_YEAR_AND_TERM):
     cursor.execute(
         """
         SELECT
+            section_id || term,
             trim(subject),
+            primary_subject,
             course_num,
             section_num,
             term,
             schedule_type,
             school,
             trim(title),
-            xlist_enrlmt,
-            xlist_family,
             section_id,
+            primary_section_id || term,
             section_status
         FROM
             dwngss_ps.crse_section
-        WHERE subject = :subject
-        AND course_num = :course_number
+        WHERE schedule_type NOT IN (
+            'MED',
+            'DIS',
+            'FLD',
+            'F01',
+            'F02',
+            'F03',
+            'F04',
+            'IND',
+            'I01',
+            'I02',
+            'I03',
+            'I04',
+            'MST',
+            'SRT'
+        )
+        AND school NOT IN ('W', 'L')
         AND term = :term
+        AND course_num = :course_number
         """,
         subject=subject,
         course_number=course_number,
         term=term,
     )
+    update_or_create_course(cursor)
     courses = list()
     for course in cursor:
         courses.append(course)
@@ -715,6 +733,86 @@ def get_instructor_object(instructor: Instructor):
         return None
 
 
+def update_or_create_course(cursor):
+    for (
+        course_code,
+        subject,
+        primary_subject,
+        course_number,
+        section_number,
+        year_and_term,
+        schedule_type,
+        school,
+        title,
+        section_id,
+        primary_section_code,
+        section_status,
+    ) in cursor:
+        subject = get_subject_object(subject, course_code)
+        primary_subject = get_subject_object(primary_subject, course_code)
+        year, term = split_year_and_term(year_and_term)
+        schedule_type = get_schedule_type_object(schedule_type, course_code)
+        title = format_title(title)
+        if primary_section_code != course_code:
+            primary_crosslist = primary_section_code
+        else:
+            primary_crosslist = ""
+        school = primary_subject.schools if primary_subject else subject.schools
+        primary_subject = primary_subject or subject
+        try:
+            course, created = Course.objects.update_or_create(
+                course_code=course_code,
+                defaults={
+                    "owner": OWNER,
+                    "course_term": term,
+                    "course_activity": schedule_type,
+                    "course_subject": subject,
+                    "course_primary_subject": primary_subject,
+                    "primary_crosslist": primary_crosslist,
+                    "course_schools": school,
+                    "course_number": course_number,
+                    "course_section": section_number,
+                    "course_name": title,
+                    "year": year,
+                },
+            )
+            logger.info(
+                f"- Added course {course_code}"
+                if created
+                else f"- Updated course {course_code}"
+            )
+        except Exception as error:
+            course = None
+            logger.error(
+                f"- ERROR: Failed to add or update course {course_code} ({error})"
+            )
+        if course:
+            try:
+                instructors = get_instructors(section_id, year_and_term)
+                instructors = [
+                    get_instructor_object(instructor) for instructor in instructors
+                ]
+                instructors = [instructor for instructor in instructors if instructor]
+                if instructors:
+                    course.instructors.clear()
+                    for instructor in instructors:
+                        course.instructors.add(instructor)
+                        logger.info(
+                            f"- Updated course {course_code} with instructor:"
+                            f" {instructor.username}"
+                        )
+                    course.save()
+            except Exception as error:
+                message = f"Failed to add new instructor(s) to course ({error})"
+                logger.error(message)
+            course.get_crosslisted()
+        if section_status != "A":
+            delete_data_warehouse_canceled_courses(
+                term, query=False, course=course_code
+            )
+    logger.info("FINISHED")
+
+
 def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
     logger.info(") Pulling courses from the Data Warehouse...")
     term = term.upper()
@@ -762,85 +860,7 @@ def get_data_warehouse_courses(term=CURRENT_YEAR_AND_TERM, logger=logger):
             """,
             term=term,
         )
-        for (
-            course_code,
-            subject,
-            primary_subject,
-            course_number,
-            section_number,
-            year_and_term,
-            schedule_type,
-            school,
-            title,
-            section_id,
-            primary_section_code,
-            section_status,
-        ) in cursor:
-            subject = get_subject_object(subject, course_code)
-            primary_subject = get_subject_object(primary_subject, course_code)
-            year, term = split_year_and_term(year_and_term)
-            schedule_type = get_schedule_type_object(schedule_type, course_code)
-            title = format_title(title)
-            if primary_section_code != course_code:
-                primary_crosslist = primary_section_code
-            else:
-                primary_crosslist = ""
-            school = primary_subject.schools if primary_subject else subject.schools
-            primary_subject = primary_subject or subject
-            try:
-                course, created = Course.objects.update_or_create(
-                    course_code=course_code,
-                    defaults={
-                        "owner": OWNER,
-                        "course_term": term,
-                        "course_activity": schedule_type,
-                        "course_subject": subject,
-                        "course_primary_subject": primary_subject,
-                        "primary_crosslist": primary_crosslist,
-                        "course_schools": school,
-                        "course_number": course_number,
-                        "course_section": section_number,
-                        "course_name": title,
-                        "year": year,
-                    },
-                )
-                logger.info(
-                    f"- Added course {course_code}"
-                    if created
-                    else f"- Updated course {course_code}"
-                )
-            except Exception as error:
-                course = None
-                logger.error(
-                    f"- ERROR: Failed to add or update course {course_code} ({error})"
-                )
-            if course:
-                try:
-                    instructors = get_instructors(section_id, year_and_term)
-                    instructors = [
-                        get_instructor_object(instructor) for instructor in instructors
-                    ]
-                    instructors = [
-                        instructor for instructor in instructors if instructor
-                    ]
-                    if instructors:
-                        course.instructors.clear()
-                        for instructor in instructors:
-                            course.instructors.add(instructor)
-                            logger.info(
-                                f"- Updated course {course_code} with instructor:"
-                                f" {instructor.username}"
-                            )
-                        course.save()
-                except Exception as error:
-                    message = f"Failed to add new instructor(s) to course ({error})"
-                    logger.error(message)
-                course.get_crosslisted()
-            if section_status != "A":
-                delete_data_warehouse_canceled_courses(
-                    term, query=False, course=course_code
-                )
-        logger.info("FINISHED")
+        update_or_create_course(cursor)
 
 
 def get_data_warehouse_instructors(term=CURRENT_YEAR_AND_TERM, logger=logger):
