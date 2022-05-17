@@ -1,0 +1,25 @@
+{% extends "./base.html" %}
+
+{% block content %}
+    <h1>Sections</h1>
+    <h2>{{ object.section_code  }}</h2>
+    <p>School: {{ object.school.school_desc_long }}</p>
+    <p>Subject: {{ object.subject }}</p>
+    <p>Term: {{ object.term }}</p>
+    <p>Schedule Type: {{ object.schedule_type }}</p>
+    <p>Instructors:
+        {% for instructor in object.instructors.all %}
+            {{ instructor.first_name }} {{ instructor.last_name  }}
+        {% endfor %}
+    </p>
+    <p>Also offered as:
+        {% for section in object.also_offered_as.all %}
+            {{ section.section_code }}
+        {% endfor %}
+    </p>
+    <p>Course sections:
+        {% for section in object.course_secctions.all %}
+            {{ section.section_code }}
+        {% endfor %}
+    </p>
+{% endblock %}

@@ -16,6 +16,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+from form.views import HomePageView, SectionDetailView, SectionListView
+
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("", HomePageView.as_view()),
+    path("sections/", SectionListView.as_view()),
+    path("sections/<pk>", SectionDetailView.as_view()),
 ]

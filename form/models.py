@@ -478,7 +478,9 @@ class Section(Model):
             primary_subject = Subject.get_subject(primary_subject_code) or subject
             schedule_type = ScheduleType.get_schedule_type(sched_type_code)
             if primary_section_id != section_id:
-                primary_section = cls.get_section(primary_section_id, term)
+                primary_section = cls.get_section(
+                    primary_section_id, term, sync_related_data=False
+                )
             else:
                 primary_section = None
             try:
@@ -499,12 +501,12 @@ class Section(Model):
                         "xlist_family": xlist_family,
                     },
                 )
-                action = "ADDED" if created else "UPDATED"
-                logger.info(f"{action} {section}")
                 if sync_related_data:
                     section.sync_instructors()
                     section.sync_also_offered_as_sections()
                     section.sync_course_sections()
+                action = "ADDED" if created else "UPDATED"
+                logger.info(f"{action} {section}")
             except Exception as error:
                 logger.error(
                     f"FAILED to update or create section '{section_code}': {error}"
@@ -557,12 +559,14 @@ class Section(Model):
         except Exception:
             return cls.sync_section(section_id, term, sync_related_data)
 
-    def get_canvas_course_code(self, sis_format=False, related_section=False) -> str:
+    def get_canvas_course_code(
+        self, sis_format=False, include_schedule_type=False
+    ) -> str:
         subject = self.subject.subject_code
         divider = "-" if sis_format else " "
         course_and_section = f"{self.course_num}-{self.section_num}"
         canvas_course_code = f"{subject}{divider}{course_and_section} {self.term}"
-        if related_section:
+        if include_schedule_type:
             is_lecture_section = self.schedule_type.sched_type_code == self.LECTURE_CODE
             if not is_lecture_section:
                 schedule_type = self.schedule_type.sched_type_code
@@ -579,7 +583,7 @@ class Section(Model):
     ) -> str:
         title = title_override if title_override else self.title
         canvas_course_code = self.get_canvas_course_code(
-            related_section=related_section
+            include_schedule_type=related_section
         )
         return f"{canvas_course_code} {title}"
 

@@ -1,0 +1,14 @@
+{% extends "./base.html" %}
+
+{% block content %}
+    <h1>Course Sections</h1>
+    <ul>
+        {% for section in object_list %}
+            <li>
+                <a href="/sections/{{section.section_code}}">{{ section.title }} ({{ section.section_code }})</a>
+            </li>
+        {% empty %}
+            <li>No sections available.</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

@@ -16,7 +16,7 @@ from platform import system
 
 from cx_Oracle import init_oracle_client
 
-from config.config import LIB_DIR
+from config.config import DEBUG_VALUE, LIB_DIR
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -29,7 +29,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-b^0uxn&)x_jxl&*2ot9p*&qmeyw7abj!q7#!+abzd5nhg%zdd1"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = DEBUG_VALUE
 
 ALLOWED_HOSTS = ["*"]
 

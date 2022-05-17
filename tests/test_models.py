@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from unittest.mock import patch
 
 from django.test import TestCase
@@ -33,6 +33,32 @@ PRIMARY_SUBJECT_CODE = "PRIM"
 PRIMARY_SUBJECT_DESC_LONG = f"Primary {SUBJECT_DESC_LONG}"
 
 
+@dataclass
+class MockUser:
+    id: int
+    unique_id: str
+    sis_user_id: str
+    name: str
+    email: str
+
+
+@dataclass
+class MockAccount:
+    id: int
+    name: str
+    users: list[MockUser] = field(default_factory=list)
+
+    def create_user(self, pseudonym, user, communication_channel):
+        unique_id = pseudonym["unique_id"]
+        sis_user_id = pseudonym["sis_user_id"]
+        name = user["name"]
+        email = communication_channel["address"]
+        user_id = len(self.users) + CANVAS_ID
+        user = MockUser(user_id, unique_id, sis_user_id, name, email)
+        self.users.append(user)
+        return user
+
+
 def create_user():
     return User.objects.create(
         username=PENNKEY, first_name=FIRST_NAME, last_name=LAST_NAME
@@ -44,7 +70,7 @@ def get_mock_code_and_description(model: str) -> tuple:
     return (
         ("ABCD", f"First {model} {description}"),
         ("EFGH", f"Second {model} {description}"),
-        ("IJKL", f"Third {model} {description}"),
+        ("L", f"Third {model} {description}"),
         (None, None),
     )
 
@@ -100,32 +126,37 @@ class UserTest(TestCase):
     new_canvas_id = 7654322
 
     @classmethod
-    def get_mock_data_warehouse_response(cls, new=False, blank=False):
-        if new:
-            return (
+    def get_mock_user(cls, updated=False, blank=False):
+        user = (
+            (
+                FIRST_NAME.upper(),
+                LAST_NAME.upper(),
+                PENN_ID,
+                f"{EMAIL}    ",
+            ),
+        )
+        updated_user = (
+            (
                 (
                     cls.new_first_name.upper(),
                     cls.new_last_name.upper(),
                     cls.new_penn_id,
                     f"{cls.new_email}    ",
-                ),
-            )
+                )
+            ),
+        )
+        blank_user = ((None, None, None, None),)
+        if updated:
+            return updated_user
         elif blank:
-            return ((None, None, None, None),)
+            return blank_user
         else:
-            return (
-                (
-                    FIRST_NAME.upper(),
-                    LAST_NAME.upper(),
-                    PENN_ID,
-                    f"{EMAIL}    ",
-                ),
-            )
+            return user
 
     @patch(EXECUTE_QUERY)
     @patch(GET_CANVAS_USER_ID_BY_PENNKEY)
     def test_str(self, mock_get_canvas_user_id_by_pennkey, mock_execute_query):
-        mock_execute_query.return_value = self.get_mock_data_warehouse_response()
+        mock_execute_query.return_value = self.get_mock_user()
         mock_get_canvas_user_id_by_pennkey.return_value = CANVAS_ID
         user = create_user()
         user_string = str(user)
@@ -135,7 +166,7 @@ class UserTest(TestCase):
     @patch(EXECUTE_QUERY)
     @patch(GET_CANVAS_USER_ID_BY_PENNKEY)
     def test_create_user(self, mock_get_canvas_user_id_by_pennkey, mock_execute_query):
-        mock_execute_query.return_value = self.get_mock_data_warehouse_response()
+        mock_execute_query.return_value = self.get_mock_user()
         mock_get_canvas_user_id_by_pennkey.return_value = CANVAS_ID
         user = User(username=PENNKEY)
         empty_values = (
@@ -152,27 +183,40 @@ class UserTest(TestCase):
         self.assertEqual(user.email, EMAIL)
 
     @patch(EXECUTE_QUERY)
-    @patch(GET_CANVAS_USER_ID_BY_PENNKEY)
-    def test_sync_dw_info(self, mock_get_canvas_user_id_by_pennkey, mock_execute_query):
-        mock_execute_query.return_value = self.get_mock_data_warehouse_response()
-        mock_get_canvas_user_id_by_pennkey.return_value = CANVAS_ID
+    def test_sync_dw_info(self, mock_execute_query):
+        mock_user = self.get_mock_user()
+        mock_updated_user = self.get_mock_user(updated=True)
+        mock_blank_user = self.get_mock_user(blank=True)
+        mock_execute_query.side_effect = [mock_user, mock_updated_user, mock_blank_user]
         user = create_user()
-        mock_execute_query.return_value = self.get_mock_data_warehouse_response(
-            new=True
-        )
         user.sync_dw_info()
         self.assertEqual(user.first_name, self.new_first_name)
         self.assertEqual(user.last_name, self.new_last_name)
         self.assertEqual(user.penn_id, self.new_penn_id)
         self.assertEqual(user.email, self.new_email)
-        mock_execute_query.return_value = self.get_mock_data_warehouse_response(
-            blank=True
-        )
         user.sync_dw_info()
         self.assertFalse(user.first_name)
         self.assertFalse(user.last_name)
         self.assertIsNone(user.penn_id)
         self.assertFalse(user.email)
+
+    @patch(EXECUTE_QUERY)
+    @patch(GET_CANVAS_USER_ID_BY_PENNKEY)
+    @patch("form.models.get_canvas_main_account")
+    def test_get_canvas_id(
+        self,
+        mock_get_canvas_main_account,
+        mock_get_canvas_user_id_by_pennkey,
+        mock_execute_query,
+    ):
+        mock_execute_query.return_value = self.get_mock_user()
+        mock_get_canvas_user_id_by_pennkey.side_effect = [None, CANVAS_ID]
+        mock_get_canvas_main_account.return_value = MockAccount(1, "Mock Account")
+        user = create_user()
+        canvas_id = user.get_canvas_id()
+        self.assertEqual(canvas_id, CANVAS_ID)
+        canvas_id = user.get_canvas_id()
+        self.assertEqual(canvas_id, CANVAS_ID)
 
 
 class ScheduleTypeTest(TestCase):
@@ -208,12 +252,6 @@ class ScheduleTypeTest(TestCase):
         self.assertEqual(schedule_type.sched_type_desc, new_sched_type_desc)
 
 
-@dataclass
-class MockAccount:
-    id: int
-    name: str
-
-
 class SchoolTest(TestCase):
     @classmethod
     def setUpTestData(cls):
@@ -241,6 +279,41 @@ class SchoolTest(TestCase):
         self.assertTrue(len(subjects), 1)
         self.assertEqual(subject.subject_code, SUBJECT_CODE)
 
+    def test_get_canvas_school_name(self):
+        veterinary_medicine_code = "V"
+        veterinary_medicine_name = "Veterinary Medicine"
+        dental_medicine_code = "D"
+        dental_medicine_name = "Dental Medicine"
+        school_of_arts_and_sciences_code = "A"
+        school_of_arts_and_sciences_name = "School of Arts & Sciences"
+        School.objects.create(
+            school_code=veterinary_medicine_code,
+            school_desc_long=veterinary_medicine_name,
+        )
+        School.objects.create(
+            school_code=dental_medicine_code,
+            school_desc_long=dental_medicine_name,
+        )
+        School.objects.create(
+            school_code=school_of_arts_and_sciences_code,
+            school_desc_long=school_of_arts_and_sciences_name,
+        )
+        veterinary_medicine = School.objects.get(school_code=veterinary_medicine_code)
+        dental_medicine = School.objects.get(school_code=dental_medicine_code)
+        school_of_arts_and_sciences = School.objects.get(
+            school_code=school_of_arts_and_sciences_code
+        )
+        veterinary_medicine_canvas_name = veterinary_medicine.get_canvas_school_name()
+        dental_medicine_canvas_name = dental_medicine.get_canvas_school_name()
+        school_of_arts_and_sciences_canvas_name = (
+            school_of_arts_and_sciences.get_canvas_school_name()
+        )
+        self.assertEqual(veterinary_medicine_canvas_name, "Penn Vet")
+        self.assertEqual(dental_medicine_canvas_name, "Penn Dental Medicine")
+        self.assertEqual(
+            school_of_arts_and_sciences_canvas_name, "School of Arts and Sciences"
+        )
+
     @patch(EXECUTE_QUERY)
     @patch(GET_ALL_CANVAS_ACCOUNTS)
     def test_sync_all(self, mock_get_all_canvas_accounts, mock_execute_query):
@@ -252,7 +325,7 @@ class SchoolTest(TestCase):
             MockAccount(id=1, name=f"First {SCHOOL_DESC_LONG}")
         ]
         School.sync_all()
-        success_school_count = get_mock_values_success_count(mock_schools)
+        success_school_count = 2
         expected_school_count = success_school_count + school_count
         school_count = School.objects.count()
         self.assertEqual(school_count, expected_school_count)
@@ -297,6 +370,14 @@ class SubjectTest(TestCase):
 
 
 class SectionTest(TestCase):
+    mock_instructors_response = (INSTRUCTORS[0],)
+    mock_empty_response = ()
+    canvas_course_code = f"SUBJ 1000-200 {CURRENT_TERM}"
+    canvas_sis_code = f"SUBJ-1000-200 {CURRENT_TERM}"
+    canvas_schedule_type_code = f"SUBJ 1000-200 {CURRENT_TERM} SCH"
+    canvas_sis_id = f"BAN_SUBJ-1000-200 {CURRENT_TERM}"
+    canvas_name = f"SUBJ 1000-200 {CURRENT_TERM} Course Title"
+
     @classmethod
     def setUpTestData(cls):
         cls.section = create_section(
@@ -371,21 +452,25 @@ class SectionTest(TestCase):
 
     @classmethod
     def get_mock_section_data(
-        cls, scheduled_with=False, active=True, unsynced=False, new_schedule_type=False
+        cls,
+        primary=True,
+        other_course_section=False,
+        canceled=False,
+        unsynced=False,
+        new_schedule_type=False,
+        bad_value=False,
     ):
-        primary_course_id = f"{PRIMARY_SUBJECT_CODE}{COURSE_NUM}"
-        course_id = (
-            f"{SUBJECT_CODE}{COURSE_NUM}" if scheduled_with else primary_course_id
-        )
-        primary_section_id = f"{primary_course_id}{SECTION_NUM}"
-        section_id = (
-            f"{course_id}{SECTION_NUM}" if scheduled_with else primary_section_id
-        )
-        section_code = "RAND1234567" if unsynced else f"{section_id}{TERM}"
+        course_num = "9999" if unsynced else COURSE_NUM
+        section_num = SECTION_NUM + 1 if other_course_section else SECTION_NUM
+        primary_course_id = f"{PRIMARY_SUBJECT_CODE}{course_num}"
+        course_id = primary_course_id if primary else f"{SUBJECT_CODE}{course_num}"
+        primary_section_id = f"{primary_course_id}{section_num}"
+        section_id = primary_section_id if primary else f"{course_id}{section_num}"
+        section_code = None if bad_value else f"{section_id}{TERM}"
         primary_subject = PRIMARY_SUBJECT_CODE
-        subject = SUBJECT_CODE if scheduled_with else primary_subject
+        subject = primary_subject if primary else SUBJECT_CODE
         schedule_type = "NEW" if new_schedule_type else SCHED_TYPE_CODE
-        status_code = "A" if active else "X"
+        status_code = "X" if canceled else "A"
         xlist_family = f"{CURRENT_TERM}A1234"
         return (
             section_code,
@@ -420,57 +505,62 @@ class SectionTest(TestCase):
             subject_code=PRIMARY_SUBJECT_CODE,
             subject_desc_long=PRIMARY_SUBJECT_DESC_LONG,
         )
-        instructors = INSTRUCTORS[0]
-        mock_active_section = self.get_mock_section_data()
-        mock_canceled_section = self.get_mock_section_data(active=False)
+        mock_primary_section = self.get_mock_section_data()
+        mock_canceled_section = self.get_mock_section_data(canceled=True)
         mock_unsynced_canceled_section = self.get_mock_section_data(
-            active=False, unsynced=True
+            canceled=True, unsynced=True
         )
-        mock_scheduled_with_section = self.get_mock_section_data(scheduled_with=True)
+        mock_secondary_section = self.get_mock_section_data(primary=False)
         mock_new_schedule_type_section = self.get_mock_section_data(
             new_schedule_type=True
         )
-        also_offered_with = (("PRIM1000200",),)
-        course_sections = (("SUBJ1000201",),)
+        mock_bad_value_section = self.get_mock_section_data(bad_value=True)
         new_schedule_type = (("NEW", f"New {SCHED_TYPE_DESC}"),)
-        mock_execute_query.side_effect = [
+        mock_primary_query_responses = [
+            self.mock_instructors_response,
+            self.mock_empty_response,
+            self.mock_empty_response,
+        ]
+        mock_secondary_query_responses = [
+            (mock_primary_section,),
+            self.mock_instructors_response,
+            self.mock_empty_response,
+            self.mock_empty_response,
+        ]
+        mock_new_schedule_type_responses = [
+            new_schedule_type,
+            self.mock_instructors_response,
+            self.mock_empty_response,
+            self.mock_empty_response,
+        ]
+        mock_query_responses = (
+            mock_primary_query_responses
+            + mock_secondary_query_responses
+            + mock_new_schedule_type_responses
+        )
+        mock_sections = [
             (
-                mock_active_section,
+                mock_primary_section,
                 mock_canceled_section,
                 mock_unsynced_canceled_section,
-                mock_scheduled_with_section,
+                mock_secondary_section,
                 mock_new_schedule_type_section,
-            ),
-            (instructors,),
-            (mock_active_section,),
-            (mock_active_section,),
-            (instructors,),
-            (mock_active_section,),
-            (mock_active_section,),
-            (instructors,),
-            course_sections,
-            (mock_active_section,),
-            (instructors,),
-            (mock_active_section,),
-            (instructors,),
-            new_schedule_type,
-            (mock_active_section,),
-            (instructors,),
-            (mock_active_section,),
-            new_schedule_type,
-            (instructors,),
-            also_offered_with,
-            course_sections,
-            (mock_active_section,),
+                mock_bad_value_section,
+            )
         ]
+        side_effect = mock_sections + mock_query_responses
+        mock_execute_query.side_effect = side_effect
         Section.sync_all()
 
     @patch(EXECUTE_QUERY)
     def test_sync(self, mock_execute_query):
         mock_execute_query.side_effect = [
-            (self.get_mock_section_data(scheduled_with=True),),
+            (self.get_mock_section_data(primary=False),),
             ((PRIMARY_SUBJECT_CODE, PRIMARY_SUBJECT_DESC_LONG, SCHOOL_CODE),),
             (self.get_mock_section_data(),),
+            self.mock_instructors_response,
+            self.mock_empty_response,
+            self.mock_empty_response,
         ]
         self.section.sync()
         section = Section.objects.get(section_code=self.section.section_code)
@@ -481,6 +571,29 @@ class SectionTest(TestCase):
         self.assertEqual(section.primary_section_id, f"PRIM1000200{CURRENT_TERM}")
         self.assertEqual(section.primary_subject.subject_code, PRIMARY_SUBJECT_CODE)
         self.assertEqual(section.primary_course_id, f"{PRIMARY_SUBJECT_CODE}1000")
+
+    def test_get_canvas_course_code(self):
+        section = self.section
+        canvas_course_code = section.get_canvas_course_code()
+        self.assertEqual(canvas_course_code, self.canvas_course_code)
+        sis_canvas_course_code = section.get_canvas_course_code(sis_format=True)
+        self.assertEqual(sis_canvas_course_code, self.canvas_sis_code)
+        schedule_type_canvas_course_code = section.get_canvas_course_code(
+            include_schedule_type=True
+        )
+        self.assertEqual(
+            schedule_type_canvas_course_code, self.canvas_schedule_type_code
+        )
+
+    def test_get_canvas_sis_id(self):
+        section = self.section
+        sis_id = section.get_canvas_sis_id()
+        self.assertEqual(sis_id, self.canvas_sis_id)
+
+    def test_get_canvas_name(self):
+        section = self.section
+        canvas_name = section.get_canvas_name(title_override="")
+        self.assertEqual(canvas_name, self.canvas_name)
 
 
 class RequestTest(TestCase):

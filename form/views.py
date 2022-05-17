@@ -1,5 +1,15 @@
-from django.http import HttpResponse
+from django.views.generic import DetailView, ListView, TemplateView
+
+from .models import Section
 
 
-def index(request):
-    return HttpResponse("Hello, world. You're at the CRF index.")
+class HomePageView(TemplateView):
+    template_name = "form/home.html"
+
+
+class SectionListView(ListView):
+    model = Section
+
+
+class SectionDetailView(DetailView):
+    model = Section
