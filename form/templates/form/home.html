@@ -1,5 +1,26 @@
 {% extends "./base.html" %}
 
 {% block content %}
-    <h1>Welcome</h1>
+    <h1>Home</h1>
+    <div class="my-info">
+        <h2>Contact info</h2>
+        <p>Email: {{ email }}</p>
+        <button>Change email</button>
+    </div>
+    <div class="my-courses">
+        <h2>My courses</h2>
+        {% if courses %}
+            {% for course in courses %}
+                <p>{{ course }}</p>
+            {% endfor %}
+        {% else %}
+            <p>You do not have any courses.</p>
+        {% endif %}
+    </div>
+    <div class="my-canvas-sites">
+        <h2>My Canvas sites</h2>
+        {% for site in canvas_sites %}
+            <p><a href="{{ canvas_url }}/{{ site.id }}">{{ site }}</a><p>
+        {% endfor %}
+    </div>
 {% endblock %}

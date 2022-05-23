@@ -18,6 +18,7 @@ from django.db.models import (
     OneToOneField,
     TextChoices,
     TextField,
+    UniqueConstraint,
 )
 
 from .canvas import (
@@ -44,7 +45,7 @@ class User(AbstractUser):
 
     def save(self, *args, **kwargs):
         if self._state.adding and not self.penn_id:
-            self.sync_dw_info(save=False)
+            self.sync_dw_info()
         super().save(*args, **kwargs)
 
     @staticmethod
@@ -54,29 +55,35 @@ class User(AbstractUser):
         else:
             logger.warning(f"{field} NOT FOUND for '{username}'")
 
-    def sync_dw_info(self, save=True):
-        logger.info(f"Getting {self.username}'s info from Data Warehouse...")
+    @classmethod
+    def sync_user(cls, pennkey: str):
+        logger.info(f"Getting {pennkey}'s info from Data Warehouse...")
         query = """
                 SELECT first_name, last_name, penn_id, email_address
                 FROM employee_general
                 WHERE pennkey = :username
                 """
-        cursor = execute_query(query, {"username": self.username})
+        cursor = execute_query(query, {"username": pennkey})
         for first_name, last_name, penn_id, email in cursor:
             first_name = first_name.title() if first_name else ""
-            self.log_field(self.username, "first name", first_name)
-            self.first_name = first_name
+            cls.log_field(pennkey, "first name", first_name)
             last_name = last_name.title() if last_name else ""
-            self.log_field(self.username, "last name", last_name)
-            self.last_name = last_name
-            self.log_field(self.username, "Penn id", penn_id)
-            self.penn_id = penn_id
-            email = email.strip().lower() if email else None
-            self.log_field(self.username, "email", email)
-            self.email = email or ""
+            cls.log_field(pennkey, "last name", last_name)
+            cls.log_field(pennkey, "Penn id", penn_id)
+            email = email.strip().lower() if email else ""
+            cls.log_field(pennkey, "email", email)
+            User.objects.update_or_create(
+                username=pennkey,
+                defaults={
+                    "first_name": first_name,
+                    "last_name": last_name,
+                    "penn_id": penn_id,
+                    "email": email,
+                },
+            )
 
-        if save:
-            self.save()
+    def sync_dw_info(self):
+        self.sync_user(self.username)
 
     def get_canvas_id(self) -> int:
         logger.info(f"Getting Canvas user id for '{self.username}'...")
@@ -332,7 +339,7 @@ class Section(Model):
                 'MST',
                 'SRT'
             )
-            AND school NOT IN ('W', 'L')
+            AND school NOT IN ('W', 'L', 'P')
             """
     QUERY_SECTION_ID = f"{QUERY} AND term = :term AND section_id = :section_id"
     DEFAULT_TERMS = [CURRENT_TERM, NEXT_TERM]
@@ -387,7 +394,7 @@ class Section(Model):
                         "first_name": first_name,
                         "last_name": last_name,
                         "penn_id": penn_id,
-                        "email": email,
+                        "email": email or "",
                     },
                 )
                 if user:
@@ -601,11 +608,23 @@ class Enrollment(Model):
             return [(member.name, member.value) for member in cls]
 
     LIBRARIAN_ROLE_ID = 1383
-    user = ForeignKey(User, on_delete=CASCADE, related_name="auto_adds")
+    user = ForeignKey(User, on_delete=CASCADE)
     role = CharField(max_length=18, choices=CanvasRole.choices, default=CanvasRole.TA)
 
     class Meta:
         managed = False
+        abstract = True
+
+
+class SectionEnrollment(Enrollment):
+    request = ForeignKey("form.Request", on_delete=CASCADE)
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(
+                fields=["user", "role", "request"], name="unique_section_enrollment"
+            )
+        ]
 
 
 class AutoAdd(Enrollment):
@@ -613,6 +632,13 @@ class AutoAdd(Enrollment):
     subject = ForeignKey(Subject, on_delete=CASCADE)
     created_at = DateTimeField(auto_now_add=True)
     updated_at = DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(
+                fields=["school", "subject", "user", "role"], name="unique_auto_add"
+            )
+        ]
 
 
 class Request(Model):
@@ -629,8 +655,6 @@ class Request(Model):
     STORAGE_QUOTA = 2000
     RESERVES_TAB_ID = "context_external_tool_139969"
     RESERVES_TAB_LABEL = "Course Materials @ Penn Libraries"
-    MAX_MIGRATION_ATTEMPTS = 180
-    MIGRATION_SLEEP_TIME = 5
     section = OneToOneField(Section, on_delete=CASCADE, primary_key=True)
     included_sections = ManyToManyField(Section, blank=True, related_name=RELATED_NAME)
     requester = ForeignKey(User, on_delete=CASCADE, related_name=RELATED_NAME)
@@ -642,7 +666,9 @@ class Request(Model):
     reserves = BooleanField(default=False)
     lps_online = BooleanField(default=False)
     exclude_announcements = BooleanField(default=False)
-    additional_enrollments = ManyToManyField(Enrollment, blank=True)
+    additional_enrollments = ManyToManyField(
+        SectionEnrollment, blank=True, related_name="section_enrollments"
+    )
     additional_instructions = TextField(blank=True, default=None, null=True)
     admin_additional_instructions = TextField(blank=True, default=None, null=True)
     process_notes = TextField(blank=True, default="")
@@ -686,11 +712,13 @@ class Request(Model):
             sis_course_id = section.get_canvas_sis_id()
             create_course_section(name, sis_course_id, canvas_course)
 
-    def get_enrollments(self) -> list[Union[Enrollment, AutoAdd]]:
+    def get_enrollments(self) -> list[SectionEnrollment]:
         section = self.section
         instructors = section.instructors.all()
         instructor_enrollments = [
-            Enrollment(user=instructor, role=Enrollment.CanvasRole.INSTRUCTOR)
+            SectionEnrollment(
+                user=instructor, role=Enrollment.CanvasRole.INSTRUCTOR, request=self
+            )
             for instructor in instructors
         ]
         additional_enrollments = list(self.additional_enrollments.all())
@@ -700,9 +728,7 @@ class Request(Model):
         enrollments = instructor_enrollments + additional_enrollments + auto_adds
         return enrollments
 
-    def enroll_users(
-        self, enrollments: list[Union[Enrollment, AutoAdd]], canvas_course: Course
-    ):
+    def enroll_users(self, enrollments: list[SectionEnrollment], canvas_course: Course):
         for enrollment in enrollments:
             canvas_id = enrollment.user.get_canvas_id()
             sections = canvas_course.get_sections()
@@ -714,10 +740,10 @@ class Request(Model):
                 "enrollment_state": "active",
                 "course_section_id": course_section.id,
             }
-            if enrollment.role == Enrollment.CanvasRole.LIBRARIAN:
+            if enrollment.role == Enrollment.CanvasRole.LIBRARIAN.value:
                 enrollment_data["role_id"] = Enrollment.LIBRARIAN_ROLE_ID
             canvas_course.enroll_user(
-                canvas_id, enrollment.role.value, enrollment=enrollment_data
+                canvas_id, enrollment.role, enrollment=enrollment_data
             )
 
     def set_canvas_course_reserves(self, canvas_course: Course):
@@ -725,14 +751,14 @@ class Request(Model):
             return
         requester = canvas_course._requester
         reserves_tab = {
-            "course_id": canvas_course.id,
             "id": self.RESERVES_TAB_ID,
+            "course_id": canvas_course.id,
             "label": self.RESERVES_TAB_LABEL,
         }
         tab = Tab(requester, reserves_tab)
         tab.update(hidden=False)
 
-    def migrate_course(self, canvas_course: Course):
+    def migrate_course(self, canvas_course: Course, sleep_time=5, max_attempts=180):
         source_course_id = self.copy_from_course
         if not source_course_id:
             return
@@ -751,11 +777,10 @@ class Request(Model):
             migration_status = content_migration.get_progress().workflow_state
             attempts = 0
             while (
-                migration_status in {"queued", "running"}
-                and attempts <= self.MAX_MIGRATION_ATTEMPTS
+                migration_status in {"queued", "running"} and attempts <= max_attempts
             ):
                 logger.info(f"Migration {migration_status}...")
-                sleep(self.MIGRATION_SLEEP_TIME)
+                sleep(sleep_time)
                 migration_status = content_migration.get_progress().workflow_state
                 attempts += 1
             if not migration_status == "complete":
@@ -780,6 +805,7 @@ class Request(Model):
         enrollments = self.get_enrollments()
         self.enroll_users(enrollments, canvas_course)
         self.set_canvas_course_reserves(canvas_course)
+        self.migrate_course(canvas_course)
         action = "CREATED" if created else "UPDATED"
         name = canvas_course.name
         canvas_id = canvas_course.id

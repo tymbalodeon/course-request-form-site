@@ -1,8 +1,5 @@
-from dataclasses import dataclass
 from unittest.mock import patch
 
-from canvasapi.account import Account
-from canvasapi.exceptions import CanvasException
 from canvasapi.user import User as CanvasUser
 from django.test import TestCase
 
@@ -11,38 +8,17 @@ from form.canvas import (
     MAIN_ACCOUNT_ID,
     get_all_canvas_accounts,
     get_canvas,
+    get_canvas_enrollment_term_id,
     get_canvas_main_account,
     get_canvas_user_by_login_id,
     get_canvas_user_id_by_pennkey,
+    update_canvas_course,
 )
+from form.terms import CURRENT_TERM
+from tests.mocks import LOGIN_ID, SUB_ACCOUNTS, MockAccount, MockCanvas
 
 CANVAS_MODULE = "form.canvas"
 GET_CANVAS = f"{CANVAS_MODULE}.get_canvas"
-LOGIN_ID = "testuser"
-SUB_ACCOUNTS = ["SubAccount"]
-
-
-@dataclass
-class MockCanvas:
-    @staticmethod
-    def get_user(login_id, login_type):
-        if login_id == LOGIN_ID and login_type == "sis_login_id":
-            return CanvasUser(None, {"login_id": login_id})
-        else:
-            raise CanvasException("")
-
-    @staticmethod
-    def get_account(account_id):
-        if account_id == MAIN_ACCOUNT_ID:
-            return Account(None, {"id": MAIN_ACCOUNT_ID})
-
-
-@dataclass
-class MockAccount:
-    @staticmethod
-    def get_subaccounts(recursive: bool):
-        if recursive:
-            return SUB_ACCOUNTS
 
 
 class CanvasApiTest(TestCase):
@@ -61,7 +37,7 @@ class CanvasApiTest(TestCase):
 
     @patch(f"{CANVAS_MODULE}.get_canvas_main_account")
     def test_get_all_canvas_accounts(self, mock_get_canvas_main_account):
-        mock_get_canvas_main_account.return_value = MockAccount()
+        mock_get_canvas_main_account.return_value = MockAccount(1)
         sub_accounts = get_all_canvas_accounts()
         self.assertEqual(sub_accounts, SUB_ACCOUNTS)
 
@@ -84,3 +60,40 @@ class CanvasApiTest(TestCase):
         mock_get_canvas_user_by_login_id.return_value = None
         user_id = get_canvas_user_id_by_pennkey(LOGIN_ID)
         self.assertIsNone(user_id)
+
+    @patch(GET_CANVAS)
+    def test_get_canvas_enrollment_term_id(self, mock_get_canvas):
+        mock_get_canvas.return_value = MockCanvas()
+        term_id = get_canvas_enrollment_term_id(CURRENT_TERM)
+        self.assertTrue(term_id)
+        term_id = get_canvas_enrollment_term_id(1000)
+        self.assertFalse(term_id)
+
+    @patch(GET_CANVAS)
+    def test_update_canvas_course(self, mock_get_canvas):
+        canvas = MockCanvas()
+        mock_get_canvas.return_value = canvas
+        new_name = "New Name"
+        new_term_id = 2
+        new_storage_quota_mb = 3000
+        course = {
+            "name": new_name,
+            "sis_course_id": f"BAN_SUBJ-1000-200 {CURRENT_TERM}",
+            "term_id": new_term_id,
+            "storage_quota_mb": new_storage_quota_mb,
+        }
+        update_canvas_course(course)
+        mock_course = next(iter(canvas.courses))
+        self.assertEqual(mock_course.name, new_name)
+        self.assertEqual(mock_course.term_id, new_term_id)
+        self.assertEqual(mock_course.storage_quota_mb, new_storage_quota_mb)
+        course = {
+            "name": "Failed new name",
+            "sis_course_id": "bad value",
+            "term_id": 0,
+            "storage_quota_mb": 5000,
+        }
+        update_canvas_course(course)
+        self.assertEqual(mock_course.name, new_name)
+        self.assertEqual(mock_course.term_id, new_term_id)
+        self.assertEqual(mock_course.storage_quota_mb, new_storage_quota_mb)

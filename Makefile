@@ -68,7 +68,7 @@ sync: ## Sync data from Pennant Student Records
 
 sync-constants: schedule-types schools subjects ## Sync schedule types, schools, and subjects
 
-test: ## Run the test suite (args: `module`, `class`)
+test: ## Run the test suite (args: `module`, `class`, `method`)
 ifdef module
 ifdef class
 ifdef method

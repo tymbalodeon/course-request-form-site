@@ -2,13 +2,23 @@
 
 {% block content %}
     <h1>Course Sections</h1>
-    <ul>
+    <table>
+        <colgroup span="5"></colgroup>
+        <tr>
+            <th>Section code</th>
+            <th>Title</th>
+            <th>Schedule Type</th>
+            <th>Instructors</th>
+            <th>Request</th>
+        </tr>
         {% for section in object_list %}
-            <li>
-                <a href="/sections/{{section.section_code}}">{{ section.title }} ({{ section.section_code }})</a>
-            </li>
-        {% empty %}
-            <li>No sections available.</li>
+            <tr>
+                <td><a href="/sections/{{ section.section_code }}">{{ section.section_code }}</a></td>
+                <td>{{ section.title }}</td>
+                <td>{{ section.schedule_type.sched_type_code }}</td>
+                <td>{{ section.instructors.first }}</td>
+                <td>{{ section.request }}</td>
+            </tr>
         {% endfor %}
-    </ul>
+    </table>
 {% endblock %}

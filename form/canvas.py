@@ -10,7 +10,6 @@ from canvasapi.discussion_topic import DiscussionTopic
 from canvasapi.exceptions import CanvasException
 from canvasapi.paginated_list import PaginatedList
 from canvasapi.user import User as CanvasUser
-
 from config.config import DEBUG_VALUE, PROD_KEY, PROD_URL, TEST_KEY, TEST_URL
 
 logger = getLogger(__name__)
@@ -141,3 +140,23 @@ def delete_announcements(canvas_course):
     announcements = [announcement for announcement in announcements]
     for announcement in announcements:
         delete_announcement(announcement)
+
+
+def get_canvas_course(course_id: int) -> Course:
+    return get_canvas().get_course(course_id)
+
+
+def get_user_canvas_sites(user: str) -> Optional[list[Course]]:
+    instructor = get_canvas_user_by_pennkey(user)
+    if not instructor:
+        return None
+    enrollments = instructor.get_enrollments(
+        role=[
+            "TeacherEnrollment",
+            "TaEnrollment",
+            "ObserverEnrollment",
+            "DesignerEnrollment",
+        ]
+    )
+    courses = [get_canvas_course(enrollment.course_id) for enrollment in enrollments]
+    return courses

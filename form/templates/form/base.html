@@ -3,25 +3,33 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
+        <title>Course Request Form</title>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Serif+Pro">
         <link rel="stylesheet" href="{% static "css/style.css" %}">
-        <title>Course Request Form</title>
     </head>
     <body>
-        <div class="main">
-            <div class="sidebar">
-                <img class="logo" src="{% static 'img/UniversityofPennsylvania_FullLogo_Reverse_RGB.png' %}" alt="UPenn logo">
+        {% if user.is_authenticated %}
+            <div class="main">
+                <div class="sidebar">
+                    <img class="logo" src="{% static 'img/UniversityofPennsylvania_FullLogo_Reverse_RGB.png' %}" alt="UPenn logo">
+                    <h1>Course Request Form</h1>
+                    <nav class="nav">
+                        <a href="/">Home</a>
+                        <a href="/sections">Courses</a>
+                        <a href="{% url 'logout' %}">Log Out</a>
+                    </nav>
+                </div>
+                <div class="content">
+                    {% block content %}
+                    {% endblock %}
+                </div>
+            </div>
+        {% else %}
+            <div class="header">
+                <img class="header-logo" src="{% static 'img/UniversityofPennsylvania_FullLogo_Reverse_RGB.png' %}" alt="UPenn logo">
                 <h1>Course Request Form</h1>
-                <nav class="nav">
-                    <a href="/">Home</a>
-                    <a href="/sections">Courses</a>
-                    <a href="#">Requests</a>
-                </nav>
             </div>
-            <div class="content">
-                {% block content %}
-                {% endblock %}
-            </div>
-        </div>
+            {% block body %}{% endblock %}
+        {% endif %}
     </body>
 </html>
